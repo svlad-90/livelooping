@@ -1,0 +1,1 @@
+xcopy "D:\Development\Projects\Live-looping\Livelooping" "C:\Users\Dream Machines\Documents\Image-Line\FL Studio\Settings\Hardware" /E /Y
