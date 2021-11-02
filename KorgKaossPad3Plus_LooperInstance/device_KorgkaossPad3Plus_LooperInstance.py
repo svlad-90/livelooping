@@ -1,5 +1,4 @@
 # name=KorgKaossPad3Plus_LooperInstance
-from random import sample
 device_name="KorgKaossPad3Plus_LooperInstance"
 print(device_name + ': started')
 
@@ -56,6 +55,10 @@ LOOPER_4_INITIAL_MIXER_TRACK = 41
 KP3_PLUS_ABCD_PRESSED        = 100
 KP3_PLUS_ABCD_RELEASED       = 64
 
+MASTER_CHANNEL               = 0
+MIC_ROUTE_CHANNEL            = 4
+SYNTH_ROUTE_CHANNEL          = 8
+
 # MIXER SLOT INDEXES
 TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX = 0
 TRACK_PANOMATIC_VOLUME_PLUGIN_MIXER_SLOT_INDEX = 9
@@ -66,6 +69,7 @@ AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX = 0
 AUGUSTUS_LOOP_PLUGIN_DELAY_TIME_PARAM_INDEX = 1
 AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MIN_PARAM_INDEX = 2
 AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX = 3
+AUGUSTUS_LOOP_PLUGIN_MASTER_FEEDBACK_PARAM_INDEX = 12
 AUGUSTUS_LOOP_PLUGIN_EFFECT_LEVEL_PARAM_INDEX = 22
 AUGUSTUS_LOOP_INPUT_LEVEL_PARAM_INDEX = 31
 AUGUSTUS_LOOP_HOST_TEMPO_PARAM_INDEX = 33
@@ -88,7 +92,7 @@ def printAllPluginParameters(mixer_track, slot):
     
     for param_index in range(number_of_params):
         print( "#" + str(param_index) + ": param name - " + plugins.getParamName(param_index, mixer_track, slot) + \
-               "; param value - " + str( plugins.getParamValue(param_index, mixer_track, slot) ) )
+               " param value - " + str( plugins.getParamValue(param_index, mixer_track, slot) ) )
 
 class SampleLength:
     LENGTH_1 = 1
@@ -110,23 +114,26 @@ class Track():
     def __init__(self, track_number, mixer_track):
         self.__track_number = track_number
         self.__mixer_track = mixer_track
-        self.__sample_length = SampleLength.LENGTH_1
+        self.__sample_length = SampleLength.LENGTH_32
     
     def onInitScript(self):
         self.resetTrackParams()
+        self.setTrackVolume(0.8)
+        self.disableRouting()
         
     def setLooperVolume(self, looperVolume):
         mixer.setTrackVolume(self.__mixer_track, looperVolume)
         
     def setTrackVolume(self, trackVolume):
-        plugins.setParamValue(trackVolume, PANOMATIC_VOLUME_PARAM_INDEX, self.__mixer_track, TRACK_PANOMATIC_VOLUME_PLUGIN_MIXER_SLOT_INDEX)
+        # From 0.000000001 to 0.000000298
+        trackVolumeNormalized = 0.000000001 + ( 0.000000297 * trackVolume )
+        plugins.setParamValue(trackVolumeNormalized, PANOMATIC_VOLUME_PARAM_INDEX, self.__mixer_track, TRACK_PANOMATIC_VOLUME_PLUGIN_MIXER_SLOT_INDEX)
     
     def clear(self):
         plugins.setParamValue(1, AUGUSTUS_LOOP_CLEAR_LOOP_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)    
     
     def resetTrackParams(self):
         plugins.setParamValue(0.0, AUGUSTUS_LOOP_PLUGIN_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-        plugins.setParamValue(0.938302, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
         plugins.setParamValue(0, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MIN_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
         plugins.setParamValue(0.938576, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
         plugins.setParamValue(1.0, AUGUSTUS_LOOP_HOST_TEMPO_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
@@ -134,17 +141,55 @@ class Track():
         plugins.setParamValue(0.995, AUGUSTUS_LOOP_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
         plugins.setParamValue(0.99218, AUGUSTUS_LOOP_PLUGIN_EFFECT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
         plugins.setParamValue(0.0, AUGUSTUS_LOOP_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-    
-    def startRecording(self, sample_length):
-        if(sample_length == self.__sample_length):
-            plugins.setParamValue(0.99218, AUGUSTUS_LOOP_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-        else:
-            self.__sample_length == sample_length
-            
-            plugins.setParamValue(0.99218, AUGUSTUS_LOOP_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(0.992188, AUGUSTUS_LOOP_PLUGIN_MASTER_FEEDBACK_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
         
+        self.setSampleLength(self.__sample_length)
+    
+    def setSampleLength(self, sample_length):
+        
+        if(sample_length != self.__sample_length):
+            
+            if(sample_length == SampleLength.LENGTH_1):
+                plugins.setParamValue(0.8995, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.813, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+            elif(sample_length == SampleLength.LENGTH_2):
+                plugins.setParamValue(0.90733, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.89952, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+            elif(sample_length == SampleLength.LENGTH_4):
+                plugins.setParamValue(0.91513, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.91178, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+            elif(sample_length == SampleLength.LENGTH_8):
+                plugins.setParamValue(0.938576, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.99219, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+            elif(sample_length == SampleLength.LENGTH_16):
+                plugins.setParamValue(0.938576, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.99219, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+            elif(sample_length == SampleLength.LENGTH_32):
+                plugins.setParamValue(0.938576, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.9383, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+            elif(sample_length == SampleLength.LENGTH_64):
+                plugins.setParamValue(0.938576, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.99219, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+            elif(sample_length == SampleLength.LENGTH_128):
+                plugins.setParamValue(0.938576, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.99219, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                
+            self.__sample_length = sample_length
+        
+    def startRecording(self, sample_length):
+        self.setSampleLength(sample_length)
+        plugins.setParamValue(0.99218, AUGUSTUS_LOOP_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+    
     def stopRecording(self):
         plugins.setParamValue(0.0, AUGUSTUS_LOOP_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        
+    def enableRouting(self):
+        mixer.setRouteTo(MIC_ROUTE_CHANNEL, self.__mixer_track, 1)
+        mixer.setRouteTo(SYNTH_ROUTE_CHANNEL, self.__mixer_track, 1)
+        
+    def disableRouting(self):
+        mixer.setRouteTo(MIC_ROUTE_CHANNEL, self.__mixer_track, 0)
+        mixer.setRouteTo(SYNTH_ROUTE_CHANNEL, self.__mixer_track, 0)
     
 class Looper():
     Looper_1    = 0
@@ -167,6 +212,9 @@ class Looper():
     def getLooperNumber(self):
         return self.__looper_number
     
+    def getTracks(self):
+        return self.__tracks
+    
     def getTrack(self, track_number):
         return self.__tracks.get(track_number)
     
@@ -186,10 +234,10 @@ class Looper():
             self.__tracks[track_id].clear()
             
     def startRecordingTrack(self, track_id, sample_length):
-        self.__tracks[track_id].startRecording(sample_length);
+        self.__tracks[track_id].startRecording(sample_length)
         
     def stopRecordingTrack(self, track_id):
-        self.__tracks[track_id].stopRecording();
+        self.__tracks[track_id].stopRecording()
         
 class KorgKaossPad3Plus_LooperInstance:
  
@@ -201,14 +249,25 @@ class KorgKaossPad3Plus_LooperInstance:
                            Looper.Looper_3: Looper(Looper.Looper_3, LOOPER_3_INITIAL_MIXER_TRACK),
                            Looper.Looper_4: Looper(Looper.Looper_4, LOOPER_4_INITIAL_MIXER_TRACK) }
         self.__selectedSampleLength = SampleLength.LENGTH_1
+        self.__initialized = False
         
     def onInitScript(self):
-        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.onInitScript.__name__);
-        for looper_id in self.__loopers:
-            self.__loopers[looper_id].onInitScript();
+        
+        if False == self.__initialized:
+            print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.onInitScript.__name__)
+            
+            try:
+                for looper_id in self.__loopers:
+                    self.__loopers[looper_id].onInitScript()
+                mixer.setRouteTo(MIC_ROUTE_CHANNEL, MASTER_CHANNEL, 1)
+                mixer.setRouteTo(SYNTH_ROUTE_CHANNEL, MASTER_CHANNEL, 1)
+                self.__initialized = True
+            except Exception as e:
+                print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.onInitScript.__name__ + ": failed to initialize the script.")
+                print(e)
     
     def playStop(self):
-        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.playStop.__name__);
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.playStop.__name__)
         
         looper.clear()
         
@@ -222,75 +281,106 @@ class KorgKaossPad3Plus_LooperInstance:
         currentTempo = mixer.getCurrentTempo() / 100.0
         if math.fabs( int(currentTempo/10) - int(targetTempo/10) ) >= TEMPO_JOG_ROTATION_THRESHOLD:
             jogRotation = int( targetTempo - currentTempo )
-            print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.setTempo.__name__ + ": target tempo: " + str(targetTempo) + ", current tempo: " + str(currentTempo) + ", jog rotation: " + str(jogRotation));
+            print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.setTempo.__name__ + ": target tempo: " + str(targetTempo) + ", current tempo: " + str(currentTempo) + ", jog rotation: " + str(jogRotation))
             transport.globalTransport( 105, jogRotation )
         
     def setShiftPressedState(self, shiftPressed):
-        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.setShiftPressedState.__name__ + ": shift pressed - " + str(shiftPressed));
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.setShiftPressedState.__name__ + ": shift pressed - " + str(shiftPressed))
         self.__shiftPressed = shiftPressed
         
     def getShiftPressedState(self):
         return self.__shiftPressed
     
     def selectLooper(self, selectedLooper):
-        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.selectLooper.__name__ + ": selected looper - " + str(selectedLooper));
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.selectLooper.__name__ + ": selected looper - " + str(selectedLooper))
         self.__selectedLooper = selectedLooper
         
     def setLooperVolume(self, looperVolume):
-        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.setLooperVolume.__name__ + ": selected looper - " + str(self.__selectedLooper) + ", looper volume - " + str(looperVolume));
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.setLooperVolume.__name__ + ": selected looper - " + str(self.__selectedLooper) + ", looper volume - " + str(looperVolume))
         self.__loopers.get(self.__selectedLooper).setLooperVolume(looperVolume)
             
     def setTrackVolume(self, trackIndex, trackVolume):
-        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.setTrackVolume.__name__ + ": track index - " + str(trackIndex) + ", track volume - " + str(trackVolume));
-        
-        # From 0.000000001 to 0.000000298
-        trackVolumeNormalized = 0.000000001 + ( 0.000000297 * trackVolume )
-        self.__loopers.get(self.__selectedLooper).setTrackVolume(trackIndex, trackVolumeNormalized)
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.setTrackVolume.__name__ + ": track index - " + str(trackIndex) + ", track volume - " + str(trackVolume))
+
+        self.__loopers.get(self.__selectedLooper).setTrackVolume(trackIndex, trackVolume)
         
     def setSampleLength(self, sampleLength):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.setSampleLength.__name__ + ": selected sample length - " + str(sampleLength))
         self.__selectedSampleLength = sampleLength
         
     def clear(self):
-        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.clear.__name__);
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.clear.__name__)
         for looper_id in self.__loopers:
-            self.__loopers[looper_id].clearLooper();
+            self.__loopers[looper_id].clearLooper()
             
     def clearTrack(self, track_id):
-        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.clearTrack.__name__ + ": track - " + str(track_id));
-        self.__loopers[self.__selectedLooper].clearTrack(track_id);
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.clearTrack.__name__ + ": track - " + str(track_id))
+        self.__loopers[self.__selectedLooper].clearTrack(track_id)
         
-    def startRecordingTrack(self, track_id):
-        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.startRecordingTrack.__name__ + ": track - " + str(track_id));
-        self.__loopers[self.__selectedLooper].startRecordingTrack(track_id, self.__selectedSampleLength);
+    def startRecordingTrack(self, selected_track_id):
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.startRecordingTrack.__name__ + ": track - " + str(selected_track_id))
+        self.__loopers[self.__selectedLooper].startRecordingTrack(selected_track_id, self.__selectedSampleLength)
+        
+        for looper_id in self.__loopers:
+            for track_id in self.__loopers[looper_id].getTracks():
+                if looper_id == self.__selectedLooper:
+                    if track_id == selected_track_id:
+                        self.__loopers[looper_id].getTrack(track_id).enableRouting()
+                    else:
+                        self.__loopers[looper_id].getTrack(track_id).disableRouting()
+                else:
+                    self.__loopers[looper_id].getTrack(track_id).disableRouting()
+        
+        mixer.setRouteTo(MIC_ROUTE_CHANNEL, MASTER_CHANNEL, 0)
+        mixer.setRouteTo(SYNTH_ROUTE_CHANNEL, MASTER_CHANNEL, 0)
         
     def stopRecordingTrack(self, track_id):
-        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.stopRecordingTrack.__name__ + ": track - " + str(track_id));
-        self.__loopers[self.__selectedLooper].stopRecordingTrack(track_id);
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.stopRecordingTrack.__name__ + ": track - " + str(track_id))
+        self.__loopers[self.__selectedLooper].stopRecordingTrack(track_id)
+        
+        self.__loopers[self.__selectedLooper].getTrack(track_id).disableRouting()
+        
+        mixer.setRouteTo(MIC_ROUTE_CHANNEL, MASTER_CHANNEL, 1)
+        mixer.setRouteTo(SYNTH_ROUTE_CHANNEL, MASTER_CHANNEL, 1)
     
 looper = KorgKaossPad3Plus_LooperInstance()
 
 def OnInit():
-    looper.onInitScript();
+    looper.onInitScript()
  
 def OnMidiMsg(event):
+    
+    looper.onInitScript()
         
     event.handled = False
-    if event.data1 == MIDI_CC_SAMPLE_LENGTH_1 and looper.getShiftPressedState():
+    
+    if event.data1 == MIDI_CC_LOOPER_1 and looper.getShiftPressedState():
+        looper.selectLooper(Looper.Looper_1)
+    elif event.data1 == MIDI_CC_LOOPER_2 and looper.getShiftPressedState():
+        looper.selectLooper(Looper.Looper_2)
+    elif event.data1 == MIDI_CC_LOOPER_3 and looper.getShiftPressedState():
+        looper.selectLooper(Looper.Looper_3)
+    elif event.data1 == MIDI_CC_LOOPER_4 and looper.getShiftPressedState():
+        looper.selectLooper(Looper.Looper_4)
+    elif event.data1 == MIDI_CC_CLEAR_LOOPER and looper.getShiftPressedState():
+        looper.clear()
+    elif event.data1 == MIDI_CC_PLAY_STOP and looper.getShiftPressedState():
+        looper.playStop()
+    elif event.data1 == MIDI_CC_SAMPLE_LENGTH_1:
         looper.setSampleLength(SampleLength.LENGTH_1)
-    elif event.data1 == MIDI_CC_SAMPLE_LENGTH_2 and looper.getShiftPressedState():
+    elif event.data1 == MIDI_CC_SAMPLE_LENGTH_2:
         looper.setSampleLength(SampleLength.LENGTH_2)
-    elif event.data1 == MIDI_CC_SAMPLE_LENGTH_4 and looper.getShiftPressedState():
+    elif event.data1 == MIDI_CC_SAMPLE_LENGTH_4:
         looper.setSampleLength(SampleLength.LENGTH_4)
-    elif event.data1 == MIDI_CC_SAMPLE_LENGTH_8 and looper.getShiftPressedState():
+    elif event.data1 == MIDI_CC_SAMPLE_LENGTH_8:
         looper.setSampleLength(SampleLength.LENGTH_8)
-    elif event.data1 == MIDI_CC_SAMPLE_LENGTH_16 and looper.getShiftPressedState():
+    elif event.data1 == MIDI_CC_SAMPLE_LENGTH_16:
         looper.setSampleLength(SampleLength.LENGTH_16)
-    elif event.data1 == MIDI_CC_SAMPLE_LENGTH_32 and looper.getShiftPressedState():
+    elif event.data1 == MIDI_CC_SAMPLE_LENGTH_32:
         looper.setSampleLength(SampleLength.LENGTH_32)
-    elif event.data1 == MIDI_CC_SAMPLE_LENGTH_64 and looper.getShiftPressedState():
+    elif event.data1 == MIDI_CC_SAMPLE_LENGTH_64:
         looper.setSampleLength(SampleLength.LENGTH_64)
-    elif event.data1 == MIDI_CC_SAMPLE_LENGTH_128 and looper.getShiftPressedState():
+    elif event.data1 == MIDI_CC_SAMPLE_LENGTH_128:
         looper.setSampleLength(SampleLength.LENGTH_128)
     elif event.data1 == MIDI_CC_TRACK_1_CLEAR and event.data2 == KP3_PLUS_ABCD_PRESSED and looper.getShiftPressedState():
         looper.clearTrack(Track.Track_1)
@@ -300,20 +390,10 @@ def OnMidiMsg(event):
         looper.clearTrack(Track.Track_3)
     elif event.data1 == MIDI_CC_TRACK_4_CLEAR and event.data2 == KP3_PLUS_ABCD_PRESSED and looper.getShiftPressedState():
         looper.clearTrack(Track.Track_4)
-    elif event.data1 == MIDI_CC_PLAY_STOP:
-        looper.playStop()
     elif event.data1 == MIDI_CC_SHIFT:
         looper.setShiftPressedState(event.data2 == MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_TEMPO and looper.getShiftPressedState():
         looper.setTempo(800 + int((event.data2 / MIDI_MAX_VALUE) * 1000.0)) # from 80 to 180
-    elif event.data1 == MIDI_CC_LOOPER_1:
-        looper.selectLooper(Looper.Looper_1)
-    elif event.data1 == MIDI_CC_LOOPER_2:
-        looper.selectLooper(Looper.Looper_2)
-    elif event.data1 == MIDI_CC_LOOPER_3:
-        looper.selectLooper(Looper.Looper_3)
-    elif event.data1 == MIDI_CC_LOOPER_4:
-        looper.selectLooper(Looper.Looper_4)
     elif event.data1 == MIDI_CC_LOOPER_VOLUME:
         looper.setLooperVolume((event.data2 / MIDI_MAX_VALUE) * 0.8)
     elif event.data1 == MIDI_CC_TRACK_VOLUME_1:
@@ -324,23 +404,21 @@ def OnMidiMsg(event):
         looper.setTrackVolume(2, (event.data2 / MIDI_MAX_VALUE) * 0.8)
     elif event.data1 == MIDI_CC_TRACK_VOLUME_4:
         looper.setTrackVolume(3, (event.data2 / MIDI_MAX_VALUE) * 0.8)
-    elif event.data1 == MIDI_CC_CLEAR_LOOPER:
-        looper.clear()
     elif event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
         looper.startRecordingTrack(Track.Track_1)
     elif event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
         looper.stopRecordingTrack(Track.Track_1)
     elif event.data1 == MIDI_CC_TRACK_2_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
         looper.startRecordingTrack(Track.Track_2)
-    elif event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
+    elif event.data1 == MIDI_CC_TRACK_2_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
         looper.stopRecordingTrack(Track.Track_2)
     elif event.data1 == MIDI_CC_TRACK_3_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
         looper.startRecordingTrack(Track.Track_3)
-    elif event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
+    elif event.data1 == MIDI_CC_TRACK_3_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
         looper.stopRecordingTrack(Track.Track_3)
     elif event.data1 == MIDI_CC_TRACK_4_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
         looper.startRecordingTrack(Track.Track_4)
-    elif event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
+    elif event.data1 == MIDI_CC_TRACK_4_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
         looper.stopRecordingTrack(Track.Track_4)
         
     event.handled = True
