@@ -46,6 +46,11 @@ MIDI_CC_TRACK_2_SAMPLING    = 37
 MIDI_CC_TRACK_3_SAMPLING    = 38
 MIDI_CC_TRACK_4_SAMPLING    = 39
 
+# ROUTING
+MASTER_CHANNEL               = 0
+MIC_ROUTE_CHANNEL            = 4
+SYNTH_ROUTE_CHANNEL          = 8
+
 # CONSTANTS
 LOOPER_1_INITIAL_MIXER_TRACK = 17
 LOOPER_2_INITIAL_MIXER_TRACK = 25
@@ -55,11 +60,10 @@ LOOPER_4_INITIAL_MIXER_TRACK = 41
 KP3_PLUS_ABCD_PRESSED        = 100
 KP3_PLUS_ABCD_RELEASED       = 64
 
-MASTER_CHANNEL               = 0
-MIC_ROUTE_CHANNEL            = 4
-SYNTH_ROUTE_CHANNEL          = 8
+# MASTER MIXER SLOT INDICES
+CONTROL_SURFACE_MIXER_SLOT_INDEX = 0
 
-# MIXER SLOT INDEXES
+# MIXER SLOT INDICES
 TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX = 0
 TRACK_PANOMATIC_VOLUME_PLUGIN_MIXER_SLOT_INDEX = 9
 
@@ -70,12 +74,14 @@ AUGUSTUS_LOOP_PLUGIN_DELAY_TIME_PARAM_INDEX = 1
 AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MIN_PARAM_INDEX = 2
 AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX = 3
 AUGUSTUS_LOOP_PLUGIN_MASTER_FEEDBACK_PARAM_INDEX = 12
-AUGUSTUS_LOOP_PLUGIN_EFFECT_LEVEL_PARAM_INDEX = 22
+AUGUSTUS_LOOP_PLUGIN_PITCH_INDEPENDENT_DELAY_PARAM_INDEX = 16
+AUGUSTUS_LOOP_PLUGIN_EFFECT_LEVEL_PARAM_INDEX = 221
 AUGUSTUS_LOOP_INPUT_LEVEL_PARAM_INDEX = 31
 AUGUSTUS_LOOP_HOST_TEMPO_PARAM_INDEX = 33
 AUGUSTUS_LOOP_BEATS_PARAM_INDEX = 34
 AUGUSTUS_LOOP_BEATS_DIVISOR_PARAM_INDEX = 35
 AUGUSTUS_LOOP_CLEAR_LOOP_PARAM_INDEX = 49
+AUGUSTUS_LOOP_DIGITAL_MODE_PARAM_INDEX = 59
 
 PANOMATIC_VOLUME_PARAM_INDEX = 1
 
@@ -94,6 +100,15 @@ def printAllPluginParameters(mixer_track, slot):
         print( "#" + str(param_index) + ": param name - " + plugins.getParamName(param_index, mixer_track, slot) + \
                " param value - " + str( plugins.getParamValue(param_index, mixer_track, slot) ) )
 
+def findSurfaceControlElementIdByName(control_element_name):
+    number_of_parameters = plugins.getParamCount(MASTER_CHANNEL, CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    
+    for parameter_id in range(number_of_parameters):
+        parameter_name = plugins.getParamName(parameter_id, MASTER_CHANNEL, CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        if(parameter_name == control_element_name):
+            return parameter_id  
+    raise Exception("Control element " + control_element_name + " not found")
+
 class SampleLength:
     LENGTH_1 = 1
     LENGTH_2 = 2
@@ -111,7 +126,8 @@ class Track():
     Track_3    = 2
     Track_4    = 3
     
-    def __init__(self, track_number, mixer_track):
+    def __init__(self, looper_number, track_number, mixer_track):
+        self.__looper_number = looper_number
         self.__track_number = track_number
         self.__mixer_track = mixer_track
         self.__sample_length = SampleLength.LENGTH_32
@@ -119,15 +135,12 @@ class Track():
     def onInitScript(self):
         self.resetTrackParams()
         self.setTrackVolume(0.8)
-        self.disableRouting()
         
     def setLooperVolume(self, looperVolume):
         mixer.setTrackVolume(self.__mixer_track, looperVolume)
         
     def setTrackVolume(self, trackVolume):
-        # From 0.000000001 to 0.000000298
-        trackVolumeNormalized = 0.000000001 + ( 0.000000297 * trackVolume )
-        plugins.setParamValue(trackVolumeNormalized, PANOMATIC_VOLUME_PARAM_INDEX, self.__mixer_track, TRACK_PANOMATIC_VOLUME_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(trackVolume, PANOMATIC_VOLUME_PARAM_INDEX, self.__mixer_track, TRACK_PANOMATIC_VOLUME_PLUGIN_MIXER_SLOT_INDEX)
     
     def clear(self):
         plugins.setParamValue(1, AUGUSTUS_LOOP_CLEAR_LOOP_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)    
@@ -135,61 +148,48 @@ class Track():
     def resetTrackParams(self):
         plugins.setParamValue(0.0, AUGUSTUS_LOOP_PLUGIN_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
         plugins.setParamValue(0, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MIN_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-        plugins.setParamValue(0.938576, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
         plugins.setParamValue(1.0, AUGUSTUS_LOOP_HOST_TEMPO_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-        plugins.setParamValue(0.99219, AUGUSTUS_LOOP_BEATS_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-        plugins.setParamValue(0.995, AUGUSTUS_LOOP_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-        plugins.setParamValue(0.99218, AUGUSTUS_LOOP_PLUGIN_EFFECT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, AUGUSTUS_LOOP_BEATS_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, AUGUSTUS_LOOP_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, AUGUSTUS_LOOP_PLUGIN_EFFECT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
         plugins.setParamValue(0.0, AUGUSTUS_LOOP_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-        plugins.setParamValue(0.992188, AUGUSTUS_LOOP_PLUGIN_MASTER_FEEDBACK_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, AUGUSTUS_LOOP_PLUGIN_MASTER_FEEDBACK_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, AUGUSTUS_LOOP_DIGITAL_MODE_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, AUGUSTUS_LOOP_PLUGIN_PITCH_INDEPENDENT_DELAY_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        
+        self.__setRouting();
         
         self.setSampleLength(self.__sample_length)
     
     def setSampleLength(self, sample_length):
         
         if(sample_length != self.__sample_length):
-            
-            if(sample_length == SampleLength.LENGTH_1):
-                plugins.setParamValue(0.8995, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-                plugins.setParamValue(0.813, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-            elif(sample_length == SampleLength.LENGTH_2):
-                plugins.setParamValue(0.90733, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-                plugins.setParamValue(0.89952, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-            elif(sample_length == SampleLength.LENGTH_4):
-                plugins.setParamValue(0.91513, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-                plugins.setParamValue(0.91178, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-            elif(sample_length == SampleLength.LENGTH_8):
-                plugins.setParamValue(0.938576, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-                plugins.setParamValue(0.99219, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-            elif(sample_length == SampleLength.LENGTH_16):
-                plugins.setParamValue(0.938576, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-                plugins.setParamValue(0.99219, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-            elif(sample_length == SampleLength.LENGTH_32):
-                plugins.setParamValue(0.938576, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-                plugins.setParamValue(0.9383, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-            elif(sample_length == SampleLength.LENGTH_64):
-                plugins.setParamValue(0.938576, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-                plugins.setParamValue(0.99219, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-            elif(sample_length == SampleLength.LENGTH_128):
-                plugins.setParamValue(0.938576, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-                plugins.setParamValue(0.99219, AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-                
+            plugins.setParamValue((1.0/3600.0) * sample_length, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+            plugins.setParamValue((1.0/3599.0) * (sample_length - 1), AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
             self.__sample_length = sample_length
         
     def startRecording(self, sample_length):
         self.setSampleLength(sample_length)
-        plugins.setParamValue(0.99218, AUGUSTUS_LOOP_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, AUGUSTUS_LOOP_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
     
     def stopRecording(self):
         plugins.setParamValue(0.0, AUGUSTUS_LOOP_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
         
-    def enableRouting(self):
+    def __setRouting(self):
         mixer.setRouteTo(MIC_ROUTE_CHANNEL, self.__mixer_track, 1)
         mixer.setRouteTo(SYNTH_ROUTE_CHANNEL, self.__mixer_track, 1)
         
-    def disableRouting(self):
+    def __removeRouting(self):
         mixer.setRouteTo(MIC_ROUTE_CHANNEL, self.__mixer_track, 0)
         mixer.setRouteTo(SYNTH_ROUTE_CHANNEL, self.__mixer_track, 0)
+        
+    def setRoutingLevel(self, routing_level):
+        parameter_id = findSurfaceControlElementIdByName("L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "M")
+        plugins.setParamValue(routing_level, parameter_id, MASTER_CHANNEL, CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = findSurfaceControlElementIdByName("L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "S")
+        plugins.setParamValue(routing_level, parameter_id, MASTER_CHANNEL, CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    
     
 class Looper():
     Looper_1    = 0
@@ -200,10 +200,14 @@ class Looper():
     def __init__(self, looper_number, initial_mixer_track):
         self.__looper_number = looper_number
         self.__initial_mixer_track__ = initial_mixer_track
-        self.__tracks = { Track.Track_1: Track(Track.Track_1, initial_mixer_track + Track.Track_1),
-                          Track.Track_2: Track(Track.Track_2, initial_mixer_track + Track.Track_2),
-                          Track.Track_3: Track(Track.Track_3, initial_mixer_track + Track.Track_3),
-                          Track.Track_4: Track(Track.Track_4, initial_mixer_track + Track.Track_4) }
+        self.__tracks = { Track.Track_1: Track(looper_number, Track.Track_1, 
+                                               initial_mixer_track + Track.Track_1),
+                          Track.Track_2: Track(looper_number, Track.Track_2, 
+                                               initial_mixer_track + Track.Track_2),
+                          Track.Track_3: Track(looper_number, Track.Track_3, 
+                                               initial_mixer_track + Track.Track_3),
+                          Track.Track_4: Track(looper_number, Track.Track_4, 
+                                               initial_mixer_track + Track.Track_4) }
     
     def onInitScript(self):
         for track_id in self.__tracks:
@@ -244,10 +248,14 @@ class KorgKaossPad3Plus_LooperInstance:
     def __init__(self):
         self.__shiftPressed = False
         self.__selectedLooper = Looper.Looper_1
-        self.__loopers = { Looper.Looper_1: Looper(Looper.Looper_1, LOOPER_1_INITIAL_MIXER_TRACK),
-                           Looper.Looper_2: Looper(Looper.Looper_2, LOOPER_2_INITIAL_MIXER_TRACK),
-                           Looper.Looper_3: Looper(Looper.Looper_3, LOOPER_3_INITIAL_MIXER_TRACK),
-                           Looper.Looper_4: Looper(Looper.Looper_4, LOOPER_4_INITIAL_MIXER_TRACK) }
+        self.__loopers = { Looper.Looper_1: Looper(Looper.Looper_1, 
+                                                   LOOPER_1_INITIAL_MIXER_TRACK),
+                           Looper.Looper_2: Looper(Looper.Looper_2, 
+                                                   LOOPER_2_INITIAL_MIXER_TRACK),
+                           Looper.Looper_3: Looper(Looper.Looper_3, 
+                                                   LOOPER_3_INITIAL_MIXER_TRACK),
+                           Looper.Looper_4: Looper(Looper.Looper_4, 
+                                                   LOOPER_4_INITIAL_MIXER_TRACK) }
         self.__selectedSampleLength = SampleLength.LENGTH_1
         self.__initialized = False
         
@@ -308,6 +316,8 @@ class KorgKaossPad3Plus_LooperInstance:
         print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.setSampleLength.__name__ + ": selected sample length - " + str(sampleLength))
         self.__selectedSampleLength = sampleLength
         
+        #printAllPluginParameters(17, 0)
+        
     def clear(self):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.clear.__name__)
         for looper_id in self.__loopers:
@@ -316,7 +326,13 @@ class KorgKaossPad3Plus_LooperInstance:
     def clearTrack(self, track_id):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.clearTrack.__name__ + ": track - " + str(track_id))
         self.__loopers[self.__selectedLooper].clearTrack(track_id)
-        
+    
+    def setMasterRoutingLevel(self, routing_level):
+        parameter_id = findSurfaceControlElementIdByName("MasterM")
+        plugins.setParamValue(routing_level, parameter_id, MASTER_CHANNEL, CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = findSurfaceControlElementIdByName("MasterS")
+        plugins.setParamValue(routing_level, parameter_id, MASTER_CHANNEL, CONTROL_SURFACE_MIXER_SLOT_INDEX)
+
     def startRecordingTrack(self, selected_track_id):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.startRecordingTrack.__name__ + ": track - " + str(selected_track_id))
         self.__loopers[self.__selectedLooper].startRecordingTrack(selected_track_id, self.__selectedSampleLength)
@@ -325,23 +341,21 @@ class KorgKaossPad3Plus_LooperInstance:
             for track_id in self.__loopers[looper_id].getTracks():
                 if looper_id == self.__selectedLooper:
                     if track_id == selected_track_id:
-                        self.__loopers[looper_id].getTrack(track_id).enableRouting()
+                        self.__loopers[looper_id].getTrack(track_id).setRoutingLevel(0.8)
                     else:
-                        self.__loopers[looper_id].getTrack(track_id).disableRouting()
+                        self.__loopers[looper_id].getTrack(track_id).setRoutingLevel(0.0)
                 else:
-                    self.__loopers[looper_id].getTrack(track_id).disableRouting()
+                    self.__loopers[looper_id].getTrack(track_id).setRoutingLevel(0.0)
         
-        mixer.setRouteTo(MIC_ROUTE_CHANNEL, MASTER_CHANNEL, 0)
-        mixer.setRouteTo(SYNTH_ROUTE_CHANNEL, MASTER_CHANNEL, 0)
+        self.setMasterRoutingLevel(0.0)
         
     def stopRecordingTrack(self, track_id):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.stopRecordingTrack.__name__ + ": track - " + str(track_id))
         self.__loopers[self.__selectedLooper].stopRecordingTrack(track_id)
         
-        self.__loopers[self.__selectedLooper].getTrack(track_id).disableRouting()
+        self.__loopers[self.__selectedLooper].getTrack(track_id).setRoutingLevel(0.0)
         
-        mixer.setRouteTo(MIC_ROUTE_CHANNEL, MASTER_CHANNEL, 1)
-        mixer.setRouteTo(SYNTH_ROUTE_CHANNEL, MASTER_CHANNEL, 1)
+        self.setMasterRoutingLevel(0.8)
     
 looper = KorgKaossPad3Plus_LooperInstance()
 
