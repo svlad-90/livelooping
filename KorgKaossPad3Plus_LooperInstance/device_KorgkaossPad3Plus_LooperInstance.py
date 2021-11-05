@@ -23,6 +23,10 @@ MIDI_CC_TRACK_VOLUME_1      = 70
 MIDI_CC_TRACK_VOLUME_2      = 71
 MIDI_CC_TRACK_VOLUME_3      = 72
 MIDI_CC_TRACK_VOLUME_4      = 73
+MIDI_CC_TRACK_SIDECHAIN_1   = 74
+MIDI_CC_TRACK_SIDECHAIN_2   = 75
+MIDI_CC_TRACK_SIDECHAIN_3   = 76
+MIDI_CC_TRACK_SIDECHAIN_4   = 77
 MIDI_CC_CLEAR_LOOPER        = 55
 MIDI_CC_SAMPLE_LENGTH_1     = 49
 MIDI_CC_SAMPLE_LENGTH_2     = 50
@@ -32,9 +36,6 @@ MIDI_CC_SAMPLE_LENGTH_16    = 53
 MIDI_CC_SAMPLE_LENGTH_32    = 54
 MIDI_CC_SAMPLE_LENGTH_64    = 55
 MIDI_CC_SAMPLE_LENGTH_128   = 56
-
-MIDI_CC_LENGTH              = 56
-MIDI_CC_SAMPLE              = 123
 
 MIDI_CC_TRACK_1_CLEAR       = 36
 MIDI_CC_TRACK_2_CLEAR       = 37
@@ -48,8 +49,10 @@ MIDI_CC_TRACK_4_SAMPLING    = 39
 
 # ROUTING
 MASTER_CHANNEL               = 0
+MASTER_FX_1_CHANNEL          = 2
 MIC_ROUTE_CHANNEL            = 4
 SYNTH_ROUTE_CHANNEL          = 8
+LOOPER_ALL_CHANNEL           = 12
 
 # CONSTANTS
 LOOPER_1_INITIAL_MIXER_TRACK = 17
@@ -65,9 +68,16 @@ CONTROL_SURFACE_MIXER_SLOT_INDEX = 0
 
 # MIXER SLOT INDICES
 TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX = 0
-TRACK_PANOMATIC_VOLUME_PLUGIN_MIXER_SLOT_INDEX = 9
+TRACK_PANOMATIC_VOLUME_PLUGIN_MIXER_SLOT_INDEX = 8
+LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX = 9
+LOOPER_ALL_ENDLESS_SMILE_SLOT_INDEX = 8
 
 # PLUGIN PARAMETERS
+
+PEAK_CONTROLLER_BASE_PARAM_INDEX = 0
+PEAK_CONTROLLER_VOLUME_PARAM_INDEX = 1
+PEAK_CONTROLLER_TENSION_PARAM_INDEX = 2
+PEAK_CONTROLLER_DECAY_PARAM_INDEX = 3
 
 AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX = 0
 AUGUSTUS_LOOP_PLUGIN_DELAY_TIME_PARAM_INDEX = 1
@@ -87,6 +97,8 @@ AUGUSTUS_LOOP_PLUGIN_SATURATION_ON_OFF_PARAM_INDEX = 55
 AUGUSTUS_LOOP_PLUGIN_DELAY_INTERIA_MODE_PARAM_INDEX = 57
 AUGUSTUS_LOOP_PLUGIN_DIGITAL_MODE_PARAM_INDEX = 59
 AUGUSTUS_LOOP_PLUGIN_SYNC_GROUP_MODE_PARAM_INDEX = 71
+
+ENDLESS_SMILE_PLUGIN_INTENSITY_PARAM_INDEX = 0
 
 PANOMATIC_VOLUME_PARAM_INDEX = 1
 
@@ -165,6 +177,13 @@ class Track():
         plugins.setParamValue(1.1, AUGUSTUS_LOOP_PLUGIN_RR_FEEDBACK_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)        
         plugins.setParamValue(0.0, AUGUSTUS_LOOP_PLUGIN_SATURATION_ON_OFF_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)        
         
+        # looper 1 is the source of the sidechain
+        if self.__looper_number == Looper.Looper_1:
+            plugins.setParamValue(0.8, PEAK_CONTROLLER_BASE_PARAM_INDEX, self.__mixer_track, LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX)
+            plugins.setParamValue(0.12, PEAK_CONTROLLER_VOLUME_PARAM_INDEX, self.__mixer_track, LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX)
+            plugins.setParamValue(0.85, PEAK_CONTROLLER_TENSION_PARAM_INDEX, self.__mixer_track, LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX)
+            plugins.setParamValue(0.5, PEAK_CONTROLLER_DECAY_PARAM_INDEX, self.__mixer_track, LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX)
+        
         self.__setRouting();
         
         self.setSampleLength(self.__sample_length, True) 
@@ -236,7 +255,12 @@ class Track():
         parameter_id = findSurfaceControlElementIdByName("L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "S")
         plugins.setParamValue(routing_level, parameter_id, MASTER_CHANNEL, CONTROL_SURFACE_MIXER_SLOT_INDEX)
     
-    
+    def setSideChainLevel(self, sidechain_level):
+        parameter_id = findSurfaceControlElementIdByName("M2L1T" + str(self.__track_number + 1) + "S")
+        plugins.setParamValue(sidechain_level, parameter_id, MASTER_CHANNEL, CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = findSurfaceControlElementIdByName("S2L1T" + str(self.__track_number + 1) + "S")
+        plugins.setParamValue(sidechain_level, parameter_id, MASTER_CHANNEL, CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        
 class Looper():
     Looper_1    = 0
     Looper_2    = 1
@@ -289,10 +313,20 @@ class Looper():
     def stopRecordingTrack(self, track_id):
         self.__tracks[track_id].stopRecording()
         
+    def setSideChainLevel(self, track_id, sidechain_level):
+        self.__tracks[track_id].setSideChainLevel(sidechain_level)
+
+class PressedSamplerButton:
+    A_PRESSED = 0;
+    B_PRESSED = 1;
+    C_PRESSED = 2;
+    D_PRESSED = 3;
+   
 class KorgKaossPad3Plus_LooperInstance:
  
     def __init__(self):
         self.__shiftPressed = False
+        self.__pressedSamplerButtons = set()
         self.__selectedLooper = Looper.Looper_1
         self.__loopers = { Looper.Looper_1: Looper(Looper.Looper_1, 
                                                    LOOPER_1_INITIAL_MIXER_TRACK),
@@ -313,8 +347,8 @@ class KorgKaossPad3Plus_LooperInstance:
             try:
                 for looper_id in self.__loopers:
                     self.__loopers[looper_id].onInitScript()
-                mixer.setRouteTo(MIC_ROUTE_CHANNEL, MASTER_CHANNEL, 1)
-                mixer.setRouteTo(SYNTH_ROUTE_CHANNEL, MASTER_CHANNEL, 1)
+                mixer.setRouteTo(MIC_ROUTE_CHANNEL, MASTER_FX_1_CHANNEL, 1)
+                mixer.setRouteTo(SYNTH_ROUTE_CHANNEL, MASTER_FX_1_CHANNEL, 1)
                 self.__initialized = True
             except Exception as e:
                 print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.onInitScript.__name__ + ": failed to initialize the script.")
@@ -342,8 +376,27 @@ class KorgKaossPad3Plus_LooperInstance:
         print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.setShiftPressedState.__name__ + ": shift pressed - " + str(shiftPressed))
         self.__shiftPressed = shiftPressed
         
+        if(False == shiftPressed):
+            for element in self.__pressedSamplerButtons:
+                if(element == PressedSamplerButton.A_PRESSED):
+                    self.startRecordingTrack(Track.Track_1)
+                elif(element == PressedSamplerButton.B_PRESSED):
+                    self.startRecordingTrack(Track.Track_2)
+                elif(element == PressedSamplerButton.C_PRESSED):
+                    self.startRecordingTrack(Track.Track_3)
+                elif(element == PressedSamplerButton.D_PRESSED):
+                    self.startRecordingTrack(Track.Track_4)
+        
     def getShiftPressedState(self):
         return self.__shiftPressed
+    
+    def addPressedSamplerButton(self, pressedSamplerButton):
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.addPressedSamplerButton.__name__ + ": added sampelr button - " + str(pressedSamplerButton))
+        self.__pressedSamplerButtons.add(pressedSamplerButton)
+        
+    def removePressedSamplerButton(self, releasedSamplerButton):
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.addPressedSamplerButton.__name__ + ": removed sampelr button - " + str(releasedSamplerButton))
+        self.__pressedSamplerButtons.remove(releasedSamplerButton)
     
     def selectLooper(self, selectedLooper):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.selectLooper.__name__ + ": selected looper - " + str(selectedLooper))
@@ -362,7 +415,7 @@ class KorgKaossPad3Plus_LooperInstance:
         print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.setSampleLength.__name__ + ": selected sample length - " + str(sampleLength))
         self.__selectedSampleLength = sampleLength
         
-        #printAllPluginParameters(17, 0)
+        #printAllPluginParameters(17, 9)
         
     def clear(self):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.clear.__name__)
@@ -374,9 +427,9 @@ class KorgKaossPad3Plus_LooperInstance:
         self.__loopers[self.__selectedLooper].clearTrack(track_id)
     
     def setMasterRoutingLevel(self, routing_level):
-        parameter_id = findSurfaceControlElementIdByName("MasterM")
+        parameter_id = findSurfaceControlElementIdByName("MasterFX1M")
         plugins.setParamValue(routing_level, parameter_id, MASTER_CHANNEL, CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        parameter_id = findSurfaceControlElementIdByName("MasterS")
+        parameter_id = findSurfaceControlElementIdByName("MasterFX1S")
         plugins.setParamValue(routing_level, parameter_id, MASTER_CHANNEL, CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
     def startRecordingTrack(self, selected_track_id):
@@ -402,6 +455,12 @@ class KorgKaossPad3Plus_LooperInstance:
         self.__loopers[self.__selectedLooper].getTrack(track_id).setRoutingLevel(0.0)
         
         self.setMasterRoutingLevel(0.8)
+        
+    def setSideChainLevel(self, track_id, sidechain_level):
+        self.__loopers[Looper.Looper_1].setSideChainLevel(track_id, sidechain_level)
+    
+    def setDropIntencity(self, drop_intencity):
+        plugins.setParamValue(drop_intencity, ENDLESS_SMILE_PLUGIN_INTENSITY_PARAM_INDEX, LOOPER_ALL_CHANNEL, LOOPER_ALL_ENDLESS_SMILE_SLOT_INDEX)
     
 looper = KorgKaossPad3Plus_LooperInstance()
 
@@ -414,7 +473,28 @@ def OnMidiMsg(event):
         
     event.handled = False
     
-    if event.data1 == MIDI_CC_LOOPER_1 and looper.getShiftPressedState():
+    if event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
+        looper.addPressedSamplerButton(PressedSamplerButton.A_PRESSED)
+    elif event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
+        looper.removePressedSamplerButton(PressedSamplerButton.A_PRESSED)
+    elif event.data1 == MIDI_CC_TRACK_2_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
+        looper.addPressedSamplerButton(PressedSamplerButton.B_PRESSED)
+    elif event.data1 == MIDI_CC_TRACK_2_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
+        looper.removePressedSamplerButton(PressedSamplerButton.B_PRESSED)
+    elif event.data1 == MIDI_CC_TRACK_3_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
+        looper.addPressedSamplerButton(PressedSamplerButton.C_PRESSED)
+    elif event.data1 == MIDI_CC_TRACK_3_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
+        looper.removePressedSamplerButton(PressedSamplerButton.C_PRESSED)
+    elif event.data1 == MIDI_CC_TRACK_4_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
+        looper.addPressedSamplerButton(PressedSamplerButton.D_PRESSED)
+    elif event.data1 == MIDI_CC_TRACK_4_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
+        looper.removePressedSamplerButton(PressedSamplerButton.D_PRESSED)
+        
+        
+        
+    if event.data1 == MIDI_CC_LOOPER_VOLUME and looper.getShiftPressedState():
+        looper.setDropIntencity( (MIDI_MAX_VALUE - event.data2) / MIDI_MAX_VALUE )
+    elif event.data1 == MIDI_CC_LOOPER_1 and looper.getShiftPressedState():
         looper.selectLooper(Looper.Looper_1)
     elif event.data1 == MIDI_CC_LOOPER_2 and looper.getShiftPressedState():
         looper.selectLooper(Looper.Looper_2)
@@ -444,12 +524,16 @@ def OnMidiMsg(event):
         looper.setSampleLength(SampleLength.LENGTH_128)
     elif event.data1 == MIDI_CC_TRACK_1_CLEAR and event.data2 == KP3_PLUS_ABCD_PRESSED and looper.getShiftPressedState():
         looper.clearTrack(Track.Track_1)
+        looper.stopRecordingTrack(Track.Track_1)
     elif event.data1 == MIDI_CC_TRACK_2_CLEAR and event.data2 == KP3_PLUS_ABCD_PRESSED and looper.getShiftPressedState():
         looper.clearTrack(Track.Track_2)
+        looper.stopRecordingTrack(Track.Track_2)
     elif event.data1 == MIDI_CC_TRACK_3_CLEAR and event.data2 == KP3_PLUS_ABCD_PRESSED and looper.getShiftPressedState():
         looper.clearTrack(Track.Track_3)
+        looper.stopRecordingTrack(Track.Track_3)
     elif event.data1 == MIDI_CC_TRACK_4_CLEAR and event.data2 == KP3_PLUS_ABCD_PRESSED and looper.getShiftPressedState():
         looper.clearTrack(Track.Track_4)
+        looper.stopRecordingTrack(Track.Track_4)
     elif event.data1 == MIDI_CC_SHIFT:
         looper.setShiftPressedState(event.data2 == MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_TEMPO and looper.getShiftPressedState():
@@ -480,5 +564,13 @@ def OnMidiMsg(event):
         looper.startRecordingTrack(Track.Track_4)
     elif event.data1 == MIDI_CC_TRACK_4_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
         looper.stopRecordingTrack(Track.Track_4)
+    elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_1:
+        looper.setSideChainLevel(Track.Track_1, event.data2 / MIDI_MAX_VALUE)
+    elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_2:
+        looper.setSideChainLevel(Track.Track_2, event.data2 / MIDI_MAX_VALUE)
+    elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_3:
+        looper.setSideChainLevel(Track.Track_3, event.data2 / MIDI_MAX_VALUE)
+    elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_4:
+        looper.setSideChainLevel(Track.Track_4, event.data2 / MIDI_MAX_VALUE)
         
     event.handled = True
