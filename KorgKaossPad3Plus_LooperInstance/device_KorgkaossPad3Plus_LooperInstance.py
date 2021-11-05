@@ -73,15 +73,20 @@ AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX = 0
 AUGUSTUS_LOOP_PLUGIN_DELAY_TIME_PARAM_INDEX = 1
 AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MIN_PARAM_INDEX = 2
 AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX = 3
+AUGUSTUS_LOOP_PLUGIN_LL_FEEDBACK_PARAM_INDEX = 5
+AUGUSTUS_LOOP_PLUGIN_RR_FEEDBACK_PARAM_INDEX = 11
 AUGUSTUS_LOOP_PLUGIN_MASTER_FEEDBACK_PARAM_INDEX = 12
 AUGUSTUS_LOOP_PLUGIN_PITCH_INDEPENDENT_DELAY_PARAM_INDEX = 16
-AUGUSTUS_LOOP_PLUGIN_EFFECT_LEVEL_PARAM_INDEX = 221
-AUGUSTUS_LOOP_INPUT_LEVEL_PARAM_INDEX = 31
-AUGUSTUS_LOOP_HOST_TEMPO_PARAM_INDEX = 33
-AUGUSTUS_LOOP_BEATS_PARAM_INDEX = 34
-AUGUSTUS_LOOP_BEATS_DIVISOR_PARAM_INDEX = 35
-AUGUSTUS_LOOP_CLEAR_LOOP_PARAM_INDEX = 49
-AUGUSTUS_LOOP_DIGITAL_MODE_PARAM_INDEX = 59
+AUGUSTUS_LOOP_PLUGIN_EFFECT_LEVEL_PARAM_INDEX = 22
+AUGUSTUS_LOOP_PLUGIN_INPUT_LEVEL_PARAM_INDEX = 31
+AUGUSTUS_LOOP_PLUGIN_HOST_TEMPO_PARAM_INDEX = 33
+AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX = 34
+AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX = 35
+AUGUSTUS_LOOP_PLUGIN_CLEAR_LOOP_PARAM_INDEX = 49
+AUGUSTUS_LOOP_PLUGIN_SATURATION_ON_OFF_PARAM_INDEX = 55
+AUGUSTUS_LOOP_PLUGIN_DELAY_INTERIA_MODE_PARAM_INDEX = 57
+AUGUSTUS_LOOP_PLUGIN_DIGITAL_MODE_PARAM_INDEX = 59
+AUGUSTUS_LOOP_PLUGIN_SYNC_GROUP_MODE_PARAM_INDEX = 71
 
 PANOMATIC_VOLUME_PARAM_INDEX = 1
 
@@ -130,7 +135,7 @@ class Track():
         self.__looper_number = looper_number
         self.__track_number = track_number
         self.__mixer_track = mixer_track
-        self.__sample_length = SampleLength.LENGTH_32
+        self.__sample_length = SampleLength.LENGTH_1
     
     def onInitScript(self):
         self.resetTrackParams()
@@ -143,38 +148,79 @@ class Track():
         plugins.setParamValue(trackVolume, PANOMATIC_VOLUME_PARAM_INDEX, self.__mixer_track, TRACK_PANOMATIC_VOLUME_PLUGIN_MIXER_SLOT_INDEX)
     
     def clear(self):
-        plugins.setParamValue(1, AUGUSTUS_LOOP_CLEAR_LOOP_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)    
+        plugins.setParamValue(1, AUGUSTUS_LOOP_PLUGIN_CLEAR_LOOP_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
     
     def resetTrackParams(self):
         plugins.setParamValue(0.0, AUGUSTUS_LOOP_PLUGIN_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
         plugins.setParamValue(0, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MIN_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-        plugins.setParamValue(1.0, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-        plugins.setParamValue(1.0, AUGUSTUS_LOOP_HOST_TEMPO_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-        plugins.setParamValue(1.0, AUGUSTUS_LOOP_BEATS_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-        plugins.setParamValue(1.0, AUGUSTUS_LOOP_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, AUGUSTUS_LOOP_PLUGIN_HOST_TEMPO_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
         plugins.setParamValue(1.0, AUGUSTUS_LOOP_PLUGIN_EFFECT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-        plugins.setParamValue(0.0, AUGUSTUS_LOOP_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(0.0, AUGUSTUS_LOOP_PLUGIN_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
         plugins.setParamValue(1.0, AUGUSTUS_LOOP_PLUGIN_MASTER_FEEDBACK_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-        plugins.setParamValue(1.0, AUGUSTUS_LOOP_DIGITAL_MODE_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, AUGUSTUS_LOOP_PLUGIN_DIGITAL_MODE_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
         plugins.setParamValue(1.0, AUGUSTUS_LOOP_PLUGIN_PITCH_INDEPENDENT_DELAY_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0 / 3600.0, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(0.33, AUGUSTUS_LOOP_PLUGIN_SYNC_GROUP_MODE_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.1, AUGUSTUS_LOOP_PLUGIN_LL_FEEDBACK_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.1, AUGUSTUS_LOOP_PLUGIN_RR_FEEDBACK_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)        
+        plugins.setParamValue(0.0, AUGUSTUS_LOOP_PLUGIN_SATURATION_ON_OFF_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)        
         
         self.__setRouting();
         
-        self.setSampleLength(self.__sample_length)
+        self.setSampleLength(self.__sample_length, True) 
     
-    def setSampleLength(self, sample_length):
+    def setSampleLength(self, sample_length, unconditionally = False):
         
-        if(sample_length != self.__sample_length):
-            plugins.setParamValue((1.0/3600.0) * sample_length, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-            plugins.setParamValue((1.0/3599.0) * (sample_length - 1), AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-            self.__sample_length = sample_length
+        if(sample_length != self.__sample_length or True == unconditionally):            
+            if(sample_length == SampleLength.LENGTH_1):
+                plugins.setParamValue((1.0 - 1.0) / 3599.0 , AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(1.0 / 3600.0, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.33, AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(1.0/128.0, AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+            elif(sample_length == SampleLength.LENGTH_2):
+                plugins.setParamValue((2.0 - 1.0) / 3599.0 , AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(2.0 / 3600.0, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.33, AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(2.0/128.0, AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+            elif(sample_length == SampleLength.LENGTH_4):
+                plugins.setParamValue((4.0 - 1.0) / 3599.0 , AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(4.0 / 3600.0, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.33, AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(4.0/128.0, AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+            elif(sample_length == SampleLength.LENGTH_8):
+                plugins.setParamValue((8.0 - 1.0) / 3599.0 , AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(8.0 / 3600.0, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.33, AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(8.0/128.0, AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+            elif(sample_length == SampleLength.LENGTH_16):
+                plugins.setParamValue((16.0 - 1.0) / 3599.0 , AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(16.0 / 3600.0, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.33, AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(16.0/128.0, AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+            elif(sample_length == SampleLength.LENGTH_32):
+                plugins.setParamValue((32.0 - 1.0) / 3599.0 , AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(32.0 / 3600.0, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.33, AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(32.0/128.0, AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+            elif(sample_length == SampleLength.LENGTH_64):
+                plugins.setParamValue((64.0 - 1.0) / 3599.0 , AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(64.0 / 3600.0, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.33, AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(64.0/128.0, AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+            elif(sample_length == SampleLength.LENGTH_128):
+                plugins.setParamValue((64.0 - 1.0) / 3599.0 , AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(64.0 / 3600.0, AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.33, AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+                plugins.setParamValue(128.0/128.0, AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+
+        self.__sample_length = sample_length
         
     def startRecording(self, sample_length):
         self.setSampleLength(sample_length)
-        plugins.setParamValue(1.0, AUGUSTUS_LOOP_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, AUGUSTUS_LOOP_PLUGIN_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
     
     def stopRecording(self):
-        plugins.setParamValue(0.0, AUGUSTUS_LOOP_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        plugins.setParamValue(0.0, AUGUSTUS_LOOP_PLUGIN_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
         
     def __setRouting(self):
         mixer.setRouteTo(MIC_ROUTE_CHANNEL, self.__mixer_track, 1)
