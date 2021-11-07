@@ -182,6 +182,7 @@ class Track():
 
     def clear(self):
         plugins.setParamValue(1, AUGUSTUS_LOOP_PLUGIN_CLEAR_LOOP_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+        self.setTrackVolume(0.8)
 
     def resetTrackParams(self):
         plugins.setParamValue(0.0, AUGUSTUS_LOOP_PLUGIN_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
@@ -263,18 +264,20 @@ class Track():
 
         if ResampleMode.FROM_LOOPER_TO_TRACK == self.__resample_mode:
             
-            mixer.setRouteTo(LOOPER_1_CHANNEL, LOOPER_ALL_CHANNEL, 0)
-            
             if self.__looper_number == Looper.Looper_1:
+                mixer.setRouteTo(LOOPER_1_CHANNEL, LOOPER_ALL_CHANNEL, 0)
                 mixer.setRouteTo(self.__mixer_track, LOOPER_1_FX_1_CHANNEL, 0)
                 mixer.setRouteTo(LOOPER_1_CHANNEL, self.__mixer_track, 1)
             elif self.__looper_number == Looper.Looper_2:
+                mixer.setRouteTo(LOOPER_2_CHANNEL, LOOPER_ALL_CHANNEL, 0)
                 mixer.setRouteTo(self.__mixer_track, LOOPER_2_FX_1_CHANNEL, 0)
                 mixer.setRouteTo(LOOPER_2_CHANNEL, self.__mixer_track, 1)
             elif self.__looper_number == Looper.Looper_3:
+                mixer.setRouteTo(LOOPER_3_CHANNEL, LOOPER_ALL_CHANNEL, 0)
                 mixer.setRouteTo(self.__mixer_track, LOOPER_3_FX_1_CHANNEL, 0)
                 mixer.setRouteTo(LOOPER_3_CHANNEL, self.__mixer_track, 1)
             elif self.__looper_number == Looper.Looper_4:
+                mixer.setRouteTo(LOOPER_4_CHANNEL, LOOPER_ALL_CHANNEL, 0)
                 mixer.setRouteTo(self.__mixer_track, LOOPER_4_FX_1_CHANNEL, 0)
                 mixer.setRouteTo(LOOPER_4_CHANNEL, self.__mixer_track, 1)
                 
@@ -305,18 +308,20 @@ class Track():
             if self.__looper_number == Looper.Looper_1:
                 mixer.setRouteTo(LOOPER_1_CHANNEL, self.__mixer_track, 0)
                 mixer.setRouteTo(self.__mixer_track, LOOPER_1_FX_1_CHANNEL, 1)
+                mixer.setRouteTo(LOOPER_1_CHANNEL, LOOPER_ALL_CHANNEL, 1)
             elif self.__looper_number == Looper.Looper_2:
                 mixer.setRouteTo(LOOPER_2_CHANNEL, self.__mixer_track, 0)
                 mixer.setRouteTo(self.__mixer_track, LOOPER_2_FX_1_CHANNEL, 1)
+                mixer.setRouteTo(LOOPER_2_CHANNEL, LOOPER_ALL_CHANNEL, 1)
             elif self.__looper_number == Looper.Looper_3:
                 mixer.setRouteTo(LOOPER_3_CHANNEL, self.__mixer_track, 0)
                 mixer.setRouteTo(self.__mixer_track, LOOPER_3_FX_1_CHANNEL, 1)
+                mixer.setRouteTo(LOOPER_3_CHANNEL, LOOPER_ALL_CHANNEL, 1)
             elif self.__looper_number == Looper.Looper_4:
                 mixer.setRouteTo(LOOPER_4_CHANNEL, self.__mixer_track, 0)
                 mixer.setRouteTo(self.__mixer_track, LOOPER_4_FX_1_CHANNEL, 1)
+                mixer.setRouteTo(LOOPER_4_CHANNEL, LOOPER_ALL_CHANNEL, 1)
             self.__resample_mode = ResampleMode.NONE
-            
-            mixer.setRouteTo(LOOPER_1_CHANNEL, LOOPER_ALL_CHANNEL, 1)
             
         elif ResampleMode.FROM_ALL_LOOPERS_TO_TRACK == self.__resample_mode:
             
@@ -398,6 +403,7 @@ class Looper():
         for track_id in self.__tracks:
             self.__tracks[track_id].clear()
             self.__tracks[track_id].resetTrackParams()
+            self.__tracks[track_id].setSideChainLevel(0.0)
 
     def clearTrack(self, track_id):
             self.__tracks[track_id].clear()
@@ -517,6 +523,7 @@ class KorgKaossPad3Plus_LooperInstance:
         print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.clear.__name__)
         for looper_id in self.__loopers:
             self.__loopers[looper_id].clearLooper()
+        self.__selected_looper = Looper.Looper_1
 
     def clearTrack(self, track_id):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperInstance.clearTrack.__name__ + ": track - " + str(track_id))
