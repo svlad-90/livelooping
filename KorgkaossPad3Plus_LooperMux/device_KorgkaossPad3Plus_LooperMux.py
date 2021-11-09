@@ -182,6 +182,9 @@ class Track():
         self.__view.updateSampleLength(self.__sample_length)
         self.setTrackVolume(MAX_VOLUME_LEVEL_VALUE)
 
+    def getResampleMode(self):
+        return self.__resample_mode
+
     def setLooperVolume(self, looper_volume):
         mixer.setTrackVolume(self.__mixer_track, looper_volume)
 
@@ -189,6 +192,10 @@ class Track():
         self.__volume = track_volume
         plugins.setParamValue(track_volume, PANOMATIC_VOLUME_PARAM_INDEX, self.__mixer_track, TRACK_PANOMATIC_VOLUME_PLUGIN_MIXER_SLOT_INDEX)
         self.updateVolume()
+        
+    def __setTrackVolumeActivation(self, track_volume_activation):
+        parameter_id = findSurfaceControlElementIdByName("L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "VA", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(track_volume_activation, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
     def clear(self):
         plugins.setParamValue(1, AUGUSTUS_LOOP_PLUGIN_CLEAR_LOOP_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
@@ -198,6 +205,7 @@ class Track():
         self.__isPlaybackActive = False
         self.__view.setTrackPlaybackState(self.__track_number, self.__isPlaybackActive)
         self.setSampleLength(SampleLength.LENGTH_0)
+        self.__setTrackVolumeActivation(1.0)
 
     def resetTrackParams(self):
         plugins.setParamValue(0.0, AUGUSTUS_LOOP_PLUGIN_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
@@ -281,6 +289,8 @@ class Track():
         
         self.setSampleLength(sample_length)
         self.__resample_mode = resample_mode
+        
+        self.__setTrackVolumeActivation(0.0)
 
         plugins.setParamValue(1.0, AUGUSTUS_LOOP_PLUGIN_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
 
@@ -327,6 +337,8 @@ class Track():
 
     def stopRecording(self):
         plugins.setParamValue(0.0, AUGUSTUS_LOOP_PLUGIN_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+
+        self.__setTrackVolumeActivation(1.0)
 
         if ResampleMode.FROM_LOOPER_TO_TRACK == self.__resample_mode:
             
@@ -436,6 +448,9 @@ class Looper():
         for track_id in self.__tracks:
             self.__tracks[track_id].onInitScript()
 
+    def getResampleMode(self, track_id):
+        return self.__tracks[track_id].getResampleMode()
+
     def getLooperNumber(self):
         return self.__looper_number
 
@@ -467,6 +482,13 @@ class Looper():
         self.__tracks[track_id].startRecording(sample_length, resample_mode)
 
     def stopRecordingTrack(self, track_id):
+        
+        if self.__tracks[track_id].getResampleMode() == ResampleMode.FROM_LOOPER_TO_TRACK:
+            # clear all tracks of the looper, except the one for which recording is over
+            for track_id_it in self.__tracks:
+                if track_id_it != track_id:
+                    self.__tracks[track_id_it].clear()
+                    
         self.__tracks[track_id].stopRecording()
 
     def setSideChainLevel(self, track_id, sidechain_level):
@@ -608,6 +630,7 @@ class KorgKaossPad3Plus_LooperMux:
         self.selectLooper(Looper.Looper_1)
         self.setLooperVolume(MAX_VOLUME_LEVEL_VALUE)
         self.setDropIntencity(0.0)
+        self.setSampleLength(SampleLength.LENGTH_1)
         self.setResampleMode(ResampleMode.NONE)
         self.__view.clear()
 
@@ -639,12 +662,17 @@ class KorgKaossPad3Plus_LooperMux:
 
     def stopRecordingTrack(self, track_id):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.stopRecordingTrack.__name__ + ": track - " + str(track_id))
+
+        if self.__loopers[self.__selected_looper].getResampleMode(track_id) == ResampleMode.FROM_ALL_LOOPERS_TO_TRACK:
+            # clear all tracks of all loopers, except the one for which recording is over
+            for looper_id in self.__loopers:
+                for track_id_it in self.__loopers[looper_id].getTracks():
+                    if looper_id != self.__selected_looper or track_id_it != track_id:
+                        self.__loopers[looper_id].clearTrack(track_id_it)
+
         self.__loopers[self.__selected_looper].stopRecordingTrack(track_id)
-
         self.__loopers[self.__selected_looper].getTrack(track_id).setRoutingLevel(0.0)
-
         self.setMasterRoutingLevel(MAX_VOLUME_LEVEL_VALUE)
-        
         self.__resample_mode = ResampleMode.NONE
 
     def setSideChainLevel(self, track_id, sidechain_level):
