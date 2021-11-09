@@ -75,6 +75,8 @@ LOOPER_2_INITIAL_MIXER_TRACK = 27
 LOOPER_3_INITIAL_MIXER_TRACK = 35
 LOOPER_4_INITIAL_MIXER_TRACK = 43
 
+RESAMPLING_VOLUME_THRESHOLD =  0.1
+
 KP3_PLUS_ABCD_PRESSED        = 100
 KP3_PLUS_ABCD_RELEASED       = 64
 
@@ -176,6 +178,7 @@ class Track():
         self.__resample_mode = ResampleMode.NONE
         self.__volume = MAX_VOLUME_LEVEL_VALUE
         self.__isPlaybackActive = False
+        self.__isRecordingInProgress = False
 
     def onInitScript(self):
         self.resetTrackParams()
@@ -192,7 +195,10 @@ class Track():
         self.__volume = track_volume
         plugins.setParamValue(track_volume, PANOMATIC_VOLUME_PARAM_INDEX, self.__mixer_track, TRACK_PANOMATIC_VOLUME_PLUGIN_MIXER_SLOT_INDEX)
         self.updateVolume()
-        
+    
+    def getTrackVolume(self):
+        return self.__volume
+    
     def __setTrackVolumeActivation(self, track_volume_activation):
         parameter_id = findSurfaceControlElementIdByName("L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "VA", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(track_volume_activation, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
@@ -334,58 +340,64 @@ class Track():
             self.__view.setTrackRecordingState(self.__track_number, 1.0)
         else:
             self.__view.setTrackResamplingState(self.__track_number, 1.0)
+            
+        self.__isRecordingInProgress = True
 
     def stopRecording(self):
-        plugins.setParamValue(0.0, AUGUSTUS_LOOP_PLUGIN_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-
-        self.__setTrackVolumeActivation(1.0)
-
-        if ResampleMode.FROM_LOOPER_TO_TRACK == self.__resample_mode:
-            
-            mixer.setRouteTo(self.__mixer_track, LOOPER_ALL_FX_1_CHANNEL, 0)
-            
-            if self.__looper_number == Looper.Looper_1:
-                mixer.setRouteTo(LOOPER_1_CHANNEL, self.__mixer_track, 0)
-                mixer.setRouteTo(self.__mixer_track, LOOPER_1_FX_1_CHANNEL, 1)
-                mixer.setRouteTo(LOOPER_1_CHANNEL, LOOPER_ALL_CHANNEL, 1)
-            elif self.__looper_number == Looper.Looper_2:
-                mixer.setRouteTo(LOOPER_2_CHANNEL, self.__mixer_track, 0)
-                mixer.setRouteTo(self.__mixer_track, LOOPER_2_FX_1_CHANNEL, 1)
-                mixer.setRouteTo(LOOPER_2_CHANNEL, LOOPER_ALL_CHANNEL, 1)
-            elif self.__looper_number == Looper.Looper_3:
-                mixer.setRouteTo(LOOPER_3_CHANNEL, self.__mixer_track, 0)
-                mixer.setRouteTo(self.__mixer_track, LOOPER_3_FX_1_CHANNEL, 1)
-                mixer.setRouteTo(LOOPER_3_CHANNEL, LOOPER_ALL_CHANNEL, 1)
-            elif self.__looper_number == Looper.Looper_4:
-                mixer.setRouteTo(LOOPER_4_CHANNEL, self.__mixer_track, 0)
-                mixer.setRouteTo(self.__mixer_track, LOOPER_4_FX_1_CHANNEL, 1)
-                mixer.setRouteTo(LOOPER_4_CHANNEL, LOOPER_ALL_CHANNEL, 1)
-            
-        elif ResampleMode.FROM_ALL_LOOPERS_TO_TRACK == self.__resample_mode:
-            
-            mixer.setRouteTo(self.__mixer_track, LOOPER_ALL_FX_1_CHANNEL, 0)
-            mixer.setRouteTo(LOOPER_ALL_CHANNEL, self.__mixer_track, 0)
-            
-            if self.__looper_number == Looper.Looper_1:
-                mixer.setRouteTo(self.__mixer_track, LOOPER_1_FX_1_CHANNEL, 1)
-            elif self.__looper_number == Looper.Looper_2:
-                mixer.setRouteTo(self.__mixer_track, LOOPER_2_FX_1_CHANNEL, 1)
-            elif self.__looper_number == Looper.Looper_3:
-                mixer.setRouteTo(self.__mixer_track, LOOPER_3_FX_1_CHANNEL, 1)
-            elif self.__looper_number == Looper.Looper_4:
-                mixer.setRouteTo(self.__mixer_track, LOOPER_4_FX_1_CHANNEL, 1)
-            
-            mixer.setRouteTo(LOOPER_ALL_CHANNEL, LOOPER_ALL_FX_1_CHANNEL, 1)
         
-        if self.__resample_mode == ResampleMode.NONE:
-            self.__view.setTrackRecordingState(self.__track_number, 0.0)
-        else:
-            self.__view.setTrackResamplingState(self.__track_number, 0.0)
+        if self.__isRecordingInProgress == True:
+            plugins.setParamValue(0.0, AUGUSTUS_LOOP_PLUGIN_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
+    
+            self.__setTrackVolumeActivation(1.0)
+    
+            if ResampleMode.FROM_LOOPER_TO_TRACK == self.__resample_mode:
+                
+                mixer.setRouteTo(self.__mixer_track, LOOPER_ALL_FX_1_CHANNEL, 0)
+                
+                if self.__looper_number == Looper.Looper_1:
+                    mixer.setRouteTo(LOOPER_1_CHANNEL, self.__mixer_track, 0)
+                    mixer.setRouteTo(self.__mixer_track, LOOPER_1_FX_1_CHANNEL, 1)
+                    mixer.setRouteTo(LOOPER_1_CHANNEL, LOOPER_ALL_CHANNEL, 1)
+                elif self.__looper_number == Looper.Looper_2:
+                    mixer.setRouteTo(LOOPER_2_CHANNEL, self.__mixer_track, 0)
+                    mixer.setRouteTo(self.__mixer_track, LOOPER_2_FX_1_CHANNEL, 1)
+                    mixer.setRouteTo(LOOPER_2_CHANNEL, LOOPER_ALL_CHANNEL, 1)
+                elif self.__looper_number == Looper.Looper_3:
+                    mixer.setRouteTo(LOOPER_3_CHANNEL, self.__mixer_track, 0)
+                    mixer.setRouteTo(self.__mixer_track, LOOPER_3_FX_1_CHANNEL, 1)
+                    mixer.setRouteTo(LOOPER_3_CHANNEL, LOOPER_ALL_CHANNEL, 1)
+                elif self.__looper_number == Looper.Looper_4:
+                    mixer.setRouteTo(LOOPER_4_CHANNEL, self.__mixer_track, 0)
+                    mixer.setRouteTo(self.__mixer_track, LOOPER_4_FX_1_CHANNEL, 1)
+                    mixer.setRouteTo(LOOPER_4_CHANNEL, LOOPER_ALL_CHANNEL, 1)
+                
+            elif ResampleMode.FROM_ALL_LOOPERS_TO_TRACK == self.__resample_mode:
+                
+                mixer.setRouteTo(self.__mixer_track, LOOPER_ALL_FX_1_CHANNEL, 0)
+                mixer.setRouteTo(LOOPER_ALL_CHANNEL, self.__mixer_track, 0)
+                
+                if self.__looper_number == Looper.Looper_1:
+                    mixer.setRouteTo(self.__mixer_track, LOOPER_1_FX_1_CHANNEL, 1)
+                elif self.__looper_number == Looper.Looper_2:
+                    mixer.setRouteTo(self.__mixer_track, LOOPER_2_FX_1_CHANNEL, 1)
+                elif self.__looper_number == Looper.Looper_3:
+                    mixer.setRouteTo(self.__mixer_track, LOOPER_3_FX_1_CHANNEL, 1)
+                elif self.__looper_number == Looper.Looper_4:
+                    mixer.setRouteTo(self.__mixer_track, LOOPER_4_FX_1_CHANNEL, 1)
+                
+                mixer.setRouteTo(LOOPER_ALL_CHANNEL, LOOPER_ALL_FX_1_CHANNEL, 1)
             
-        self.__resample_mode = ResampleMode.NONE
-        
-        self.__isPlaybackActive = True
-        self.__view.setTrackPlaybackState(self.__track_number, self.__isPlaybackActive)
+            if self.__resample_mode == ResampleMode.NONE:
+                self.__view.setTrackRecordingState(self.__track_number, 0.0)
+            else:
+                self.__view.setTrackResamplingState(self.__track_number, 0.0)
+                
+            self.__resample_mode = ResampleMode.NONE
+            
+            self.__isPlaybackActive = True
+            self.__view.setTrackPlaybackState(self.__track_number, self.__isPlaybackActive)
+            
+            self.__isRecordingInProgress = False
 
     def updateStats(self):
         
@@ -419,6 +431,7 @@ class Track():
 
     def updateVolume(self):
         self.__view.setTrackVolume(self.__track_number, self.__volume)
+        self.__view.setTrackResampleThreasholdActive(self.__track_number, self.__volume <= RESAMPLING_VOLUME_THRESHOLD)
 
 class Looper():
     Looper_1    = 0
@@ -468,6 +481,9 @@ class Looper():
     def setTrackVolume(self, track_id, track_volume):
         self.__tracks.get(track_id).setTrackVolume(track_volume)
 
+    def getTrackVolume(self, track_id):
+        return self.__tracks.get(track_id).getTrackVolume()
+
     def clearLooper(self):
         self.__looper_volume = MAX_VOLUME_LEVEL_VALUE
         for track_id in self.__tracks:
@@ -486,7 +502,7 @@ class Looper():
         if self.__tracks[track_id].getResampleMode() == ResampleMode.FROM_LOOPER_TO_TRACK:
             # clear all tracks of the looper, except the one for which recording is over
             for track_id_it in self.__tracks:
-                if track_id_it != track_id:
+                if track_id_it != track_id and self.__tracks[track_id_it].getTrackVolume() > RESAMPLING_VOLUME_THRESHOLD:
                     self.__tracks[track_id_it].clear()
                     
         self.__tracks[track_id].stopRecording()
@@ -634,6 +650,9 @@ class KorgKaossPad3Plus_LooperMux:
         self.setResampleMode(ResampleMode.NONE)
         self.__view.clear()
 
+    def clearCurrentLooper(self):
+        self.__loopers[self.__selected_looper].clearLooper()
+
     def clearTrack(self, track_id):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.clearTrack.__name__ + ": track - " + str(track_id))
         self.__loopers[self.__selected_looper].clearTrack(track_id)
@@ -667,7 +686,7 @@ class KorgKaossPad3Plus_LooperMux:
             # clear all tracks of all loopers, except the one for which recording is over
             for looper_id in self.__loopers:
                 for track_id_it in self.__loopers[looper_id].getTracks():
-                    if looper_id != self.__selected_looper or track_id_it != track_id:
+                    if ( looper_id != self.__selected_looper or track_id_it != track_id ) and self.__loopers[looper_id].getTrackVolume(track_id_it) > RESAMPLING_VOLUME_THRESHOLD:
                         self.__loopers[looper_id].clearTrack(track_id_it)
 
         self.__loopers[self.__selected_looper].stopRecordingTrack(track_id)
@@ -834,6 +853,10 @@ class View:
         parameter_id = findSurfaceControlElementIdByName("T" + str(track_id + 1) + "U", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sample_length_units / 10, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
     
+    def setTrackResampleThreasholdActive(self, track_id, threshold_active):
+        parameter_id = findSurfaceControlElementIdByName("T" + str(track_id + 1) + "RT", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(threshold_active, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    
 view = View()
 looper = KorgKaossPad3Plus_LooperMux(view)
 
@@ -880,7 +903,7 @@ def OnMidiMsg(event):
     elif event.data1 == MIDI_CC_LOOPER_4 and looper.getShiftPressedState():
         looper.selectLooper(Looper.Looper_4)
     elif event.data1 == MIDI_CC_CLEAR_LOOPER and looper.getShiftPressedState():
-        looper.clear()
+        looper.clearCurrentLooper()
     elif event.data1 == MIDI_CC_PLAY_STOP and looper.getShiftPressedState():
         looper.playStop()
     elif event.data1 == MIDI_CC_SAMPLE_LENGTH_1:
@@ -923,19 +946,19 @@ def OnMidiMsg(event):
         looper.setTrackVolume(3, (event.data2 / MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
     elif event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
         looper.startRecordingTrack(Track.Track_1)
-    elif event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED and not looper.getShiftPressedState():
+    elif event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
         looper.stopRecordingTrack(Track.Track_1)
     elif event.data1 == MIDI_CC_TRACK_2_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
         looper.startRecordingTrack(Track.Track_2)
-    elif event.data1 == MIDI_CC_TRACK_2_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED and not looper.getShiftPressedState():
+    elif event.data1 == MIDI_CC_TRACK_2_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
         looper.stopRecordingTrack(Track.Track_2)
     elif event.data1 == MIDI_CC_TRACK_3_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
         looper.startRecordingTrack(Track.Track_3)
-    elif event.data1 == MIDI_CC_TRACK_3_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED and not looper.getShiftPressedState():
+    elif event.data1 == MIDI_CC_TRACK_3_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
         looper.stopRecordingTrack(Track.Track_3)
     elif event.data1 == MIDI_CC_TRACK_4_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
         looper.startRecordingTrack(Track.Track_4)
-    elif event.data1 == MIDI_CC_TRACK_4_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED and not looper.getShiftPressedState():
+    elif event.data1 == MIDI_CC_TRACK_4_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
         looper.stopRecordingTrack(Track.Track_4)
     elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_1:
         looper.setSideChainLevel(Track.Track_1, event.data2 / MIDI_MAX_VALUE)
