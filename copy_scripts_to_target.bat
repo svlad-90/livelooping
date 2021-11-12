@@ -1,1 +1,2 @@
 xcopy "D:\Development\Projects\Live-looping\Livelooping" "C:\Users\Dream Machines\Documents\Image-Line\FL Studio\Settings\Hardware" /E /Y
+xcopy "D:\Development\Projects\Live-looping\Livelooping\common\" "C:\Program Files\Image-Line\Shared\Python\Lib\common\" /E /Y

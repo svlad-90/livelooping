@@ -1,15 +1,17 @@
-# name=KorgKaossPad3Plus_LooperMux
-device_name="KorgKaossPad3Plus_LooperMux"
+# name=device_KorgKaossPad3Plus_LooperMux
+device_name="device_KorgKaossPad3Plus_LooperMux"
 print(device_name + ': started')
 
 # python imports
 import math
-import time
 
 # FL imports
 import transport
 import mixer
 import plugins
+
+# internal imports 
+from common import fl_helper
 
 # MIDI CC
 MIDI_CC_SHIFT               = 95
@@ -75,6 +77,8 @@ LOOPER_2_INITIAL_MIXER_TRACK = 27
 LOOPER_3_INITIAL_MIXER_TRACK = 35
 LOOPER_4_INITIAL_MIXER_TRACK = 43
 
+TEMPO_JOG_ROTATION_THRESHOLD = 5
+
 RESAMPLING_VOLUME_THRESHOLD =  0.1
 
 KP3_PLUS_ABCD_PRESSED        = 100
@@ -121,30 +125,6 @@ AUGUSTUS_LOOP_PLUGIN_SYNC_GROUP_MODE_PARAM_INDEX = 71
 ENDLESS_SMILE_PLUGIN_INTENSITY_PARAM_INDEX = 0
 
 PANOMATIC_VOLUME_PARAM_INDEX = 1
-
-TEMPO_JOG_ROTATION_THRESHOLD = 5
-
-MIDI_MAX_VALUE = 127
-
-def printAllPluginParameters(mixer_track, slot):
-
-    number_of_params = plugins.getParamCount(mixer_track, slot)
-    plugin_name = plugins.getPluginName(mixer_track, slot)
-
-    print("Parameters of the plugin \"" + plugin_name + "\":")
-
-    for param_index in range(number_of_params):
-        print( "#" + str(param_index) + ": param name - " + plugins.getParamName(param_index, mixer_track, slot) + \
-               " param value - " + str( plugins.getParamValue(param_index, mixer_track, slot) ) )
-
-def findSurfaceControlElementIdByName(control_element_name, slot_index):
-    number_of_parameters = plugins.getParamCount(MASTER_CHANNEL, slot_index)
-
-    for parameter_id in range(number_of_parameters):
-        parameter_name = plugins.getParamName(parameter_id, MASTER_CHANNEL, slot_index)
-        if(parameter_name == control_element_name):
-            return parameter_id
-    raise Exception("Control element " + control_element_name + " not found")
 
 class SampleLength:
     LENGTH_0 = 0
@@ -200,7 +180,7 @@ class Track():
         return self.__volume
     
     def __setTrackVolumeActivation(self, track_volume_activation):
-        parameter_id = findSurfaceControlElementIdByName("L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "VA", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "VA", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(track_volume_activation, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
     def clear(self):
@@ -417,16 +397,16 @@ class Track():
         mixer.setRouteTo(SYNTH_ROUTE_CHANNEL, self.__mixer_track, 0)
 
     def setRoutingLevel(self, routing_level):
-        parameter_id = findSurfaceControlElementIdByName("L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "M", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "M", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(routing_level, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        parameter_id = findSurfaceControlElementIdByName("L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "S", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "S", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(routing_level, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
     def setSideChainLevel(self, sidechain_level):
         self.__view.setSideChainLevel(self.__track_number, sidechain_level)
-        parameter_id = findSurfaceControlElementIdByName("M2L1T" + str(self.__track_number + 1) + "S", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "M2L1T" + str(self.__track_number + 1) + "S", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sidechain_level, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        parameter_id = findSurfaceControlElementIdByName("S2L1T" + str(self.__track_number + 1) + "S", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "S2L1T" + str(self.__track_number + 1) + "S", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sidechain_level, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
     def updateVolume(self):
@@ -658,9 +638,9 @@ class KorgKaossPad3Plus_LooperMux:
         self.__loopers[self.__selected_looper].clearTrack(track_id)
 
     def setMasterRoutingLevel(self, routing_level):
-        parameter_id = findSurfaceControlElementIdByName("MasterFX1M", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "MasterFX1M", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(routing_level, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        parameter_id = findSurfaceControlElementIdByName("MasterFX1S", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "MasterFX1S", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(routing_level, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
     def startRecordingTrack(self, selected_track_id):
@@ -714,17 +694,17 @@ class KorgKaossPad3Plus_LooperMux:
         
 class View:
     def setShiftPressedState(self, shift_pressed):
-        parameter_id = findSurfaceControlElementIdByName("Shift", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Shift", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(shift_pressed, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         self.resetToggleFlags()
         
     def setLooperVolume(self, looper_volume):
-        parameter_id = findSurfaceControlElementIdByName("Volume", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Volume", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(looper_volume, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         self.resetToggleFlags()
         
     def setDropIntencity(self, drop_intencity):
-        parameter_id = findSurfaceControlElementIdByName("Drop FX", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Drop FX", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(drop_intencity, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         self.resetToggleFlags()
         
@@ -735,36 +715,36 @@ class View:
             if i == selected_looper:
                 value = 1.0
             
-            parameter_id = findSurfaceControlElementIdByName("Looper " + str(i + 1), LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+            parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Looper " + str(i + 1), LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
             plugins.setParamValue(value, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         
         self.resetToggleFlags()
         
     def clear(self):
-        parameter_id = findSurfaceControlElementIdByName("Clear all", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Clear all", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(1.0, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         
     def __clearOff(self):
-        parameter_id = findSurfaceControlElementIdByName("Clear all", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Clear all", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(0.0, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         
     def __clearTracksOff(self):
         for i in range(Track.Track_4 + 1):
-            parameter_id = findSurfaceControlElementIdByName("T" + str(i + 1) + "_Clear", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+            parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T" + str(i + 1) + "_Clear", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
             plugins.setParamValue(0.0, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
     
     def setTrackVolume(self, track_index, track_volume):
-        parameter_id = findSurfaceControlElementIdByName("T" + str(track_index + 1) + "_Volume", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T" + str(track_index + 1) + "_Volume", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(track_volume, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         self.resetToggleFlags()
     
     def setPlay(self, value):
-        parameter_id = findSurfaceControlElementIdByName("Play", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Play", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(value, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         self.resetToggleFlags()
     
     def setSideChainLevel(self, track_id, sidechain_level):
-        parameter_id = findSurfaceControlElementIdByName("T" + str(track_id + 1) + "_Sidechain", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T" + str(track_id + 1) + "_Sidechain", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sidechain_level, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         self.resetToggleFlags()
         
@@ -783,31 +763,31 @@ class View:
             resample_looper = 0.0
             resample_all_loopers = 1.0
         
-        parameter_id = findSurfaceControlElementIdByName("Resample selected looper", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Resample selected looper", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(resample_looper, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        parameter_id = findSurfaceControlElementIdByName("Resample all loopers", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Resample all loopers", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(resample_all_loopers, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         
         self.resetToggleFlags()
         
     def setTrackRecordingState(self, track_id, recording_state):
-        parameter_id = findSurfaceControlElementIdByName("T" + str(track_id + 1) + "_Recording", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T" + str(track_id + 1) + "_Recording", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(recording_state, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         
         self.resetToggleFlags()
         
     def setTrackResamplingState(self, track_id, recording_state):
-        parameter_id = findSurfaceControlElementIdByName("T" + str(track_id + 1) + "_Resampling", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T" + str(track_id + 1) + "_Resampling", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(recording_state, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         
         self.resetToggleFlags()
     
     def setTrackClearState(self, track_id, recording_state):
-        parameter_id = findSurfaceControlElementIdByName("T" + str(track_id + 1) + "_Clear", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T" + str(track_id + 1) + "_Clear", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(recording_state, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
     
     def setTrackPlaybackState(self, track_id, recording_state):
-        parameter_id = findSurfaceControlElementIdByName("T" + str(track_id + 1) + "_Playback", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T" + str(track_id + 1) + "_Playback", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(recording_state, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         
         self.resetToggleFlags()
@@ -820,7 +800,7 @@ class View:
         
         for i in range(8):
             i_sample_length = int(math.pow(2, i))
-            parameter_id = findSurfaceControlElementIdByName("Length_" + str(i_sample_length), LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+            parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Length_" + str(i_sample_length), LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
             
             value = 0
             
@@ -834,11 +814,11 @@ class View:
         tempo_dozens = (tempo % 100) // 10
         tempo_units = (tempo % 10)
         
-        parameter_id = findSurfaceControlElementIdByName("TH", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "TH", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(tempo_hundred / 10, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        parameter_id = findSurfaceControlElementIdByName("TD", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "TD", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(tempo_dozens / 10, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        parameter_id = findSurfaceControlElementIdByName("TU", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "TU", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(tempo_units / 10, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         
     def setTrackSampleLength(self, track_id, sample_length):
@@ -846,15 +826,15 @@ class View:
         sample_length_dozens = (sample_length % 100) // 10
         sample_length_units = (sample_length % 10)
         
-        parameter_id = findSurfaceControlElementIdByName("T" + str(track_id + 1) + "H", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T" + str(track_id + 1) + "H", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sample_length_hundred / 10, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        parameter_id = findSurfaceControlElementIdByName("T" + str(track_id + 1) + "D", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T" + str(track_id + 1) + "D", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sample_length_dozens / 10, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        parameter_id = findSurfaceControlElementIdByName("T" + str(track_id + 1) + "U", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T" + str(track_id + 1) + "U", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sample_length_units / 10, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
     
     def setTrackResampleThreasholdActive(self, track_id, threshold_active):
-        parameter_id = findSurfaceControlElementIdByName("T" + str(track_id + 1) + "RT", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T" + str(track_id + 1) + "RT", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(threshold_active, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
     
 view = View()
@@ -889,7 +869,7 @@ def OnMidiMsg(event):
 
 
     if event.data1 == MIDI_CC_LOOPER_VOLUME and looper.getShiftPressedState():
-        looper.setDropIntencity( (MIDI_MAX_VALUE - event.data2) / MIDI_MAX_VALUE )
+        looper.setDropIntencity( (fl_helper.MIDI_MAX_VALUE - event.data2) / fl_helper.MIDI_MAX_VALUE )
     elif event.data1 == MIDI_CC_RESAMPLE_MODE_FROM_LOOPER_TO_TRACK and looper.getShiftPressedState():
         looper.setResampleMode(ResampleMode.FROM_LOOPER_TO_TRACK)
     elif event.data1 == MIDI_CC_RESAMPLE_MODE_FROM_ALL_LOOPERS_TO_TRACK and looper.getShiftPressedState():
@@ -931,19 +911,19 @@ def OnMidiMsg(event):
     elif event.data1 == MIDI_CC_TRACK_4_CLEAR and event.data2 == KP3_PLUS_ABCD_PRESSED and looper.getShiftPressedState():
         looper.clearTrack(Track.Track_4)
     elif event.data1 == MIDI_CC_SHIFT:
-        looper.setShiftPressedState(event.data2 == MIDI_MAX_VALUE)
+        looper.setShiftPressedState(event.data2 == fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_TEMPO and looper.getShiftPressedState():
-        looper.setTempo(800 + int((event.data2 / MIDI_MAX_VALUE) * 1000.0)) # from 80 to 180
+        looper.setTempo(800 + int((event.data2 / fl_helper.MIDI_MAX_VALUE) * 1000.0)) # from 80 to 180
     elif event.data1 == MIDI_CC_LOOPER_VOLUME:
-        looper.setLooperVolume((event.data2 / MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
+        looper.setLooperVolume((event.data2 / fl_helper.MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
     elif event.data1 == MIDI_CC_TRACK_VOLUME_1:
-        looper.setTrackVolume(0, (event.data2 / MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
+        looper.setTrackVolume(0, (event.data2 / fl_helper.MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
     elif event.data1 == MIDI_CC_TRACK_VOLUME_2:
-        looper.setTrackVolume(1, (event.data2 / MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
+        looper.setTrackVolume(1, (event.data2 / fl_helper.MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
     elif event.data1 == MIDI_CC_TRACK_VOLUME_3:
-        looper.setTrackVolume(2, (event.data2 / MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
+        looper.setTrackVolume(2, (event.data2 / fl_helper.MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
     elif event.data1 == MIDI_CC_TRACK_VOLUME_4:
-        looper.setTrackVolume(3, (event.data2 / MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
+        looper.setTrackVolume(3, (event.data2 / fl_helper.MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
     elif event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
         looper.startRecordingTrack(Track.Track_1)
     elif event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
@@ -961,12 +941,12 @@ def OnMidiMsg(event):
     elif event.data1 == MIDI_CC_TRACK_4_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
         looper.stopRecordingTrack(Track.Track_4)
     elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_1:
-        looper.setSideChainLevel(Track.Track_1, event.data2 / MIDI_MAX_VALUE)
+        looper.setSideChainLevel(Track.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_2:
-        looper.setSideChainLevel(Track.Track_2, event.data2 / MIDI_MAX_VALUE)
+        looper.setSideChainLevel(Track.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_3:
-        looper.setSideChainLevel(Track.Track_3, event.data2 / MIDI_MAX_VALUE)
+        looper.setSideChainLevel(Track.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_4:
-        looper.setSideChainLevel(Track.Track_4, event.data2 / MIDI_MAX_VALUE)
+        looper.setSideChainLevel(Track.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
 
     event.handled = True
