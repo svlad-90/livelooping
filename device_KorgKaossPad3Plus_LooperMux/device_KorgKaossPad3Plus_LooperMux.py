@@ -379,6 +379,10 @@ class Track():
             
             self.__isRecordingInProgress = False
 
+
+    def isRecordingInProgress(self):
+        return self.__isRecordingInProgress
+
     def updateStats(self):
         
         self.__view.setTrackPlaybackState(self.__track_number, self.__isPlaybackActive)
@@ -500,6 +504,14 @@ class Looper():
     
     def updateLooperVolume(self):
         self.__view.setLooperVolume(self.__looper_volume)
+        
+    def isTrackRecordingInProgress(self, track_id):
+        return self.__tracks[track_id].isRecordingInProgress()
+    
+    def stopAllRecordings(self):
+        for track_id in self.__tracks:
+            if self.__tracks[track_id].isRecordingInProgress():
+                self.__tracks[track_id].stopRecording()
 
 class PressedSamplerButton:
     A_PRESSED = 0;
@@ -599,11 +611,16 @@ class KorgKaossPad3Plus_LooperMux:
 
     def selectLooper(self, selected_looper):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.selectLooper.__name__ + ": selected looper - " + str(selected_looper))
-        self.__selected_looper = selected_looper
-        self.__loopers[self.__selected_looper].updateTracksVolume()
-        self.__loopers[self.__selected_looper].updateTracksStats()
-        self.__loopers[self.__selected_looper].updateLooperVolume()
-        self.__view.selectLooper(selected_looper)
+        
+        if selected_looper != self.__selected_looper:
+            
+            self.__loopers[self.__selected_looper].stopAllRecordings()
+            
+            self.__selected_looper = selected_looper
+            self.__loopers[self.__selected_looper].updateTracksVolume()
+            self.__loopers[self.__selected_looper].updateTracksStats()
+            self.__loopers[self.__selected_looper].updateLooperVolume()
+            self.__view.selectLooper(selected_looper)
 
     def setLooperVolume(self, looper_volume):
         self.__loopers.get(self.__selected_looper).setLooperVolume(looper_volume)
@@ -643,8 +660,21 @@ class KorgKaossPad3Plus_LooperMux:
         parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "MasterFX1S", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(routing_level, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
-    def startRecordingTrack(self, selected_track_id):
-        print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.startRecordingTrack.__name__ + ": track - " + str(selected_track_id) + ", resample mode - " + str(self.__resample_mode))
+    def changeRecordingState(self, selected_track_id):
+            print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.changeRecordingState.__name__ + ": track - " + str(selected_track_id))
+
+            if not self.__loopers[self.__selected_looper].isTrackRecordingInProgress(selected_track_id):
+                self.__startRecordingTrack(selected_track_id)
+                
+                for track_id in self.__loopers[self.__selected_looper].getTracks():
+                    if track_id != selected_track_id:
+                        self.__stopRecordingTrack(track_id)
+                
+            else:
+                self.__stopRecordingTrack(selected_track_id)
+
+    def __startRecordingTrack(self, selected_track_id):
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.__startRecordingTrack.__name__ + ": track - " + str(selected_track_id) + ", resample mode - " + str(self.__resample_mode))
         self.__loopers[self.__selected_looper].startRecordingTrack(selected_track_id, self.__selectedSampleLength, self.__resample_mode)
 
         for looper_id in self.__loopers:
@@ -659,8 +689,8 @@ class KorgKaossPad3Plus_LooperMux:
 
         self.setMasterRoutingLevel(0.0)
 
-    def stopRecordingTrack(self, track_id):
-        print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.stopRecordingTrack.__name__ + ": track - " + str(track_id))
+    def __stopRecordingTrack(self, track_id):
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.__stopRecordingTrack.__name__ + ": track - " + str(track_id))
 
         if self.__loopers[self.__selected_looper].getResampleMode(track_id) == ResampleMode.FROM_ALL_LOOPERS_TO_TRACK:
             # clear all tracks of all loopers, except the one for which recording is over
@@ -925,21 +955,13 @@ def OnMidiMsg(event):
     elif event.data1 == MIDI_CC_TRACK_VOLUME_4:
         looper.setTrackVolume(3, (event.data2 / fl_helper.MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
     elif event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
-        looper.startRecordingTrack(Track.Track_1)
-    elif event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
-        looper.stopRecordingTrack(Track.Track_1)
+        looper.changeRecordingState(Track.Track_1)
     elif event.data1 == MIDI_CC_TRACK_2_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
-        looper.startRecordingTrack(Track.Track_2)
-    elif event.data1 == MIDI_CC_TRACK_2_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
-        looper.stopRecordingTrack(Track.Track_2)
+        looper.changeRecordingState(Track.Track_2)
     elif event.data1 == MIDI_CC_TRACK_3_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
-        looper.startRecordingTrack(Track.Track_3)
-    elif event.data1 == MIDI_CC_TRACK_3_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
-        looper.stopRecordingTrack(Track.Track_3)
+        looper.changeRecordingState(Track.Track_3)
     elif event.data1 == MIDI_CC_TRACK_4_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
-        looper.startRecordingTrack(Track.Track_4)
-    elif event.data1 == MIDI_CC_TRACK_4_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
-        looper.stopRecordingTrack(Track.Track_4)
+        looper.changeRecordingState(Track.Track_4)
     elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_1:
         looper.setSideChainLevel(Track.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_2:

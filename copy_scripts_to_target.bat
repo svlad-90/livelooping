@@ -1,2 +1,3 @@
-xcopy "D:\Development\Projects\Live-looping\Livelooping" "C:\Users\Dream Machines\Documents\Image-Line\FL Studio\Settings\Hardware" /E /Y
+xcopy "D:\Development\Projects\Live-looping\Livelooping\device_KorgKaossPad3Plus_LooperMux\" "C:\Users\Dream Machines\Documents\Image-Line\FL Studio\Settings\Hardware\device_KorgKaossPad3Plus_LooperMux\" /E /Y
+xcopy "D:\Development\Projects\Live-looping\Livelooping\device_KorgKaossPad3Plus_SynthController\" "C:\Users\Dream Machines\Documents\Image-Line\FL Studio\Settings\Hardware\device_KorgKaossPad3Plus_SynthController\" /E /Y
 xcopy "D:\Development\Projects\Live-looping\Livelooping\common\" "C:\Program Files\Image-Line\Shared\Python\Lib\common\" /E /Y
