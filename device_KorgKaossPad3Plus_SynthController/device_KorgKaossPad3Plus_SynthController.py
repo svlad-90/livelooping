@@ -88,6 +88,7 @@ FX_ACTIVATION_STATE_SLOT_INDEX = 10
 
 # PARAMS LIMITE
 MANIPULATOR_PARAMS_LIMIT = 200
+ENDLESS_SMILE_PARAMS_LIMIT = 1
 
 # PLUGIN PARAMETERS
 
@@ -103,7 +104,7 @@ def externalParamMapping(param_value):
     elif base_int == 0.0:
         return 0.0
     else:
-        first_part = 1 / ( 2 * ( 127.0 - base_int ) )
+        first_part = 1 / pow( 2, ( 127.0 - base_int ) )
         second_part = first_part * base_diff
         return first_part + second_part
 
@@ -142,6 +143,8 @@ class FXPreset:
                 
                 if mixer_slot == MANIPULATOR_SLOT_INDEX and param_id > MANIPULATOR_PARAMS_LIMIT:
                     break;
+                elif mixer_slot == ENDLESS_SMILE_SLOT_INDEX and param_id > ENDLESS_SMILE_PARAMS_LIMIT:
+                    break;
                 
                 param_value = plugins.getParamValue(param_id, SYNTH_FX_CHANNEL, mixer_slot)
                 
@@ -167,7 +170,7 @@ class FXPreset:
     def __applyParametersToPlugins(self):
         for mixer_slot in self.__parameters:
             
-            for param_id, param_value_str in enumerate(self.__parameters[mixer_slot]):
+            for param_id, param_value_str in reversed(list(enumerate(self.__parameters[mixer_slot]))):
                 
                 param_value = float(param_value_str)
                 
@@ -175,12 +178,12 @@ class FXPreset:
                     plugins.setParamValue(param_value, param_id, SYNTH_MAIN_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
                 else:
                     
-                    #plugin_name = plugins.getPluginName(SYNTH_FX_CHANNEL, mixer_slot)
-                    #param_name = plugins.getParamName(param_id, SYNTH_FX_CHANNEL, mixer_slot)
-                    
-                    #print("Apply parameter: plugin name - " + plugin_name + ", param - " + param_name + \
-                    #      ", param_value - " + str(param_value) + ", param_id - " + str(param_id) + \
-                    #      ", channel - " + str(SYNTH_FX_CHANNEL) + ", mixer_slot - " + str(mixer_slot))
+                    # plugin_name = plugins.getPluginName(SYNTH_FX_CHANNEL, mixer_slot)
+                    # param_name = plugins.getParamName(param_id, SYNTH_FX_CHANNEL, mixer_slot)
+                    #
+                    # print("Apply parameter: plugin name - " + plugin_name + ", param - " + param_name + \
+                    #       ", param_value - " + str(param_value) + ", param_id - " + str(param_id) + \
+                    #       ", channel - " + str(SYNTH_FX_CHANNEL) + ", mixer_slot - " + str(mixer_slot))
                     
                     plugins.setParamValue(param_value, param_id, SYNTH_FX_CHANNEL, mixer_slot)
 

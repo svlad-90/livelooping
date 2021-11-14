@@ -190,8 +190,10 @@ class Track():
         
         self.__isPlaybackActive = False
         self.__view.setTrackPlaybackState(self.__track_number, self.__isPlaybackActive)
-        self.setSampleLength(SampleLength.LENGTH_0)
-        self.__setTrackVolumeActivation(1.0)
+        
+        if False == self.__isRecordingInProgress:
+            self.__setTrackVolumeActivation(1.0)
+            self.setSampleLength(SampleLength.LENGTH_0)
 
     def resetTrackParams(self):
         plugins.setParamValue(0.0, AUGUSTUS_LOOP_PLUGIN_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
@@ -320,7 +322,7 @@ class Track():
             self.__view.setTrackRecordingState(self.__track_number, 1.0)
         else:
             self.__view.setTrackResamplingState(self.__track_number, 1.0)
-            
+                 
         self.__isRecordingInProgress = True
 
     def stopRecording(self):
@@ -590,13 +592,13 @@ class KorgKaossPad3Plus_LooperMux:
         if(False == shift_pressed):
             for element in self.__pressed_sampler_buttons:
                 if(element == PressedSamplerButton.A_PRESSED):
-                    self.startRecordingTrack(Track.Track_1)
+                    self.__startRecordingTrack(Track.Track_1)
                 elif(element == PressedSamplerButton.B_PRESSED):
-                    self.startRecordingTrack(Track.Track_2)
+                    self.__startRecordingTrack(Track.Track_2)
                 elif(element == PressedSamplerButton.C_PRESSED):
-                    self.startRecordingTrack(Track.Track_3)
+                    self.__startRecordingTrack(Track.Track_3)
                 elif(element == PressedSamplerButton.D_PRESSED):
-                    self.startRecordingTrack(Track.Track_4)
+                    self.__startRecordingTrack(Track.Track_4)
 
     def getShiftPressedState(self):
         return self.__shift_pressed
@@ -670,8 +672,11 @@ class KorgKaossPad3Plus_LooperMux:
                     if track_id != selected_track_id:
                         self.__stopRecordingTrack(track_id)
                 
+                self.setMasterRoutingLevel(0)
+                
             else:
                 self.__stopRecordingTrack(selected_track_id)
+                self.setMasterRoutingLevel(MAX_VOLUME_LEVEL_VALUE)
 
     def __startRecordingTrack(self, selected_track_id):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.__startRecordingTrack.__name__ + ": track - " + str(selected_track_id) + ", resample mode - " + str(self.__resample_mode))
@@ -687,8 +692,6 @@ class KorgKaossPad3Plus_LooperMux:
                 else:
                     self.__loopers[looper_id].getTrack(track_id).setRoutingLevel(0.0)
 
-        self.setMasterRoutingLevel(0.0)
-
     def __stopRecordingTrack(self, track_id):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.__stopRecordingTrack.__name__ + ": track - " + str(track_id))
 
@@ -701,7 +704,6 @@ class KorgKaossPad3Plus_LooperMux:
 
         self.__loopers[self.__selected_looper].stopRecordingTrack(track_id)
         self.__loopers[self.__selected_looper].getTrack(track_id).setRoutingLevel(0.0)
-        self.setMasterRoutingLevel(MAX_VOLUME_LEVEL_VALUE)
         self.__resample_mode = ResampleMode.NONE
 
     def setSideChainLevel(self, track_id, sidechain_level):
