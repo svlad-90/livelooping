@@ -84,8 +84,6 @@ RESAMPLING_VOLUME_THRESHOLD =  0.1
 KP3_PLUS_ABCD_PRESSED        = 100
 KP3_PLUS_ABCD_RELEASED       = 64
 
-MAX_VOLUME_LEVEL_VALUE   = 0.8
-
 # MASTER MIXER SLOT INDICES
 MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX = 0
 LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX = 1
@@ -156,14 +154,14 @@ class Track():
         self.__mixer_track = mixer_track
         self.__sample_length = SampleLength.LENGTH_0
         self.__resample_mode = ResampleMode.NONE
-        self.__volume = MAX_VOLUME_LEVEL_VALUE
+        self.__volume = fl_helper.MAX_VOLUME_LEVEL_VALUE
         self.__isPlaybackActive = False
         self.__isRecordingInProgress = False
 
     def onInitScript(self):
         self.resetTrackParams()
         self.__view.updateSampleLength(self.__sample_length)
-        self.setTrackVolume(MAX_VOLUME_LEVEL_VALUE)
+        self.setTrackVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
 
     def getResampleMode(self):
         return self.__resample_mode
@@ -185,7 +183,7 @@ class Track():
 
     def clear(self):
         plugins.setParamValue(1, AUGUSTUS_LOOP_PLUGIN_CLEAR_LOOP_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
-        self.setTrackVolume(MAX_VOLUME_LEVEL_VALUE)
+        self.setTrackVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
         self.__view.setTrackClearState(self.__track_number, 1.0)
         
         self.__isPlaybackActive = False
@@ -212,7 +210,7 @@ class Track():
 
         # looper 1 is the source of the sidechain
         if self.__looper_number == Looper.Looper_1:
-            plugins.setParamValue(MAX_VOLUME_LEVEL_VALUE, PEAK_CONTROLLER_BASE_PARAM_INDEX, self.__mixer_track, LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX)
+            plugins.setParamValue(fl_helper.MAX_VOLUME_LEVEL_VALUE, PEAK_CONTROLLER_BASE_PARAM_INDEX, self.__mixer_track, LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX)
             plugins.setParamValue(0.12, PEAK_CONTROLLER_VOLUME_PARAM_INDEX, self.__mixer_track, LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX)
             plugins.setParamValue(0.85, PEAK_CONTROLLER_TENSION_PARAM_INDEX, self.__mixer_track, LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX)
             plugins.setParamValue(0.5, PEAK_CONTROLLER_DECAY_PARAM_INDEX, self.__mixer_track, LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX)
@@ -441,7 +439,7 @@ class Looper():
                           Track.Track_4: Track(looper_number, Track.Track_4,
                                                initial_mixer_track + Track.Track_4,
                                                    self.__view) }
-        self.__looper_volume = MAX_VOLUME_LEVEL_VALUE
+        self.__looper_volume = fl_helper.MAX_VOLUME_LEVEL_VALUE
 
     def onInitScript(self):
         for track_id in self.__tracks:
@@ -471,7 +469,7 @@ class Looper():
         return self.__tracks.get(track_id).getTrackVolume()
 
     def clearLooper(self):
-        self.__looper_volume = MAX_VOLUME_LEVEL_VALUE
+        self.__looper_volume = fl_helper.MAX_VOLUME_LEVEL_VALUE
         for track_id in self.__tracks:
             self.__tracks[track_id].clear()
             self.__tracks[track_id].resetTrackParams()
@@ -643,7 +641,7 @@ class KorgKaossPad3Plus_LooperMux:
         for looper_id in self.__loopers:
             self.__loopers[looper_id].clearLooper()
         self.selectLooper(Looper.Looper_1)
-        self.setLooperVolume(MAX_VOLUME_LEVEL_VALUE)
+        self.setLooperVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
         self.setDropIntencity(0.0)
         self.setSampleLength(SampleLength.LENGTH_1)
         self.setResampleMode(ResampleMode.NONE)
@@ -676,7 +674,7 @@ class KorgKaossPad3Plus_LooperMux:
                 
             else:
                 self.__stopRecordingTrack(selected_track_id)
-                self.setMasterRoutingLevel(MAX_VOLUME_LEVEL_VALUE)
+                self.setMasterRoutingLevel(fl_helper.MAX_VOLUME_LEVEL_VALUE)
 
     def __startRecordingTrack(self, selected_track_id):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.__startRecordingTrack.__name__ + ": track - " + str(selected_track_id) + ", resample mode - " + str(self.__resample_mode))
@@ -686,7 +684,7 @@ class KorgKaossPad3Plus_LooperMux:
             for track_id in self.__loopers[looper_id].getTracks():
                 if looper_id == self.__selected_looper:
                     if track_id == selected_track_id:
-                        self.__loopers[looper_id].getTrack(track_id).setRoutingLevel(MAX_VOLUME_LEVEL_VALUE)
+                        self.__loopers[looper_id].getTrack(track_id).setRoutingLevel(fl_helper.MAX_VOLUME_LEVEL_VALUE)
                     else:
                         self.__loopers[looper_id].getTrack(track_id).setRoutingLevel(0.0)
                 else:
@@ -947,15 +945,15 @@ def OnMidiMsg(event):
     elif event.data1 == MIDI_CC_TEMPO and looper.getShiftPressedState():
         looper.setTempo(800 + int((event.data2 / fl_helper.MIDI_MAX_VALUE) * 1000.0)) # from 80 to 180
     elif event.data1 == MIDI_CC_LOOPER_VOLUME:
-        looper.setLooperVolume((event.data2 / fl_helper.MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
+        looper.setLooperVolume((event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
     elif event.data1 == MIDI_CC_TRACK_VOLUME_1:
-        looper.setTrackVolume(0, (event.data2 / fl_helper.MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
+        looper.setTrackVolume(0, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
     elif event.data1 == MIDI_CC_TRACK_VOLUME_2:
-        looper.setTrackVolume(1, (event.data2 / fl_helper.MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
+        looper.setTrackVolume(1, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
     elif event.data1 == MIDI_CC_TRACK_VOLUME_3:
-        looper.setTrackVolume(2, (event.data2 / fl_helper.MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
+        looper.setTrackVolume(2, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
     elif event.data1 == MIDI_CC_TRACK_VOLUME_4:
-        looper.setTrackVolume(3, (event.data2 / fl_helper.MIDI_MAX_VALUE) * MAX_VOLUME_LEVEL_VALUE)
+        looper.setTrackVolume(3, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
     elif event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
         looper.changeRecordingState(Track.Track_1)
     elif event.data1 == MIDI_CC_TRACK_2_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:

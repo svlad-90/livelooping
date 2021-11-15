@@ -16,7 +16,7 @@ from common import fl_helper
  
 # MIDI CC
 MIDI_CC_SHIFT                 = 95
-MIDI_CC_UPDATE_PRESET         = 53
+MIDI_CC_ENTER_SAVE_MODE       = 53
 MIDI_CC_RESET_PRESET          = 54
 MIDI_CC_RESET_SELECTIONS      = 55
 MIDI_CC_EFFECTS_PAGE_1        = 49
@@ -33,6 +33,9 @@ MIDI_CC_EFFECT_6              = 54
 MIDI_CC_EFFECT_7              = 55
 MIDI_CC_EFFECT_8              = 56
 
+MIDI_CC_SYNTH_VOLUME          = 93
+MIDI_CC_FX_LEVEL              = 94
+
 MIDI_CC_EFFECT_PARAM_1        = 70
 MIDI_CC_EFFECT_PARAM_2        = 71
 MIDI_CC_EFFECT_PARAM_3        = 72
@@ -41,8 +44,6 @@ MIDI_CC_EFFECT_PARAM_5        = 74
 MIDI_CC_EFFECT_PARAM_6        = 75
 MIDI_CC_EFFECT_PARAM_7        = 76
 MIDI_CC_EFFECT_PARAM_8        = 77
-
-MIDI_CC_SYNTH_VOLUME          = 93
 
 MIDI_CC_ANIMATION_1           = 36
 MIDI_CC_ANIMATION_2           = 37
@@ -53,12 +54,11 @@ MIDI_CC_ANIMATION_6           = 37
 MIDI_CC_ANIMATION_7           = 38
 MIDI_CC_ANIMATION_8           = 39
 
-MIDI_CC_FX_AMOUNT             = 94
-
 # ROUTING
 
 SYNTH_MAIN_CHANNEL            = 10
 SYNTH_FX_CHANNEL              = 9
+SYNTH_FX2_CHANNEL             = 8
 
 # CONSTANTS
 
@@ -67,30 +67,33 @@ KP3_PLUS_ABCD_RELEASED       = 64
 
 PARAMS_FIRST_STORAGE_TRACK_ID = 100
 NUMBER_OF_FX_IN_PAGE          = 8
-MAX_PARAM_VALUE               = 1016.0
 
 # MASTER MIXER SLOT INDICES
 MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX = 0
 SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX = 1
 
 # MIXER SLOT INDICES
-PARAMETRIC_EQ_2_SLOT_INDEX     = 0
-MANIPULATOR_SLOT_INDEX         = 1
-FAST_DIST_SLOT_INDEX           = 2
-STEREO_ENHANCER_SLOT_INDEX     = 3
-REVERV_SLOT_INDEX              = 4
-DELAY_SLOT_INDEX               = 5
-FRUITY_FILTER_SLOT_INDEX       = 6
-ENDLESS_SMILE_SLOT_INDEX       = 7
+FABFILTER_PRO_Q3_SLOT_INDEX    = 0
+FINISHER_VOODOO_SLOT_INDEX     = 1
+MANIPULATOR_SLOT_INDEX         = 2
+FAST_DIST_SLOT_INDEX           = 3
+STEREO_ENHANCER_SLOT_INDEX     = 4
+REVERB_SLOT_INDEX              = 5
+DELAY_SLOT_INDEX               = 6
+FRUITY_FILTER_SLOT_INDEX       = 7
 COMPRESSOT_SLOT_INDEX          = 8
 LIMITER_SLOT_INDEX             = 9
 FX_ACTIVATION_STATE_SLOT_INDEX = 10
 
-# PARAMS LIMITE
-MANIPULATOR_PARAMS_LIMIT = 200
-ENDLESS_SMILE_PARAMS_LIMIT = 1
+PRESET_CHANGE_PROTECTOR_PANOMATIC_SLOT_INDEX = 9
+
+# PARAMS LIMITS
+FABFILTER_PRO_Q3_PARAMS_LIMIT = 360
+FINISHER_VOODOO_PARAMS_LIMIT  = 10
+MANIPULATOR_PARAMS_LIMIT      = 200
 
 # PLUGIN PARAMETERS
+PANOMATIC_VOLUME_PARAM_INDEX = 1
 
 # mapping formula from 0<->1016 to 0<->1 values
 def externalParamMapping(param_value):
@@ -110,14 +113,15 @@ def externalParamMapping(param_value):
 
 class FXPreset:
     
-    FXPreset_1 = 0
-    FXPreset_2 = 1
-    FXPreset_3 = 2
-    FXPreset_4 = 3
-    FXPreset_5 = 4
-    FXPreset_6 = 5
-    FXPreset_7 = 6
-    FXPreset_8 = 7
+    FXPreset_None = -1
+    FXPreset_1    = 0
+    FXPreset_2    = 1
+    FXPreset_3    = 2
+    FXPreset_4    = 3
+    FXPreset_5    = 4
+    FXPreset_6    = 5
+    FXPreset_7    = 6
+    FXPreset_8    = 7
         
     def __init__(self, fx_page_number, fx_number, view):
         self.__view = view
@@ -125,7 +129,33 @@ class FXPreset:
         self.__fx_number = fx_number
         self.__parameters = {}
     
-    def areParametersLoaded(self):
+    def onInitScript(self):
+        self.__loadParameters()
+    
+    def update(self):
+        self.__getParamsFromPlugins()
+        self.__saveParameters()
+        self.__applyParametersToPlugins()
+
+    def reset(self):
+        self.__resetParameters()
+        self.__parameters.clear()
+
+    def select(self):
+        
+        plugins.setParamValue(0.0, PANOMATIC_VOLUME_PARAM_INDEX, SYNTH_MAIN_CHANNEL, PRESET_CHANGE_PROTECTOR_PANOMATIC_SLOT_INDEX)
+        
+        if not self.__areParametersLoaded():
+            self.__loadParameters()
+        self.__applyParametersToPlugins()
+        self.__view.selectFXPreset(self.__fx_number)
+        
+        plugins.setParamValue(fl_helper.MAX_VOLUME_LEVEL_VALUE, PANOMATIC_VOLUME_PARAM_INDEX, SYNTH_MAIN_CHANNEL, PRESET_CHANGE_PROTECTOR_PANOMATIC_SLOT_INDEX)
+    
+    def view_updateAvailability(self):
+        self.__view.setFXPresetAvailability(self.__fx_number, len(self.__parameters) > 0)
+    
+    def __areParametersLoaded(self):
         return len(self.__parameters) != 0
     
     def __getParamsFromPlugins(self):
@@ -143,13 +173,18 @@ class FXPreset:
                 
                 if mixer_slot == MANIPULATOR_SLOT_INDEX and param_id > MANIPULATOR_PARAMS_LIMIT:
                     break;
-                elif mixer_slot == ENDLESS_SMILE_SLOT_INDEX and param_id > ENDLESS_SMILE_PARAMS_LIMIT:
+                
+                if mixer_slot == FINISHER_VOODOO_SLOT_INDEX and param_id > FINISHER_VOODOO_PARAMS_LIMIT:
+                    break;
+                
+                if mixer_slot == FABFILTER_PRO_Q3_SLOT_INDEX and param_id > FABFILTER_PRO_Q3_PARAMS_LIMIT:
                     break;
                 
                 param_value = plugins.getParamValue(param_id, SYNTH_FX_CHANNEL, mixer_slot)
                 
                 if mixer_slot == MANIPULATOR_SLOT_INDEX or \
-                mixer_slot == ENDLESS_SMILE_SLOT_INDEX:
+                   mixer_slot == FABFILTER_PRO_Q3_SLOT_INDEX or \
+                   mixer_slot == FINISHER_VOODOO_SLOT_INDEX:
                     param_value = externalParamMapping(param_value)
 
                 param_value_str = str(param_value)
@@ -165,7 +200,7 @@ class FXPreset:
 
             parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "S_E" + str(mixer_slot+1) + "_TO", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
             fx_activation_state = plugins.getParamValue(parameter_id, SYNTH_MAIN_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-            self.__parameters[FX_ACTIVATION_STATE_SLOT_INDEX].append(str(fx_activation_state / MAX_PARAM_VALUE))
+            self.__parameters[FX_ACTIVATION_STATE_SLOT_INDEX].append(str( externalParamMapping(fx_activation_state) ))
 
     def __applyParametersToPlugins(self):
         for mixer_slot in self.__parameters:
@@ -202,22 +237,6 @@ class FXPreset:
     
     def __resetParameters(self):
         playlist.setTrackName( PARAMS_FIRST_STORAGE_TRACK_ID + ( self.__fx_page_number * NUMBER_OF_FX_IN_PAGE ) + self.__fx_number,  "")
-    
-    def onInitScript(self):
-        print(device_name + ': ' + FXPreset.onInitScript.__name__)
-        
-    def select(self):
-        if not self.areParametersLoaded():
-            self.__loadParameters()
-        self.__applyParametersToPlugins()
-    
-    def update(self):
-        self.__getParamsFromPlugins()
-        self.__saveParameters()
-        self.__applyParametersToPlugins()
-
-    def reset(self):
-        self.__resetParameters()
         
 class FXPresetPage:
     
@@ -226,9 +245,8 @@ class FXPresetPage:
     FXPresetPage_3 = 2
     FXPresetPage_4 = 3
     
-    def __init__(self, fx_page_number, view):        
+    def __init__(self, fx_page_number, view):
         self.__view = view
-        self.__selected_fx_preset = FXPreset.FXPreset_1
         self.__fxs = { FXPreset.FXPreset_1: FXPreset(fx_page_number, FXPreset.FXPreset_1, self.__view),
                        FXPreset.FXPreset_2: FXPreset(fx_page_number, FXPreset.FXPreset_2, self.__view),
                        FXPreset.FXPreset_3: FXPreset(fx_page_number, FXPreset.FXPreset_3, self.__view),
@@ -239,21 +257,23 @@ class FXPresetPage:
                        FXPreset.FXPreset_8: FXPreset(fx_page_number, FXPreset.FXPreset_8, self.__view), }
     
     def onInitScript(self):
-        self.selectFX(self.__selected_fx_preset)
+        for fx_preset_id in self.__fxs:
+            self.__fxs[fx_preset_id].onInitScript()
     
-    def updateFX(self):
-        self.__fxs[self.__selected_fx_preset].update()
+    def updateFX(self, fx_preset_id):
+        self.__fxs[fx_preset_id].update()
+        self.__fxs[fx_preset_id].view_updateAvailability()
     
-    def resetFX(self):
-        self.__fxs[self.__selected_fx_preset].reset()
+    def resetFX(self, fx_preset_id):
+        self.__fxs[fx_preset_id].reset()
+        self.__fxs[fx_preset_id].view_updateAvailability()
 
     def selectFX(self, preset_fx_id):
-        self.__selected_fx_preset = preset_fx_id
         self.__fxs[preset_fx_id].select()
-        self.__view.selectFXPreset(preset_fx_id)
-
-    def updateSelectedFX(self):
-        self.__fxs[self.__selected_fx_preset].select()
+        
+    def view_updatePresetsAvailability(self):
+        for fx_preset_id in self.__fxs:
+            self.__fxs[fx_preset_id].view_updateAvailability()
 
 class KorgKaossPad3Plus_SynthController:
 
@@ -263,11 +283,13 @@ class KorgKaossPad3Plus_SynthController:
         self.__view = view
         self.__initialized = False
         self.__shift_pressed = False
-        self.__selected_fx_preset_page = FXPresetPage.FXPresetPage_1
+        self.__visible_fx_preset_page = FXPresetPage.FXPresetPage_1
+        self.__selected_fx_preset = ( self.__visible_fx_preset_page, FXPreset.FXPreset_1 )
         self.__fx_preset_pages = { FXPresetPage.FXPresetPage_1: FXPresetPage(FXPresetPage.FXPresetPage_1, self.__view),
-                                FXPresetPage.FXPresetPage_2: FXPresetPage(FXPresetPage.FXPresetPage_2, self.__view),
-                                FXPresetPage.FXPresetPage_3: FXPresetPage(FXPresetPage.FXPresetPage_3, self.__view),
-                                FXPresetPage.FXPresetPage_4: FXPresetPage(FXPresetPage.FXPresetPage_4, self.__view) }
+                                   FXPresetPage.FXPresetPage_2: FXPresetPage(FXPresetPage.FXPresetPage_2, self.__view),
+                                   FXPresetPage.FXPresetPage_3: FXPresetPage(FXPresetPage.FXPresetPage_3, self.__view),
+                                   FXPresetPage.FXPresetPage_4: FXPresetPage(FXPresetPage.FXPresetPage_4, self.__view) }
+        self.__isSaveMode = False
 
     def onInitScript(self):
 
@@ -278,19 +300,36 @@ class KorgKaossPad3Plus_SynthController:
                 for preset_page_id in self.__fx_preset_pages:
                     self.__fx_preset_pages[preset_page_id].onInitScript()
                 
-                self.selectFXPage(FXPresetPage.FXPresetPage_1)
+                self.selectFXPage(self.__visible_fx_preset_page)
+                self.__selectFXPreset(self.__selected_fx_preset[0], self.__selected_fx_preset[1])
                 
+                self.__view.setSaveMode(self.__isSaveMode)
+
                 self.__initialized = True
             except Exception as e:
                 print(device_name + ': ' + KorgKaossPad3Plus_SynthController.onInitScript.__name__ + ": failed to initialize the script.")
                 print(e)
 
-
+    def isSaveMode(self):
+        return self.__isSaveMode
+        
+    def setSaveMode(self, save_mode):
+        print(device_name + ': ' + KorgKaossPad3Plus_SynthController.setSaveMode.__name__ + ": save mode - " + str(save_mode))
+        self.__isSaveMode = save_mode
+        self.__view.setSaveMode(save_mode)
+        
     def selectFXPage(self, preset_fx_page_id):
         print(device_name + ': ' + KorgKaossPad3Plus_SynthController.onInitScript.__name__ + ": fx page id - " + str(preset_fx_page_id))
-        self.__selected_fx_preset_page = preset_fx_page_id;
+        self.__visible_fx_preset_page = preset_fx_page_id;
+        
+        if preset_fx_page_id == self.__selected_fx_preset[0]:
+            self.__view.selectFXPreset(self.__selected_fx_preset[1])
+        else:
+            self.__view.selectFXPreset(FXPreset.FXPreset_None)
+            
         self.__view.selectFXPage(preset_fx_page_id)
-        self.__fx_preset_pages[preset_fx_page_id].updateSelectedFX()
+        
+        self.__fx_preset_pages[self.__visible_fx_preset_page].view_updatePresetsAvailability()
 
     def setShiftPressedState(self, shift_pressed):
         print(device_name + ': ' + KorgKaossPad3Plus_SynthController.setShiftPressedState.__name__ + ": shift pressed - " + str(shift_pressed))
@@ -300,27 +339,41 @@ class KorgKaossPad3Plus_SynthController:
     def getShiftPressedState(self):
         return self.__shift_pressed
     
-    def selectFXPreset(self, preset_fx_id):
-        print(device_name + ': ' + KorgKaossPad3Plus_SynthController.selectFXPreset.__name__ + ": selected FX - " + str(preset_fx_id))
-        self.__fx_preset_pages[self.__selected_fx_preset_page].selectFX(preset_fx_id)
+    def __selectFXPreset(self, preset_fx_page_id, preset_fx_id):
+        print(device_name + ': ' + KorgKaossPad3Plus_SynthController.__selectFXPreset.__name__ + ": selected page - " + \
+              str(preset_fx_page_id) + ", selected FX - " + str(preset_fx_id))
+        self.__selected_fx_preset = ( preset_fx_page_id, preset_fx_id )
+        self.__fx_preset_pages[preset_fx_page_id].selectFX(preset_fx_id)
+        
+    def selectFXPresetOnTheVisiblePage(self, preset_fx_id):
+        print(device_name + ': ' + KorgKaossPad3Plus_SynthController.selectFXPresetOnTheVisiblePage.__name__ + ": selected page - " + \
+              str(self.__visible_fx_preset_page) + ", selected FX - " + str(preset_fx_id))
+        self.__selected_fx_preset = ( self.__visible_fx_preset_page, preset_fx_id )
+        self.__fx_preset_pages[self.__visible_fx_preset_page].selectFX(preset_fx_id)
 
     def resetSelections(self):
         print(device_name + ': ' + KorgKaossPad3Plus_SynthController.resetSelections.__name__)
         
         self.selectFXPage(FXPresetPage.FXPresetPage_1)
-        
-        for preset_fx_id in self.__fx_preset_pages:
-            self.__fx_preset_pages[preset_fx_id].selectFX(FXPreset.FXPreset_1)
+        self.selectFX(FXPreset.FXPreset_1)
             
-    def updateFXPreset(self):
+    def updateFXPreset(self, fx_preset_id):
         print(device_name + ': ' + KorgKaossPad3Plus_SynthController.updateFXPreset.__name__)
-        self.__fx_preset_pages[self.__selected_fx_preset_page].updateFX()
-        self.__view.updateFXPreset()
+        self.__fx_preset_pages[self.__visible_fx_preset_page].updateFX(fx_preset_id)
         
     def resetFXPreset(self):
         print(device_name + ': ' + KorgKaossPad3Plus_SynthController.resetFXPreset.__name__)
-        self.__fx_preset_pages[self.__selected_fx_preset_page].resetFX()
+        self.__fx_preset_pages[self.__selected_fx_preset[0]].resetFX(self.__selected_fx_preset[1])
         self.__view.resetFXPreset()
+
+    def setSynthVolume(self, synth_volume):
+        mixer.setTrackVolume(SYNTH_FX2_CHANNEL, synth_volume)
+        self.__view.setSynthVolume(synth_volume)
+
+    def setFXLevel(self, fx_level):
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "S_FX_L", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(fx_level, parameter_id, SYNTH_MAIN_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        self.__view.setFXLevel(fx_level)
 
 class View:
     
@@ -333,8 +386,6 @@ class View:
         self.resetToggleFlags()
     
     def resetToggleFlags(self):
-        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "Save", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(0.0, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "Delete", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(0.0, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         
@@ -360,14 +411,25 @@ class View:
         
         self.resetToggleFlags()
         
-    def updateFXPreset(self):
-        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "Save", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(1.0, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def setSaveMode(self, save_mode):
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "Save mode", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(save_mode, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         
     def resetFXPreset(self):
         parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "Delete", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(1.0, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
+    def setSynthVolume(self, synth_volume):
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "Volume", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(synth_volume, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+
+    def setFXLevel(self, fx_level):
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "FX level", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(fx_level, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+
+    def setFXPresetAvailability(self, fx_preset_id, preset_availability):
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "FX_" + str(fx_preset_id + 1) + "_A", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(preset_availability, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
 view = View()
 synth_controller = KorgKaossPad3Plus_SynthController(view)
@@ -393,25 +455,61 @@ def OnMidiMsg(event):
         synth_controller.resetSelections()
     elif event.data1 == MIDI_CC_SHIFT:
         synth_controller.setShiftPressedState(event.data2 == fl_helper.MIDI_MAX_VALUE)
-    elif event.data1 == MIDI_CC_UPDATE_PRESET and synth_controller.getShiftPressedState():
-        synth_controller.updateFXPreset()
+    elif event.data1 == MIDI_CC_ENTER_SAVE_MODE and synth_controller.getShiftPressedState():
+        synth_controller.setSaveMode(not synth_controller.isSaveMode())
     elif event.data1 == MIDI_CC_RESET_PRESET and synth_controller.getShiftPressedState():
         synth_controller.resetFXPreset()
+    elif event.data1 == MIDI_CC_EFFECT_1 and synth_controller.isSaveMode():
+        synth_controller.updateFXPreset(FXPreset.FXPreset_1)
+        synth_controller.setSaveMode(False)
+        synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_1)
+    elif event.data1 == MIDI_CC_EFFECT_2 and synth_controller.isSaveMode():
+        synth_controller.updateFXPreset(FXPreset.FXPreset_2)
+        synth_controller.setSaveMode(False)
+        synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_2)
+    elif event.data1 == MIDI_CC_EFFECT_3 and synth_controller.isSaveMode():
+        synth_controller.updateFXPreset(FXPreset.FXPreset_3)
+        synth_controller.setSaveMode(False)
+        synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_3)
+    elif event.data1 == MIDI_CC_EFFECT_4 and synth_controller.isSaveMode():
+        synth_controller.updateFXPreset(FXPreset.FXPreset_4)
+        synth_controller.setSaveMode(False)
+        synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_4)
+    elif event.data1 == MIDI_CC_EFFECT_5 and synth_controller.isSaveMode():
+        synth_controller.updateFXPreset(FXPreset.FXPreset_5)
+        synth_controller.setSaveMode(False)
+        synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_5)
+    elif event.data1 == MIDI_CC_EFFECT_6 and synth_controller.isSaveMode():
+        synth_controller.updateFXPreset(FXPreset.FXPreset_6)
+        synth_controller.setSaveMode(False)
+        synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_6)
+    elif event.data1 == MIDI_CC_EFFECT_7 and synth_controller.isSaveMode():
+        synth_controller.updateFXPreset(FXPreset.FXPreset_7)
+        synth_controller.setSaveMode(False)
+        synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_7)
+    elif event.data1 == MIDI_CC_EFFECT_8 and synth_controller.isSaveMode():
+        synth_controller.updateFXPreset()(FXPreset.FXPreset_8)
+        synth_controller.setSaveMode(False)
+        synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_8)
     elif event.data1 == MIDI_CC_EFFECT_1 and not synth_controller.getShiftPressedState():
-        synth_controller.selectFXPreset(FXPreset.FXPreset_1)
+        synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_1)
     elif event.data1 == MIDI_CC_EFFECT_2 and not synth_controller.getShiftPressedState():
-        synth_controller.selectFXPreset(FXPreset.FXPreset_2)
+        synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_2)
     elif event.data1 == MIDI_CC_EFFECT_3 and not synth_controller.getShiftPressedState():
-        synth_controller.selectFXPreset(FXPreset.FXPreset_3)
+        synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_3)
     elif event.data1 == MIDI_CC_EFFECT_4 and not synth_controller.getShiftPressedState():
-        synth_controller.selectFXPreset(FXPreset.FXPreset_4)
+        synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_4)
     elif event.data1 == MIDI_CC_EFFECT_5 and not synth_controller.getShiftPressedState():
-        synth_controller.selectFXPreset(FXPreset.FXPreset_5)
+        synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_5)
     elif event.data1 == MIDI_CC_EFFECT_6 and not synth_controller.getShiftPressedState():
-        synth_controller.selectFXPreset(FXPreset.FXPreset_6)
+        synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_6)
     elif event.data1 == MIDI_CC_EFFECT_7 and not synth_controller.getShiftPressedState():
-        synth_controller.selectFXPreset(FXPreset.FXPreset_7)
+        synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_7)
     elif event.data1 == MIDI_CC_EFFECT_8 and not synth_controller.getShiftPressedState():
-        synth_controller.selectFXPreset(FXPreset.FXPreset_8)
+        synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_8)
+    elif event.data1 == MIDI_CC_SYNTH_VOLUME:
+        synth_controller.setSynthVolume((event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
+    elif event.data1 == MIDI_CC_FX_LEVEL:
+        synth_controller.setFXLevel(event.data2 / fl_helper.MIDI_MAX_VALUE)
         
     event.handled = True

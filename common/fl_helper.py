@@ -1,6 +1,7 @@
 import plugins
 
 MIDI_MAX_VALUE = 127
+MAX_VOLUME_LEVEL_VALUE   = 0.8
 
 def printAllPluginParameters(mixer_track, slot):
 
