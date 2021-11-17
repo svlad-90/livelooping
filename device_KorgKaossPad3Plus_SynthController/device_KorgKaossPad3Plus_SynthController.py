@@ -95,22 +95,6 @@ MANIPULATOR_PARAMS_LIMIT      = 200
 # PLUGIN PARAMETERS
 PANOMATIC_VOLUME_PARAM_INDEX = 1
 
-# mapping formula from 0<->1016 to 0<->1 values
-def externalParamMapping(param_value):
-    
-    base = param_value / 8.0
-    base_int = int(base)
-    base_diff = base - base_int
-    
-    if base_int == 127.0:
-        return 1.0
-    elif base_int == 0.0:
-        return 0.0
-    else:
-        first_part = 1 / pow( 2, ( 127.0 - base_int ) )
-        second_part = first_part * base_diff
-        return first_part + second_part
-
 class FXPreset:
     
     FXPreset_None = -1
@@ -185,7 +169,7 @@ class FXPreset:
                 if mixer_slot == MANIPULATOR_SLOT_INDEX or \
                    mixer_slot == FABFILTER_PRO_Q3_SLOT_INDEX or \
                    mixer_slot == FINISHER_VOODOO_SLOT_INDEX:
-                    param_value = externalParamMapping(param_value)
+                    param_value = fl_helper.externalParamMapping(param_value)
 
                 param_value_str = str(param_value)
                 
@@ -200,7 +184,7 @@ class FXPreset:
 
             parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "S_E" + str(mixer_slot+1) + "_TO", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
             fx_activation_state = plugins.getParamValue(parameter_id, SYNTH_MAIN_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-            self.__parameters[FX_ACTIVATION_STATE_SLOT_INDEX].append(str( externalParamMapping(fx_activation_state) ))
+            self.__parameters[FX_ACTIVATION_STATE_SLOT_INDEX].append(str( fl_helper.externalParamMapping(fx_activation_state) ))
 
     def __applyParametersToPlugins(self):
         for mixer_slot in self.__parameters:

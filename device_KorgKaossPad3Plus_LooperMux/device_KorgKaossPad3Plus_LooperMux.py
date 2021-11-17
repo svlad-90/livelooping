@@ -4,6 +4,7 @@ print(device_name + ': started')
 
 # python imports
 import math
+import time
 
 # FL imports
 import transport
@@ -53,6 +54,9 @@ MIDI_CC_TRACK_2_SAMPLING    = 37
 MIDI_CC_TRACK_3_SAMPLING    = 38
 MIDI_CC_TRACK_4_SAMPLING    = 39
 
+MIDI_CC_TURNADO_DICTATOR    = 94
+MIDI_CC_TURNADO_RANDOMIZE   = 95
+
 # ROUTING
 MASTER_CHANNEL               = 0
 MASTER_FX_1_CHANNEL          = 2
@@ -71,12 +75,12 @@ LOOPER_2_CHANNEL             = 24
 LOOPER_3_CHANNEL             = 32
 LOOPER_4_CHANNEL             = 40
 
-# CONSTANTS
-LOOPER_1_INITIAL_MIXER_TRACK = 19
-LOOPER_2_INITIAL_MIXER_TRACK = 27
-LOOPER_3_INITIAL_MIXER_TRACK = 35
-LOOPER_4_INITIAL_MIXER_TRACK = 43
+LOOPER_1_INITIAL_TRACK_CHANNEL = 19
+LOOPER_2_INITIAL_TRACK_CHANNEL = 27
+LOOPER_3_INITIAL_TRACK_CHANNEL = 35
+LOOPER_4_INITIAL_TRACK_CHANNEL = 43
 
+# CONSTANTS
 TEMPO_JOG_ROTATION_THRESHOLD = 5
 
 RESAMPLING_VOLUME_THRESHOLD =  0.1
@@ -89,10 +93,12 @@ MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX = 0
 LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX = 1
 
 # MIXER SLOT INDICES
-TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX = 0
+TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX    = 0
 TRACK_PANOMATIC_VOLUME_PLUGIN_MIXER_SLOT_INDEX = 8
-LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX = 9
-LOOPER_ALL_ENDLESS_SMILE_SLOT_INDEX = 8
+LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX  = 9
+LOOPER_ALL_ENDLESS_SMILE_SLOT_INDEX            = 8
+
+LOOPER_TURNADO_SLOT_INDEX                      = 0
 
 # PLUGIN PARAMETERS
 
@@ -123,6 +129,9 @@ AUGUSTUS_LOOP_PLUGIN_SYNC_GROUP_MODE_PARAM_INDEX = 71
 ENDLESS_SMILE_PLUGIN_INTENSITY_PARAM_INDEX = 0
 
 PANOMATIC_VOLUME_PARAM_INDEX = 1
+
+TURNADO_DICTATOR_PARAM_INDEX  = 8
+TURNADO_RANDOMIZE_PARAM_INDEX = 10
 
 class SampleLength:
     LENGTH_0 = 0
@@ -426,7 +435,7 @@ class Looper():
     def __init__(self, looper_number, initial_mixer_track, view):
         self.__view = view
         self.__looper_number = looper_number
-        self.__initial_mixer_track__ = initial_mixer_track
+        self.__INITIAL_TRACK_CHANNEL__ = initial_mixer_track
         self.__tracks = { Track.Track_1: Track(looper_number, Track.Track_1,
                                                initial_mixer_track + Track.Track_1,
                                                    self.__view),
@@ -440,6 +449,18 @@ class Looper():
                                                initial_mixer_track + Track.Track_4,
                                                    self.__view) }
         self.__looper_volume = fl_helper.MAX_VOLUME_LEVEL_VALUE
+        self.__isTurnadoTurnedOn = False
+        
+        self.__looper_channel = 0
+        
+        if self.__looper_number == Looper.Looper_1:
+            self.__looper_channel = LOOPER_1_CHANNEL
+        elif self.__looper_number == Looper.Looper_2:
+            self.__looper_channel = LOOPER_2_CHANNEL
+        elif self.__looper_number == Looper.Looper_3:
+            self.__looper_channel = LOOPER_3_CHANNEL
+        elif self.__looper_number == Looper.Looper_4:
+            self.__looper_channel = LOOPER_4_CHANNEL
 
     def onInitScript(self):
         for track_id in self.__tracks:
@@ -488,6 +509,7 @@ class Looper():
             for track_id_it in self.__tracks:
                 if track_id_it != track_id and self.__tracks[track_id_it].getTrackVolume() > RESAMPLING_VOLUME_THRESHOLD:
                     self.__tracks[track_id_it].clear()
+            self.setTurnadoDictatorLevel(0.0)
                     
         self.__tracks[track_id].stopRecording()
 
@@ -513,6 +535,24 @@ class Looper():
             if self.__tracks[track_id].isRecordingInProgress():
                 self.__tracks[track_id].stopRecording()
 
+    def setTurnadoDictatorLevel(self, turnado_dictator_level):        
+        plugins.setParamValue(turnado_dictator_level, TURNADO_DICTATOR_PARAM_INDEX, self.__looper_channel, LOOPER_TURNADO_SLOT_INDEX)
+
+        if self.__isTurnadoTurnedOn == False and turnado_dictator_level != 0.0:
+            parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "L_" + str(self.__looper_number + 1) + "_TUR_A", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+            plugins.setParamValue(1.0, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+            self.__isTurnadoTurnedOn = True
+        elif self.__isTurnadoTurnedOn == True and turnado_dictator_level == 0.0:
+            parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "L_" + str(self.__looper_number + 1) + "_TUR_A", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+            plugins.setParamValue(0.0, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+            self.__isTurnadoTurnedOn = False
+    
+    def randomizeTurnado(self):
+        print(device_name + ': ' + Looper.randomizeTurnado.__name__)
+        plugins.setParamValue(0.0, TURNADO_RANDOMIZE_PARAM_INDEX, self.__looper_channel, LOOPER_TURNADO_SLOT_INDEX)
+        plugins.setParamValue(1.0, TURNADO_RANDOMIZE_PARAM_INDEX, self.__looper_channel, LOOPER_TURNADO_SLOT_INDEX)
+        plugins.setParamValue(0.0, TURNADO_RANDOMIZE_PARAM_INDEX, self.__looper_channel, LOOPER_TURNADO_SLOT_INDEX)
+       
 class PressedSamplerButton:
     A_PRESSED = 0;
     B_PRESSED = 1;
@@ -527,19 +567,20 @@ class KorgKaossPad3Plus_LooperMux:
         self.__pressed_sampler_buttons = set()
         self.__selected_looper = Looper.Looper_1
         self.__loopers = { Looper.Looper_1: Looper(Looper.Looper_1,
-                                                   LOOPER_1_INITIAL_MIXER_TRACK,
+                                                   LOOPER_1_INITIAL_TRACK_CHANNEL,
                                                    self.__view),
                            Looper.Looper_2: Looper(Looper.Looper_2,
-                                                   LOOPER_2_INITIAL_MIXER_TRACK,
+                                                   LOOPER_2_INITIAL_TRACK_CHANNEL,
                                                    self.__view),
                            Looper.Looper_3: Looper(Looper.Looper_3,
-                                                   LOOPER_3_INITIAL_MIXER_TRACK,
+                                                   LOOPER_3_INITIAL_TRACK_CHANNEL,
                                                    self.__view),
                            Looper.Looper_4: Looper(Looper.Looper_4,
-                                                   LOOPER_4_INITIAL_MIXER_TRACK,
+                                                   LOOPER_4_INITIAL_TRACK_CHANNEL,
                                                    self.__view) }
         self.__initialized = False
         self.__resample_mode = ResampleMode.NONE
+        self.__last_shift_press_time = 0
 
     def onInitScript(self):
 
@@ -597,6 +638,16 @@ class KorgKaossPad3Plus_LooperMux:
                     self.__startRecordingTrack(Track.Track_3)
                 elif(element == PressedSamplerButton.D_PRESSED):
                     self.__startRecordingTrack(Track.Track_4)
+
+        pressed_time = time.time()
+        
+        if shift_pressed:
+            if (pressed_time - self.__last_shift_press_time) < 0.5:
+                # double click
+                self.__last_shift_press_time = 0
+                self.__loopers[self.__selected_looper].randomizeTurnado()
+            else:
+                self.__last_shift_press_time = pressed_time
 
     def getShiftPressedState(self):
         return self.__shift_pressed
@@ -720,7 +771,9 @@ class KorgKaossPad3Plus_LooperMux:
         self.__resample_mode = resample_mode
         
         self.__view.setResampleMode(resample_mode)
-        
+    
+    def setTurnadoDictatorLevel(self, turnado_dictator_level):
+        self.__loopers[self.__selected_looper].setTurnadoDictatorLevel(turnado_dictator_level)
         
 class View:
     def setShiftPressedState(self, shift_pressed):
@@ -877,6 +930,8 @@ def OnMidiMsg(event):
 
     looper.onInitScript()
 
+    #fl_helper.printAllPluginParameters(LOOPER_1_CHANNEL, LOOPER_TURNADO_SLOT_INDEX)
+
     event.handled = False
 
     if event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
@@ -895,7 +950,6 @@ def OnMidiMsg(event):
         looper.addPressedSamplerButton(PressedSamplerButton.D_PRESSED)
     elif event.data1 == MIDI_CC_TRACK_4_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
         looper.removePressedSamplerButton(PressedSamplerButton.D_PRESSED)
-
 
 
     if event.data1 == MIDI_CC_LOOPER_VOLUME and looper.getShiftPressedState():
@@ -970,5 +1024,7 @@ def OnMidiMsg(event):
         looper.setSideChainLevel(Track.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_4:
         looper.setSideChainLevel(Track.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
+    elif event.data1 == MIDI_CC_TURNADO_DICTATOR:
+        looper.setTurnadoDictatorLevel(event.data2 / fl_helper.MIDI_MAX_VALUE)
 
     event.handled = True

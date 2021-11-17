@@ -22,3 +22,19 @@ def findSurfaceControlElementIdByName(mixer_channel, control_element_name, slot_
         if(parameter_name == control_element_name):
             return parameter_id
     raise Exception("Control element " + control_element_name + " not found")
+
+# mapping formula from 0<->1016 to 0<->1 values
+def externalParamMapping(param_value):
+    
+    base = param_value / 8.0
+    base_int = int(base)
+    base_diff = base - base_int
+    
+    if base_int == 127.0:
+        return 1.0
+    elif base_int == 0.0:
+        return 0.0
+    else:
+        first_part = 1 / pow( 2, ( 127.0 - base_int ) )
+        second_part = first_part * base_diff
+        return first_part + second_part
