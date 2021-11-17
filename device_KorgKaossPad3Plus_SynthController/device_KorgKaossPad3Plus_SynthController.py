@@ -259,6 +259,45 @@ class FXPresetPage:
         for fx_preset_id in self.__fxs:
             self.__fxs[fx_preset_id].view_updateAvailability()
 
+class FX:
+    
+    FX_1  = 0
+    FX_2  = 1
+    FX_3  = 2
+    FX_4  = 3
+    FX_5  = 4
+    FX_6  = 5
+    FX_7  = 6
+    FX_8  = 7
+    FX_9  = 8
+    FX_10 = 9
+    
+    def __init__(self, fx_number, view):
+        self.__fx_number = fx_number
+        self.__view = view
+        self.__activation_param_id = -1
+        self.__level_param_id = -1
+        self.__fx_level = 0
+    
+    def setFXLevel(self, fx_level, force = False):
+        
+        if self.__activation_param_id == -1:
+            self.__activation_param_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "S_E" + str(self.__fx_number + 1) + "_TO", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        
+        if math.fabs(self.__fx_level - fx_level) >= 0.01 or fx_level == 1.0 or True == force:
+            
+            fx_activation_status = fl_helper.externalParamMapping( plugins.getParamValue(self.__activation_param_id, SYNTH_MAIN_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX) )
+            
+            if self.__level_param_id == -1:
+                self.__level_param_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "S_FX_L" + str(self.__fx_number + 1), MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+            
+            if fx_activation_status == 0.0:
+                plugins.setParamValue(0.0, self.__level_param_id, SYNTH_MAIN_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+            else:
+                plugins.setParamValue(fx_level, self.__level_param_id, SYNTH_MAIN_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+            
+            self.__fx_level = fx_level
+
 class KorgKaossPad3Plus_SynthController:
 
     def __init__(self, view):
@@ -274,6 +313,18 @@ class KorgKaossPad3Plus_SynthController:
                                    FXPresetPage.FXPresetPage_3: FXPresetPage(FXPresetPage.FXPresetPage_3, self.__view),
                                    FXPresetPage.FXPresetPage_4: FXPresetPage(FXPresetPage.FXPresetPage_4, self.__view) }
         self.__isSaveMode = False
+        self.__fxs = { FX.FX_1 : FX(FX.FX_1, self.__view),
+                      FX.FX_2 : FX(FX.FX_2, self.__view),
+                      FX.FX_3 : FX(FX.FX_3, self.__view),
+                      FX.FX_4 : FX(FX.FX_4, self.__view),
+                      FX.FX_5 : FX(FX.FX_5, self.__view),
+                      FX.FX_6 : FX(FX.FX_6, self.__view),
+                      FX.FX_7 : FX(FX.FX_7, self.__view),
+                      FX.FX_8 : FX(FX.FX_8, self.__view),
+                      FX.FX_9 : FX(FX.FX_9, self.__view),
+                      FX.FX_10 : FX(FX.FX_10, self.__view), }
+        
+        self.__fx_level = 1.0
 
     def onInitScript(self):
 
@@ -329,17 +380,23 @@ class KorgKaossPad3Plus_SynthController:
         self.__selected_fx_preset = ( preset_fx_page_id, preset_fx_id )
         self.__fx_preset_pages[preset_fx_page_id].selectFX(preset_fx_id)
         
+        self.setFXLevel(self.__fx_level, True)
+        
     def selectFXPresetOnTheVisiblePage(self, preset_fx_id):
         print(device_name + ': ' + KorgKaossPad3Plus_SynthController.selectFXPresetOnTheVisiblePage.__name__ + ": selected page - " + \
               str(self.__visible_fx_preset_page) + ", selected FX - " + str(preset_fx_id))
         self.__selected_fx_preset = ( self.__visible_fx_preset_page, preset_fx_id )
         self.__fx_preset_pages[self.__visible_fx_preset_page].selectFX(preset_fx_id)
+        
+        self.setFXLevel(self.__fx_level, True)
 
     def resetSelections(self):
         print(device_name + ': ' + KorgKaossPad3Plus_SynthController.resetSelections.__name__)
         
         self.selectFXPage(FXPresetPage.FXPresetPage_1)
         self.selectFX(FXPreset.FXPreset_1)
+        
+        self.setFXLevel(self.__fx_level, True)
             
     def updateFXPreset(self, fx_preset_id):
         print(device_name + ': ' + KorgKaossPad3Plus_SynthController.updateFXPreset.__name__)
@@ -354,10 +411,11 @@ class KorgKaossPad3Plus_SynthController:
         mixer.setTrackVolume(SYNTH_FX2_CHANNEL, synth_volume)
         self.__view.setSynthVolume(synth_volume)
 
-    def setFXLevel(self, fx_level):
-        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "S_FX_L", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(fx_level, parameter_id, SYNTH_MAIN_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def setFXLevel(self, fx_level, force = False):
+        for fx_id in self.__fxs:
+            self.__fxs[fx_id].setFXLevel(fx_level, force)
         self.__view.setFXLevel(fx_level)
+        self.__fx_level = fx_level
 
 class View:
     
@@ -472,7 +530,7 @@ def OnMidiMsg(event):
         synth_controller.setSaveMode(False)
         synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_7)
     elif event.data1 == MIDI_CC_EFFECT_8 and synth_controller.isSaveMode():
-        synth_controller.updateFXPreset()(FXPreset.FXPreset_8)
+        synth_controller.updateFXPreset(FXPreset.FXPreset_8)
         synth_controller.setSaveMode(False)
         synth_controller.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_8)
     elif event.data1 == MIDI_CC_EFFECT_1 and not synth_controller.getShiftPressedState():
