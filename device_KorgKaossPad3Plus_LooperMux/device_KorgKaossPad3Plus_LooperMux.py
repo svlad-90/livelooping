@@ -83,8 +83,6 @@ LOOPER_4_INITIAL_TRACK_CHANNEL = 43
 # CONSTANTS
 TEMPO_JOG_ROTATION_THRESHOLD = 5
 
-RESAMPLING_VOLUME_THRESHOLD =  0.1
-
 KP3_PLUS_ABCD_PRESSED        = 100
 KP3_PLUS_ABCD_RELEASED       = 64
 
@@ -400,6 +398,8 @@ class Track():
         self.__view.setTrackRecordingState(self.__track_number, 0.0)
         self.__view.setTrackResamplingState(self.__track_number, 0.0)
         self.__view.setTrackClearState(self.__track_number, 0.0)
+        
+        self.updateVolume()
 
     def __setRouting(self):
         mixer.setRouteTo(MIC_ROUTE_CHANNEL, self.__mixer_track, 1)
@@ -424,7 +424,6 @@ class Track():
 
     def updateVolume(self):
         self.__view.setTrackVolume(self.__track_number, self.__volume)
-        self.__view.setTrackResampleThreasholdActive(self.__track_number, self.__volume <= RESAMPLING_VOLUME_THRESHOLD)
 
 class Looper():
     Looper_1    = 0
@@ -452,6 +451,7 @@ class Looper():
         self.__isTurnadoTurnedOn = False
         
         self.__looper_channel = 0
+        self.__turnado_dictator_level = 0
         
         if self.__looper_number == Looper.Looper_1:
             self.__looper_channel = LOOPER_1_CHANNEL
@@ -491,6 +491,7 @@ class Looper():
 
     def clearLooper(self):
         self.__looper_volume = fl_helper.MAX_VOLUME_LEVEL_VALUE
+        self.setTurnadoDictatorLevel(0.0)
         for track_id in self.__tracks:
             self.__tracks[track_id].clear()
             self.__tracks[track_id].resetTrackParams()
@@ -505,27 +506,24 @@ class Looper():
     def stopRecordingTrack(self, track_id):
         
         if self.__tracks[track_id].getResampleMode() == ResampleMode.FROM_LOOPER_TO_TRACK:
-            # clear all tracks of the looper, except the one for which recording is over
+            # turn off the volume of all the tracks of the looper, except the one for which recording is over
             for track_id_it in self.__tracks:
-                if track_id_it != track_id and self.__tracks[track_id_it].getTrackVolume() > RESAMPLING_VOLUME_THRESHOLD:
-                    self.__tracks[track_id_it].clear()
+                if track_id_it != track_id:
+                    self.__tracks[track_id_it].setTrackVolume(0.0)
             self.setTurnadoDictatorLevel(0.0)
                     
         self.__tracks[track_id].stopRecording()
 
     def setSideChainLevel(self, track_id, sidechain_level):
         self.__tracks[track_id].setSideChainLevel(sidechain_level)
-        
-    def updateTracksVolume(self):
-        for track_id in self.__tracks:
-            self.__tracks[track_id].updateVolume()
     
     def updateTracksStats(self):
         for track_id in self.__tracks:
             self.__tracks[track_id].updateStats()
     
-    def updateLooperVolume(self):
+    def updateLooperStats(self):
         self.__view.setLooperVolume(self.__looper_volume)
+        self.__view.setResampleFXLevel(self.__turnado_dictator_level)
         
     def isTrackRecordingInProgress(self, track_id):
         return self.__tracks[track_id].isRecordingInProgress()
@@ -538,6 +536,8 @@ class Looper():
     def setTurnadoDictatorLevel(self, turnado_dictator_level):        
         plugins.setParamValue(turnado_dictator_level, TURNADO_DICTATOR_PARAM_INDEX, self.__looper_channel, LOOPER_TURNADO_SLOT_INDEX)
 
+        self.__turnado_dictator_level = turnado_dictator_level
+
         if self.__isTurnadoTurnedOn == False and turnado_dictator_level != 0.0:
             parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "L_" + str(self.__looper_number + 1) + "_TUR_A", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
             plugins.setParamValue(1.0, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
@@ -546,6 +546,8 @@ class Looper():
             parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "L_" + str(self.__looper_number + 1) + "_TUR_A", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
             plugins.setParamValue(0.0, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
             self.__isTurnadoTurnedOn = False
+            
+        self.__view.setResampleFXLevel(turnado_dictator_level)
     
     def randomizeTurnado(self):
         print(device_name + ': ' + Looper.randomizeTurnado.__name__)
@@ -554,6 +556,7 @@ class Looper():
         plugins.setParamValue(0.0, TURNADO_RANDOMIZE_PARAM_INDEX, self.__looper_channel, LOOPER_TURNADO_SLOT_INDEX)
        
 class PressedSamplerButton:
+    NONE      = -1;
     A_PRESSED = 0;
     B_PRESSED = 1;
     C_PRESSED = 2;
@@ -565,6 +568,7 @@ class KorgKaossPad3Plus_LooperMux:
         self.__view = view
         self.__shift_pressed = False
         self.__pressed_sampler_buttons = set()
+        self.__last_pressed_sampler_button = PressedSamplerButton.NONE
         self.__selected_looper = Looper.Looper_1
         self.__loopers = { Looper.Looper_1: Looper(Looper.Looper_1,
                                                    LOOPER_1_INITIAL_TRACK_CHANNEL,
@@ -629,15 +633,14 @@ class KorgKaossPad3Plus_LooperMux:
         self.__shift_pressed = shift_pressed
 
         if(False == shift_pressed):
-            for element in self.__pressed_sampler_buttons:
-                if(element == PressedSamplerButton.A_PRESSED):
-                    self.__startRecordingTrack(Track.Track_1)
-                elif(element == PressedSamplerButton.B_PRESSED):
-                    self.__startRecordingTrack(Track.Track_2)
-                elif(element == PressedSamplerButton.C_PRESSED):
-                    self.__startRecordingTrack(Track.Track_3)
-                elif(element == PressedSamplerButton.D_PRESSED):
-                    self.__startRecordingTrack(Track.Track_4)
+            if(self.__last_pressed_sampler_button == PressedSamplerButton.A_PRESSED):
+                self.__changeRecordingStateTo(Track.Track_1, True)
+            elif(self.__last_pressed_sampler_button == PressedSamplerButton.B_PRESSED):
+                self.__changeRecordingStateTo(Track.Track_2, True)
+            elif(self.__last_pressed_sampler_button == PressedSamplerButton.C_PRESSED):
+                self.__changeRecordingStateTo(Track.Track_3, True)
+            elif(self.__last_pressed_sampler_button == PressedSamplerButton.D_PRESSED):
+                self.__changeRecordingStateTo(Track.Track_4, True)
 
         pressed_time = time.time()
         
@@ -655,10 +658,14 @@ class KorgKaossPad3Plus_LooperMux:
     def addPressedSamplerButton(self, pressed_sampler_button):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.addPressedSamplerButton.__name__ + ": added sampler button - " + str(pressed_sampler_button))
         self.__pressed_sampler_buttons.add(pressed_sampler_button)
+        self.__last_pressed_sampler_button = pressed_sampler_button
 
     def removePressedSamplerButton(self, released_sampler_button):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.addPressedSamplerButton.__name__ + ": removed sampler button - " + str(released_sampler_button))
         self.__pressed_sampler_buttons.remove(released_sampler_button)
+        
+        if self.__last_pressed_sampler_button == released_sampler_button:
+            self.__last_pressed_sampler_button = PressedSamplerButton.NONE
 
     def selectLooper(self, selected_looper):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.selectLooper.__name__ + ": selected looper - " + str(selected_looper))
@@ -668,9 +675,8 @@ class KorgKaossPad3Plus_LooperMux:
             self.__loopers[self.__selected_looper].stopAllRecordings()
             
             self.__selected_looper = selected_looper
-            self.__loopers[self.__selected_looper].updateTracksVolume()
             self.__loopers[self.__selected_looper].updateTracksStats()
-            self.__loopers[self.__selected_looper].updateLooperVolume()
+            self.__loopers[self.__selected_looper].updateLooperStats()
             self.__view.selectLooper(selected_looper)
 
     def setLooperVolume(self, looper_volume):
@@ -713,19 +719,21 @@ class KorgKaossPad3Plus_LooperMux:
 
     def changeRecordingState(self, selected_track_id):
             print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.changeRecordingState.__name__ + ": track - " + str(selected_track_id))
+            self.__changeRecordingStateTo(selected_track_id, not self.__loopers[self.__selected_looper].isTrackRecordingInProgress(selected_track_id))
 
-            if not self.__loopers[self.__selected_looper].isTrackRecordingInProgress(selected_track_id):
-                self.__startRecordingTrack(selected_track_id)
-                
-                for track_id in self.__loopers[self.__selected_looper].getTracks():
-                    if track_id != selected_track_id:
-                        self.__stopRecordingTrack(track_id)
-                
-                self.setMasterRoutingLevel(0)
-                
-            else:
-                self.__stopRecordingTrack(selected_track_id)
-                self.setMasterRoutingLevel(fl_helper.MAX_VOLUME_LEVEL_VALUE)
+    def __changeRecordingStateTo(self, selected_track_id, recording_state):
+        if recording_state:
+            self.__startRecordingTrack(selected_track_id)
+            
+            for track_id in self.__loopers[self.__selected_looper].getTracks():
+                if track_id != selected_track_id:
+                    self.__stopRecordingTrack(track_id)
+            
+            self.setMasterRoutingLevel(0)
+            
+        else:
+            self.__stopRecordingTrack(selected_track_id)
+            self.setMasterRoutingLevel(fl_helper.MAX_VOLUME_LEVEL_VALUE)
 
     def __startRecordingTrack(self, selected_track_id):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.__startRecordingTrack.__name__ + ": track - " + str(selected_track_id) + ", resample mode - " + str(self.__resample_mode))
@@ -748,8 +756,8 @@ class KorgKaossPad3Plus_LooperMux:
             # clear all tracks of all loopers, except the one for which recording is over
             for looper_id in self.__loopers:
                 for track_id_it in self.__loopers[looper_id].getTracks():
-                    if ( looper_id != self.__selected_looper or track_id_it != track_id ) and self.__loopers[looper_id].getTrackVolume(track_id_it) > RESAMPLING_VOLUME_THRESHOLD:
-                        self.__loopers[looper_id].clearTrack(track_id_it)
+                    if ( looper_id != self.__selected_looper or track_id_it != track_id ):
+                        self.__loopers[looper_id].clear(track_id_it)
 
         self.__loopers[self.__selected_looper].stopRecordingTrack(track_id)
         self.__loopers[self.__selected_looper].getTrack(track_id).setRoutingLevel(0.0)
@@ -916,9 +924,9 @@ class View:
         parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T" + str(track_id + 1) + "U", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sample_length_units / 10, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
     
-    def setTrackResampleThreasholdActive(self, track_id, threshold_active):
-        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T" + str(track_id + 1) + "RT", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(threshold_active, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def setResampleFXLevel(self, fx_level):
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Resample FX", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(fx_level, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
     
 view = View()
 looper = KorgKaossPad3Plus_LooperMux(view)
