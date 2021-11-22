@@ -172,6 +172,9 @@ class Track():
 
     def getResampleMode(self):
         return self.__resample_mode
+    
+    def __setResampleMode(self, resample_mode):
+        self.__resample_mode = resample_mode
 
     def setLooperVolume(self, looper_volume):
         mixer.setTrackVolume(self.__mixer_track, looper_volume)
@@ -281,13 +284,13 @@ class Track():
     def startRecording(self, sample_length, resample_mode):
         
         self.setSampleLength(sample_length)
-        self.__resample_mode = resample_mode
+        self.__setResampleMode(resample_mode)
         
         self.__setTrackVolumeActivation(0.0)
 
         plugins.setParamValue(1.0, AUGUSTUS_LOOP_PLUGIN_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
 
-        if ResampleMode.FROM_LOOPER_TO_TRACK == self.__resample_mode:
+        if ResampleMode.FROM_LOOPER_TO_TRACK == self.getResampleMode():
             
             if self.__looper_number == Looper.Looper_1:
                 mixer.setRouteTo(LOOPER_1_CHANNEL, LOOPER_ALL_CHANNEL, 0)
@@ -308,7 +311,7 @@ class Track():
                 
             mixer.setRouteTo(self.__mixer_track, LOOPER_ALL_FX_1_CHANNEL, 1)
             
-        elif ResampleMode.FROM_ALL_LOOPERS_TO_TRACK == self.__resample_mode:
+        elif ResampleMode.FROM_ALL_LOOPERS_TO_TRACK == self.getResampleMode():
             
             if self.__looper_number == Looper.Looper_1:
                 mixer.setRouteTo(self.__mixer_track, LOOPER_1_FX_1_CHANNEL, 0)
@@ -323,7 +326,7 @@ class Track():
             mixer.setRouteTo(LOOPER_ALL_CHANNEL, self.__mixer_track, 1)
             mixer.setRouteTo(self.__mixer_track, LOOPER_ALL_FX_1_CHANNEL, 1)
 
-        if self.__resample_mode == ResampleMode.NONE:
+        if self.getResampleMode() == ResampleMode.NONE:
             self.__view.setTrackRecordingState(self.__track_number, 1.0)
         else:
             self.__view.setTrackResamplingState(self.__track_number, 1.0)
@@ -337,7 +340,7 @@ class Track():
     
             self.__setTrackVolumeActivation(1.0)
     
-            if ResampleMode.FROM_LOOPER_TO_TRACK == self.__resample_mode:
+            if ResampleMode.FROM_LOOPER_TO_TRACK == self.getResampleMode():
                 
                 mixer.setRouteTo(self.__mixer_track, LOOPER_ALL_FX_1_CHANNEL, 0)
                 
@@ -358,7 +361,7 @@ class Track():
                     mixer.setRouteTo(self.__mixer_track, LOOPER_4_FX_1_CHANNEL, 1)
                     mixer.setRouteTo(LOOPER_4_CHANNEL, LOOPER_ALL_CHANNEL, 1)
                 
-            elif ResampleMode.FROM_ALL_LOOPERS_TO_TRACK == self.__resample_mode:
+            elif ResampleMode.FROM_ALL_LOOPERS_TO_TRACK == self.getResampleMode():
                 
                 mixer.setRouteTo(self.__mixer_track, LOOPER_ALL_FX_1_CHANNEL, 0)
                 mixer.setRouteTo(LOOPER_ALL_CHANNEL, self.__mixer_track, 0)
@@ -374,12 +377,12 @@ class Track():
                 
                 mixer.setRouteTo(LOOPER_ALL_CHANNEL, LOOPER_ALL_FX_1_CHANNEL, 1)
             
-            if self.__resample_mode == ResampleMode.NONE:
+            if self.getResampleMode() == ResampleMode.NONE:
                 self.__view.setTrackRecordingState(self.__track_number, 0.0)
             else:
                 self.__view.setTrackResamplingState(self.__track_number, 0.0)
                 
-            self.__resample_mode = ResampleMode.NONE
+            self.__setResampleMode(ResampleMode.NONE)
             
             self.__isPlaybackActive = True
             self.__view.setTrackPlaybackState(self.__track_number, self.__isPlaybackActive)
@@ -510,6 +513,8 @@ class Looper():
             for track_id_it in self.__tracks:
                 if track_id_it != track_id:
                     self.__tracks[track_id_it].setTrackVolume(0.0)
+                else:
+                    self.__tracks[track_id_it].setTrackVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
             self.setTurnadoDictatorLevel(0.0)
                     
         self.__tracks[track_id].stopRecording()
@@ -600,6 +605,7 @@ class KorgKaossPad3Plus_LooperMux:
                 self.clear()
                 self.__view.setTempo(mixer.getCurrentTempo() / 1000.0)
                 self.setSampleLength(SampleLength.LENGTH_1)
+                self.setResampleMode(ResampleMode.NONE)
             except Exception as e:
                 print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.onInitScript.__name__ + ": failed to initialize the script.")
                 print(e)
@@ -736,8 +742,8 @@ class KorgKaossPad3Plus_LooperMux:
             self.setMasterRoutingLevel(fl_helper.MAX_VOLUME_LEVEL_VALUE)
 
     def __startRecordingTrack(self, selected_track_id):
-        print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.__startRecordingTrack.__name__ + ": track - " + str(selected_track_id) + ", resample mode - " + str(self.__resample_mode))
-        self.__loopers[self.__selected_looper].startRecordingTrack(selected_track_id, self.__selectedSampleLength, self.__resample_mode)
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.__startRecordingTrack.__name__ + ": track - " + str(selected_track_id) + ", resample mode - " + str(self.getResampleMode()))
+        self.__loopers[self.__selected_looper].startRecordingTrack(selected_track_id, self.__selectedSampleLength, self.getResampleMode())
 
         for looper_id in self.__loopers:
             for track_id in self.__loopers[looper_id].getTracks():
@@ -757,11 +763,13 @@ class KorgKaossPad3Plus_LooperMux:
             for looper_id in self.__loopers:
                 for track_id_it in self.__loopers[looper_id].getTracks():
                     if ( looper_id != self.__selected_looper or track_id_it != track_id ):
-                        self.__loopers[looper_id].clear(track_id_it)
+                        self.__loopers[looper_id].clearTrack(track_id_it)
+                    else:
+                        self.__loopers[looper_id].setTrackVolume(track_id_it, fl_helper.MAX_VOLUME_LEVEL_VALUE)
 
         self.__loopers[self.__selected_looper].stopRecordingTrack(track_id)
         self.__loopers[self.__selected_looper].getTrack(track_id).setRoutingLevel(0.0)
-        self.__resample_mode = ResampleMode.NONE
+        self.setResampleMode(ResampleMode.NONE)
 
     def setSideChainLevel(self, track_id, sidechain_level):
         self.__loopers[Looper.Looper_1].setSideChainLevel(track_id, sidechain_level)
@@ -772,13 +780,16 @@ class KorgKaossPad3Plus_LooperMux:
 
     def setResampleMode(self, resample_mode):
         
-        if resample_mode == self.__resample_mode:
+        if resample_mode == self.getResampleMode():
             resample_mode = ResampleMode.NONE
         
         print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.setResampleMode.__name__ + ": to - " + str(resample_mode))
         self.__resample_mode = resample_mode
         
         self.__view.setResampleMode(resample_mode)
+    
+    def getResampleMode(self):
+        return self.__resample_mode
     
     def setTurnadoDictatorLevel(self, turnado_dictator_level):
         self.__loopers[self.__selected_looper].setTurnadoDictatorLevel(turnado_dictator_level)
