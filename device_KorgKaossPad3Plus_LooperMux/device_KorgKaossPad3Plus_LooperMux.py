@@ -93,7 +93,7 @@ LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX = 1
 # MIXER SLOT INDICES
 TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX    = 0
 TRACK_PANOMATIC_VOLUME_PLUGIN_MIXER_SLOT_INDEX = 8
-LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX  = 9
+LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX  = 7
 LOOPER_ALL_ENDLESS_SMILE_SLOT_INDEX            = 8
 
 LOOPER_TURNADO_SLOT_INDEX                      = 0
@@ -155,14 +155,14 @@ class Track():
     Track_4    = 3
 
     def __init__(self, looper_number, track_number, mixer_track, view):
-        self.__view = view
-        self.__looper_number = looper_number
-        self.__track_number = track_number
-        self.__mixer_track = mixer_track
-        self.__sample_length = SampleLength.LENGTH_0
-        self.__resample_mode = ResampleMode.NONE
-        self.__volume = fl_helper.MAX_VOLUME_LEVEL_VALUE
-        self.__isPlaybackActive = False
+        self.__view                  = view
+        self.__looper_number         = looper_number
+        self.__track_number          = track_number
+        self.__mixer_track           = mixer_track
+        self.__sample_length         = SampleLength.LENGTH_0
+        self.__resample_mode         = ResampleMode.NONE
+        self.__volume                = fl_helper.MAX_VOLUME_LEVEL_VALUE
+        self.__isPlaybackActive      = False
         self.__isRecordingInProgress = False
 
     def onInitScript(self):
@@ -418,8 +418,8 @@ class Track():
         parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "S", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(routing_level, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
-    def setSideChainLevel(self, sidechain_level):
-        self.__view.setSideChainLevel(self.__track_number, sidechain_level)
+    def setInputSideChainLevel(self, sidechain_level):
+        self.__view.setInputSideChainLevel(self.__track_number, sidechain_level)
         parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "M2L1T" + str(self.__track_number + 1) + "S", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sidechain_level, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "S2L1T" + str(self.__track_number + 1) + "S", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
@@ -464,10 +464,19 @@ class Looper():
             self.__looper_channel = LOOPER_3_CHANNEL
         elif self.__looper_number == Looper.Looper_4:
             self.__looper_channel = LOOPER_4_CHANNEL
+        
+        self.__sidechainLevels       = { Track.Track_1 : 0.0, 
+                                         Track.Track_2 : 0.0,
+                                         Track.Track_3 : 0.0,
+                                         Track.Track_4 : 0.0 }
 
     def onInitScript(self):
         for track_id in self.__tracks:
             self.__tracks[track_id].onInitScript()
+        
+        if self.__looper_number != Looper.Looper_1:
+            for track_id in self.__tracks:
+                self.setLooperSideChainLevel(track_id, 0.0)
 
     def getResampleMode(self, track_id):
         return self.__tracks[track_id].getResampleMode()
@@ -498,7 +507,11 @@ class Looper():
         for track_id in self.__tracks:
             self.__tracks[track_id].clear()
             self.__tracks[track_id].resetTrackParams()
-            self.__tracks[track_id].setSideChainLevel(0.0)
+            self.__tracks[track_id].setInputSideChainLevel(0.0)
+        
+        if self.__looper_number != Looper.Looper_1:
+            for track_id in self.__tracks:
+                self.setLooperSideChainLevel(track_id, 0.0)
 
     def clearTrack(self, track_id):
             self.__tracks[track_id].clear()
@@ -519,8 +532,16 @@ class Looper():
                     
         self.__tracks[track_id].stopRecording()
 
-    def setSideChainLevel(self, track_id, sidechain_level):
-        self.__tracks[track_id].setSideChainLevel(sidechain_level)
+    def setInputSideChainLevel(self, track_id, sidechain_level):
+        self.__tracks[track_id].setInputSideChainLevel(sidechain_level)
+    
+    def setLooperSideChainLevel(self, track_id, sidechain_level):
+        self.__sidechainLevels[track_id] = sidechain_level
+        
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "L" + str(self.__looper_number + 1) + "L1SCT" + str(track_id + 1), MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(sidechain_level, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        
+        self.__view.setLooperSideChainLevel(track_id, sidechain_level)
     
     def updateTracksStats(self):
         for track_id in self.__tracks:
@@ -529,6 +550,13 @@ class Looper():
     def updateLooperStats(self):
         self.__view.setLooperVolume(self.__looper_volume)
         self.__view.setResampleFXLevel(self.__turnado_dictator_level)
+        
+        if self.__looper_number != Looper.Looper_1:
+            for track_id, sidechain_value in self.__sidechainLevels.items():
+                self.__view.setLooperSideChainLevel(track_id, sidechain_value)
+        else:
+            for track_id, sidechain_value in self.__sidechainLevels.items():
+                self.__view.setLooperSideChainLevel(track_id, 0.0)     
         
     def isTrackRecordingInProgress(self, track_id):
         return self.__tracks[track_id].isRecordingInProgress()
@@ -771,8 +799,12 @@ class KorgKaossPad3Plus_LooperMux:
         self.__loopers[self.__selected_looper].getTrack(track_id).setRoutingLevel(0.0)
         self.setResampleMode(ResampleMode.NONE)
 
-    def setSideChainLevel(self, track_id, sidechain_level):
-        self.__loopers[Looper.Looper_1].setSideChainLevel(track_id, sidechain_level)
+    def setInputSideChainLevel(self, track_id, sidechain_level):
+        self.__loopers[Looper.Looper_1].setInputSideChainLevel(track_id, sidechain_level)
+
+    def setLooperSideChainLevel(self, track_id, sidechain_level):
+        if self.__selected_looper != Looper.Looper_1:
+            self.__loopers[self.__selected_looper].setLooperSideChainLevel(track_id, sidechain_level)
 
     def setDropIntencity(self, drop_intencity):
         plugins.setParamValue(drop_intencity, ENDLESS_SMILE_PLUGIN_INTENSITY_PARAM_INDEX, LOOPER_ALL_CHANNEL, LOOPER_ALL_ENDLESS_SMILE_SLOT_INDEX)
@@ -845,11 +877,16 @@ class View:
         plugins.setParamValue(value, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         self.resetToggleFlags()
     
-    def setSideChainLevel(self, track_id, sidechain_level):
+    def setInputSideChainLevel(self, track_id, sidechain_level):
         parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T" + str(track_id + 1) + "_Sidechain", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sidechain_level, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         self.resetToggleFlags()
-        
+    
+    def setLooperSideChainLevel(self, track_id, sidechain_level):
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T" + str(track_id + 1) + "_L_S_CH", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(sidechain_level, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        self.resetToggleFlags()
+    
     def setResampleMode(self, resample_mode):
         
         resample_looper = 0.0
@@ -1035,14 +1072,22 @@ def OnMidiMsg(event):
         looper.changeRecordingState(Track.Track_3)
     elif event.data1 == MIDI_CC_TRACK_4_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
         looper.changeRecordingState(Track.Track_4)
+    elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_1 and looper.getShiftPressedState():
+        looper.setLooperSideChainLevel(Track.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
+    elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_2 and looper.getShiftPressedState():
+        looper.setLooperSideChainLevel(Track.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
+    elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_3 and looper.getShiftPressedState():
+        looper.setLooperSideChainLevel(Track.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
+    elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_4 and looper.getShiftPressedState():
+        looper.setLooperSideChainLevel(Track.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_1:
-        looper.setSideChainLevel(Track.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
+        looper.setInputSideChainLevel(Track.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_2:
-        looper.setSideChainLevel(Track.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
+        looper.setInputSideChainLevel(Track.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_3:
-        looper.setSideChainLevel(Track.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
+        looper.setInputSideChainLevel(Track.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_4:
-        looper.setSideChainLevel(Track.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
+        looper.setInputSideChainLevel(Track.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_TURNADO_DICTATOR:
         looper.setTurnadoDictatorLevel(event.data2 / fl_helper.MIDI_MAX_VALUE)
 
