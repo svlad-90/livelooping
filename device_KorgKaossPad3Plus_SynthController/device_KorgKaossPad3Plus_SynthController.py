@@ -94,6 +94,11 @@ MANIPULATOR_PARAMS_LIMIT      = 200
 
 # PLUGIN PARAMETERS
 PANOMATIC_VOLUME_PARAM_INDEX = 1
+FINISHER_VOODOO_EFFECT_PARAM_INDEX = 3
+FINISHER_VOODOO_VARIATION_1_PARAM_INDEX = 4
+FINISHER_VOODOO_VARIATION_2_PARAM_INDEX = 5
+FINISHER_VOODOO_VARIATION_3_PARAM_INDEX = 6
+FINISHER_VOODOO_VARIATION_4_PARAM_INDEX = 7
 
 class FXPreset:
     
@@ -416,6 +421,21 @@ class KorgKaossPad3Plus_SynthController:
             self.__fxs[fx_id].setFXLevel(fx_level, force)
         self.__view.setFXLevel(fx_level)
         self.__fx_level = fx_level
+    
+    def setEffectParam1Value(self, effect_level):
+        plugins.setParamValue(effect_level, FINISHER_VOODOO_VARIATION_1_PARAM_INDEX, SYNTH_FX_CHANNEL, FINISHER_VOODOO_SLOT_INDEX)
+        
+    def setEffectParam2Value(self, effect_level):
+        plugins.setParamValue(effect_level, FINISHER_VOODOO_VARIATION_2_PARAM_INDEX, SYNTH_FX_CHANNEL, FINISHER_VOODOO_SLOT_INDEX)
+        
+    def setEffectParam3Value(self, effect_level):
+        plugins.setParamValue(effect_level, FINISHER_VOODOO_VARIATION_3_PARAM_INDEX, SYNTH_FX_CHANNEL, FINISHER_VOODOO_SLOT_INDEX)
+        
+    def setEffectParam4Value(self, effect_level):
+        plugins.setParamValue(effect_level, FINISHER_VOODOO_VARIATION_4_PARAM_INDEX, SYNTH_FX_CHANNEL, FINISHER_VOODOO_SLOT_INDEX)
+
+    def setEffectParam8Value(self, effect_level):
+        plugins.setParamValue(effect_level, FINISHER_VOODOO_EFFECT_PARAM_INDEX, SYNTH_FX_CHANNEL, FINISHER_VOODOO_SLOT_INDEX)
 
 class View:
     
@@ -480,6 +500,8 @@ def OnInit():
     synth_controller.onInitScript()
     
 def OnMidiMsg(event):
+
+    #fl_helper.printAllPluginParameters(SYNTH_FX_CHANNEL, FINISHER_VOODOO_SLOT_INDEX)
 
     synth_controller.onInitScript()
 
@@ -553,5 +575,15 @@ def OnMidiMsg(event):
         synth_controller.setSynthVolume((event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
     elif event.data1 == MIDI_CC_FX_LEVEL:
         synth_controller.setFXLevel(event.data2 / fl_helper.MIDI_MAX_VALUE)
+    elif event.data1 == MIDI_CC_EFFECT_PARAM_1:
+        synth_controller.setEffectParam1Value(event.data2 / fl_helper.MIDI_MAX_VALUE)
+    elif event.data1 == MIDI_CC_EFFECT_PARAM_2:
+        synth_controller.setEffectParam2Value(event.data2 / fl_helper.MIDI_MAX_VALUE)
+    elif event.data1 == MIDI_CC_EFFECT_PARAM_3:
+        synth_controller.setEffectParam3Value(event.data2 / fl_helper.MIDI_MAX_VALUE)
+    elif event.data1 == MIDI_CC_EFFECT_PARAM_4:
+        synth_controller.setEffectParam4Value(event.data2 / fl_helper.MIDI_MAX_VALUE)
+    elif event.data1 == MIDI_CC_EFFECT_PARAM_8:
+        synth_controller.setEffectParam8Value(event.data2 / fl_helper.MIDI_MAX_VALUE)
         
     event.handled = True

@@ -638,6 +638,9 @@ class KorgKaossPad3Plus_LooperMux:
                 print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.onInitScript.__name__ + ": failed to initialize the script.")
                 print(e)
 
+    def isPlaying(self):
+        return transport.isPlaying()
+
     def playStop(self):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.playStop.__name__)
 
@@ -1052,7 +1055,7 @@ def OnMidiMsg(event):
         looper.clearTrack(Track.Track_4)
     elif event.data1 == MIDI_CC_SHIFT:
         looper.setShiftPressedState(event.data2 == fl_helper.MIDI_MAX_VALUE)
-    elif event.data1 == MIDI_CC_TEMPO and looper.getShiftPressedState():
+    elif event.data1 == MIDI_CC_TEMPO and looper.getShiftPressedState() and not looper.isPlaying():
         looper.setTempo(800 + int((event.data2 / fl_helper.MIDI_MAX_VALUE) * 1000.0)) # from 80 to 180
     elif event.data1 == MIDI_CC_LOOPER_VOLUME:
         looper.setLooperVolume((event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
