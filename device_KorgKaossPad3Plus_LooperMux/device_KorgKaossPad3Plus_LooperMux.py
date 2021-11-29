@@ -492,6 +492,7 @@ class Looper():
 
     def setLooperVolume(self, looper_volume):
         self.__looper_volume = looper_volume
+        self.__view.setLooperVolume(looper_volume)
         for track_id in self.__tracks:
             self.__tracks[track_id].setLooperVolume(self.__looper_volume)
 
@@ -502,7 +503,7 @@ class Looper():
         return self.__tracks.get(track_id).getTrackVolume()
 
     def clearLooper(self):
-        self.__looper_volume = fl_helper.MAX_VOLUME_LEVEL_VALUE
+        self.setLooperVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
         self.setTurnadoDictatorLevel(0.0)
         for track_id in self.__tracks:
             self.__tracks[track_id].clear()
@@ -617,7 +618,7 @@ class KorgKaossPad3Plus_LooperMux:
                                                    self.__view) }
         self.__initialized = False
         self.__resample_mode = ResampleMode.NONE
-        self.__last_shift_press_time = 0
+        self.__buttons_last_press_time = {}
 
     def onInitScript(self):
 
@@ -669,25 +670,8 @@ class KorgKaossPad3Plus_LooperMux:
 
         self.__shift_pressed = shift_pressed
 
-        if(False == shift_pressed):
-            if(self.__last_pressed_sampler_button == PressedSamplerButton.A_PRESSED):
-                self.__changeRecordingStateTo(Track.Track_1, True)
-            elif(self.__last_pressed_sampler_button == PressedSamplerButton.B_PRESSED):
-                self.__changeRecordingStateTo(Track.Track_2, True)
-            elif(self.__last_pressed_sampler_button == PressedSamplerButton.C_PRESSED):
-                self.__changeRecordingStateTo(Track.Track_3, True)
-            elif(self.__last_pressed_sampler_button == PressedSamplerButton.D_PRESSED):
-                self.__changeRecordingStateTo(Track.Track_4, True)
-
-        pressed_time = time.time()
-        
-        if shift_pressed:
-            if (pressed_time - self.__last_shift_press_time) < 0.5:
-                # double click
-                self.__last_shift_press_time = 0
-                self.__loopers[self.__selected_looper].randomizeTurnado()
-            else:
-                self.__last_shift_press_time = pressed_time
+        if(True == shift_pressed):
+            self.actionOnDoubleClick(MIDI_CC_SHIFT, self.__loopers[self.__selected_looper].randomizeTurnado)
 
     def getShiftPressedState(self):
         return self.__shift_pressed
@@ -718,7 +702,6 @@ class KorgKaossPad3Plus_LooperMux:
 
     def setLooperVolume(self, looper_volume):
         self.__loopers.get(self.__selected_looper).setLooperVolume(looper_volume)
-        self.__view.setLooperVolume(looper_volume)
 
     def setTrackVolume(self, track_index, track_volume):
         self.__loopers.get(self.__selected_looper).setTrackVolume(track_index, track_volume)
@@ -757,6 +740,19 @@ class KorgKaossPad3Plus_LooperMux:
     def changeRecordingState(self, selected_track_id):
             print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.changeRecordingState.__name__ + ": track - " + str(selected_track_id))
             self.__changeRecordingStateTo(selected_track_id, not self.__loopers[self.__selected_looper].isTrackRecordingInProgress(selected_track_id))
+
+    def actionOnDoubleClick(self, pressed_button, action):
+        pressed_time = time.time()
+        
+        if not pressed_button in self.__buttons_last_press_time.keys():
+            self.__buttons_last_press_time[pressed_button] = 0
+        
+        if (pressed_time - self.__buttons_last_press_time[pressed_button]) < 0.5:
+            # double click
+            self.__buttons_last_press_time[pressed_button] = 0
+            action()
+        else:
+            self.__buttons_last_press_time[pressed_button] = pressed_time
 
     def __changeRecordingStateTo(self, selected_track_id, recording_state):
         if recording_state:
@@ -828,7 +824,18 @@ class KorgKaossPad3Plus_LooperMux:
     
     def setTurnadoDictatorLevel(self, turnado_dictator_level):
         self.__loopers[self.__selected_looper].setTurnadoDictatorLevel(turnado_dictator_level)
-        
+
+    def drop(self):
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.drop.__name__)
+        self.setDropIntencity(0)
+        self.__loopers[Looper.Looper_1].setTrackVolume(Track.Track_1, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+    
+    def turnTrackOnOff(self, track_id):
+        if 0 != self.__loopers[self.__selected_looper].getTrackVolume(track_id):
+            self.__loopers[self.__selected_looper].setTrackVolume(track_id, 0.0)
+        else:
+            self.__loopers[self.__selected_looper].setTrackVolume(track_id, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+    
 class View:
     def setShiftPressedState(self, shift_pressed):
         parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Shift", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
@@ -1031,6 +1038,7 @@ def OnMidiMsg(event):
         looper.playStop()
     elif event.data1 == MIDI_CC_SAMPLE_LENGTH_1:
         looper.setSampleLength(SampleLength.LENGTH_1)
+        looper.actionOnDoubleClick(MIDI_CC_SAMPLE_LENGTH_1, looper.drop)
     elif event.data1 == MIDI_CC_SAMPLE_LENGTH_2:
         looper.setSampleLength(SampleLength.LENGTH_2)
     elif event.data1 == MIDI_CC_SAMPLE_LENGTH_4:
@@ -1039,12 +1047,20 @@ def OnMidiMsg(event):
         looper.setSampleLength(SampleLength.LENGTH_8)
     elif event.data1 == MIDI_CC_SAMPLE_LENGTH_16:
         looper.setSampleLength(SampleLength.LENGTH_16)
+        action = lambda looper = looper: looper.turnTrackOnOff(Track.Track_1)
+        looper.actionOnDoubleClick(MIDI_CC_SAMPLE_LENGTH_16, action)
     elif event.data1 == MIDI_CC_SAMPLE_LENGTH_32:
         looper.setSampleLength(SampleLength.LENGTH_32)
+        action = lambda looper = looper: looper.turnTrackOnOff(Track.Track_2)
+        looper.actionOnDoubleClick(MIDI_CC_SAMPLE_LENGTH_32, action)
     elif event.data1 == MIDI_CC_SAMPLE_LENGTH_64:
         looper.setSampleLength(SampleLength.LENGTH_64)
+        action = lambda looper = looper: looper.turnTrackOnOff(Track.Track_3)
+        looper.actionOnDoubleClick(MIDI_CC_SAMPLE_LENGTH_64, action)
     elif event.data1 == MIDI_CC_SAMPLE_LENGTH_128:
         looper.setSampleLength(SampleLength.LENGTH_128)
+        action = lambda looper = looper: looper.turnTrackOnOff(Track.Track_4)
+        looper.actionOnDoubleClick(MIDI_CC_SAMPLE_LENGTH_128, action)
     elif event.data1 == MIDI_CC_TRACK_1_CLEAR and event.data2 == KP3_PLUS_ABCD_PRESSED and looper.getShiftPressedState():
         looper.clearTrack(Track.Track_1)
     elif event.data1 == MIDI_CC_TRACK_2_CLEAR and event.data2 == KP3_PLUS_ABCD_PRESSED and looper.getShiftPressedState():
