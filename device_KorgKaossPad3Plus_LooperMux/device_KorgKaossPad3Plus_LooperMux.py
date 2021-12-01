@@ -985,7 +985,7 @@ class View:
     def setResampleFXLevel(self, fx_level):
         parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Resample FX", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(fx_level, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-    
+        
 view = View()
 looper = KorgKaossPad3Plus_LooperMux(view)
 
