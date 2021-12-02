@@ -172,9 +172,6 @@ class Track():
 
     def getResampleMode(self):
         return self.__resample_mode
-    
-    def __setResampleMode(self, resample_mode):
-        self.__resample_mode = resample_mode
 
     def setLooperVolume(self, looper_volume):
         mixer.setTrackVolume(self.__mixer_track, looper_volume)
@@ -329,6 +326,7 @@ class Track():
         if self.getResampleMode() == ResampleMode.NONE:
             self.__view.setTrackRecordingState(self.__track_number, 1.0)
         else:
+            self.clear()
             self.__view.setTrackResamplingState(self.__track_number, 1.0)
                  
         self.__isRecordingInProgress = True
@@ -404,6 +402,12 @@ class Track():
         
         self.updateVolume()
 
+    def updateVolume(self):
+        self.__view.setTrackVolume(self.__track_number, self.__volume)
+        
+    def __setResampleMode(self, resample_mode):
+        self.__resample_mode = resample_mode
+
     def __setRouting(self):
         mixer.setRouteTo(MIC_ROUTE_CHANNEL, self.__mixer_track, 1)
         mixer.setRouteTo(SYNTH_ROUTE_CHANNEL, self.__mixer_track, 1)
@@ -424,9 +428,6 @@ class Track():
         plugins.setParamValue(sidechain_level, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "S2L1T" + str(self.__track_number + 1) + "S", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sidechain_level, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-
-    def updateVolume(self):
-        self.__view.setTrackVolume(self.__track_number, self.__volume)
 
 class Looper():
     Looper_1    = 0
