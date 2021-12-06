@@ -1,5 +1,4 @@
 # name=device_KorgKaossPad3Plus_SynthController
-from _ast import Or
 device_name="device_KorgKaossPad3Plus_SynthController"
 print(device_name + ': started')
 
@@ -41,8 +40,9 @@ MIDI_CC_TURNADO_DICTATOR      = 94
 MIDI_CC_TURNADO_DRY_WET       = 94
 MIDI_CC_TURNADO_RANDOMIZE     = 95
 
-MIDI_CC_TURNADO_NEXT_PRESET   = 36
-MIDI_CC_TURNADO_PREV_PRESET   = 37
+MIDI_CC_TURNADO_PREV_PRESET   = 36
+MIDI_CC_TURNADO_NEXT_PRESET   = 37
+MIDI_CC_TURNADO_ON_OFF        = 38
 
 MIDI_CC_EFFECT_PARAM_1        = 70
 MIDI_CC_EFFECT_PARAM_2        = 71
@@ -502,6 +502,10 @@ class KorgKaossPad3Plus_SynthController:
         self.__buttons_last_press_time = {}
         
         self.__fx_level = 1.0
+        
+        self.__turnado_dry_wet_level = 0.0
+        self.__turnado_dictator_level = 0.0
+        self.__turnado_is_off = True
 
     def onInitScript(self):
 
@@ -515,7 +519,10 @@ class KorgKaossPad3Plus_SynthController:
                 self.selectFXPage(self.__selected_fx_preset_page)
                 self.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_1)
                 self.__view.setSaveMode(self.__isSaveMode)
-    
+                
+                self.setTurnadoDictatorLevel(fl_helper.externalParamMapping(plugins.getParamValue(TURNADO_DICTATOR_PARAM_INDEX, SYNTH_FX2_CHANNEL, TURNADO_SLOT_INDEX)))
+                self.setTurnadoDryWetLevel(fl_helper.externalParamMapping(plugins.getParamValue(TURNADO_DRY_WET_PARAM_INDEX, SYNTH_FX2_CHANNEL, TURNADO_SLOT_INDEX )))
+                
                 self.__initialized = True
             except Exception as e:
                 print(device_name + ': ' + KorgKaossPad3Plus_SynthController.onInitScript.__name__ + ": failed to initialize the script.")
@@ -560,6 +567,7 @@ class KorgKaossPad3Plus_SynthController:
         plugins.setParamValue(0.0, TURNADO_RANDOMIZE_PARAM_INDEX, SYNTH_FX2_CHANNEL, TURNADO_SLOT_INDEX)
         plugins.setParamValue(1.0, TURNADO_RANDOMIZE_PARAM_INDEX, SYNTH_FX2_CHANNEL, TURNADO_SLOT_INDEX)
         plugins.setParamValue(0.0, TURNADO_RANDOMIZE_PARAM_INDEX, SYNTH_FX2_CHANNEL, TURNADO_SLOT_INDEX)
+        self.__restoreParams()
 
     def getShiftPressedState(self):
         return self.__shift_pressed
@@ -605,19 +613,59 @@ class KorgKaossPad3Plus_SynthController:
         return self.__fx_preset_pages[self.__selected_fx_preset_page].getSelectedFXPresetID()
     
     def setTurnadoDryWetLevel(self, turnado_dry_wet_level):
-        plugins.setParamValue(turnado_dry_wet_level, TURNADO_DRY_WET_PARAM_INDEX, SYNTH_FX2_CHANNEL, TURNADO_SLOT_INDEX)
+        self.__turnado_dry_wet_level = turnado_dry_wet_level
+        plugins.setParamValue(self.__turnado_dry_wet_level, TURNADO_DRY_WET_PARAM_INDEX, SYNTH_FX2_CHANNEL, TURNADO_SLOT_INDEX)
+        
+        if turnado_dry_wet_level == 0.0:
+            self.__turnado_is_off = True
+        else:
+            self.__turnado_is_off = False
+        
+        view.setTurnadoDryWetLevel(turnado_dry_wet_level)
+        view.turnadoOff(turnado_dry_wet_level == 0.0)
     
     def setTurnadoDictatorLevel(self, turnado_dictator_level):
-        plugins.setParamValue(turnado_dictator_level, TURNADO_DICTATOR_PARAM_INDEX, SYNTH_FX2_CHANNEL, TURNADO_SLOT_INDEX)
+        self.__turnado_dictator_level = turnado_dictator_level
+        plugins.setParamValue(self.__turnado_dictator_level, TURNADO_DICTATOR_PARAM_INDEX, SYNTH_FX2_CHANNEL, TURNADO_SLOT_INDEX)
 
+        view.setTurnadoDictatorLevel(turnado_dictator_level)
+        
     def switchToNextTurnadoPreset(self):
         print(device_name + ': ' + KorgKaossPad3Plus_SynthController.switchToNextTurnadoPreset.__name__)
         plugins.nextPreset(SYNTH_FX2_CHANNEL, TURNADO_SLOT_INDEX)
+        self.__restoreParams()
+        
+        view.switchToNextTurnadoPreset()
     
     def switchToPrevTurnadoPreset(self):
         print(device_name + ': ' + KorgKaossPad3Plus_SynthController.switchToPrevTurnadoPreset.__name__)
         plugins.prevPreset(SYNTH_FX2_CHANNEL, TURNADO_SLOT_INDEX)
+        self.__restoreParams()
+        
+        view.switchToPrevTurnadoPreset()
     
+    def turnadoOnOff(self):        
+        self.__turnado_is_off = not self.__turnado_is_off
+        
+        if self.__turnado_is_off == False:
+            if self.__turnado_dry_wet_level != 0.0:
+                val = self.__turnado_dry_wet_level
+            else:
+                val = 1.0
+        else:
+            val = 0.0
+
+        print(device_name + ': ' + KorgKaossPad3Plus_SynthController.turnadoOnOff.__name__ + ": turnado fx level - " + str(val))
+
+        plugins.setParamValue(val, TURNADO_DRY_WET_PARAM_INDEX, SYNTH_FX2_CHANNEL, TURNADO_SLOT_INDEX)
+        
+        view.turnadoOff(val == 0.0)
+        view.setTurnadoDryWetLevel(val)
+    
+    def __restoreParams(self):
+        plugins.setParamValue(self.__turnado_dictator_level, TURNADO_DICTATOR_PARAM_INDEX, SYNTH_FX2_CHANNEL, TURNADO_SLOT_INDEX)
+        plugins.setParamValue(self.__turnado_dry_wet_level, TURNADO_DRY_WET_PARAM_INDEX, SYNTH_FX2_CHANNEL, TURNADO_SLOT_INDEX)
+
     def __selectFXPreset(self, preset_fx_page_id, preset_fx_id):
         print(device_name + ': ' + KorgKaossPad3Plus_SynthController.__selectFXPreset.__name__ + ": selected page - " + \
               str(preset_fx_page_id) + ", selected FX - " + str(preset_fx_id))
@@ -688,6 +736,29 @@ class View:
     def setFXParameterActivationStatus(self, fx_param_id, activation_status):
         parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "FX_P_" + str(fx_param_id + 1) + "_A", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(activation_status, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+
+    def setTurnadoDryWetLevel(self, turnado_dry_wet_level):
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "T_Dry/Wet", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(turnado_dry_wet_level, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    
+    def setTurnadoDictatorLevel(self, turnado_dictator_level):
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "T_Dictator", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(turnado_dictator_level, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        
+    def switchToNextTurnadoPreset(self):
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "T_Next_Preset", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(0.0, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    
+    def switchToPrevTurnadoPreset(self):
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "T_Previous_Preset", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(0.0, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    
+    def turnadoOff(self, off_value):     
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "T_Off", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(off_value, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    
 
 view = View()
 synth_controller = KorgKaossPad3Plus_SynthController(view)
@@ -791,9 +862,11 @@ def OnMidiMsg(event):
         synth_controller.setFXParameterLevel(FXParameter.FXParameter_8, event.data2 / fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_SYNTH_VOLUME:
         synth_controller.setSynthVolume((event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
-    elif event.data1 == MIDI_CC_TURNADO_NEXT_PRESET:
+    elif event.data1 == MIDI_CC_TURNADO_NEXT_PRESET and event.data2 == KP3_PLUS_ABCD_PRESSED:
         synth_controller.switchToNextTurnadoPreset()
-    elif event.data1 == MIDI_CC_TURNADO_PREV_PRESET:
+    elif event.data1 == MIDI_CC_TURNADO_PREV_PRESET and event.data2 == KP3_PLUS_ABCD_PRESSED:
         synth_controller.switchToPrevTurnadoPreset()
+    elif event.data1 == MIDI_CC_TURNADO_ON_OFF and event.data2 == KP3_PLUS_ABCD_PRESSED:
+        synth_controller.turnadoOnOff()
         
     event.handled = True
