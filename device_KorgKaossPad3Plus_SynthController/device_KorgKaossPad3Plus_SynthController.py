@@ -15,14 +15,15 @@ import playlist
 from common import fl_helper
  
 # MIDI CC
-MIDI_CC_SHIFT                 = 95
-MIDI_CC_ENTER_SAVE_MODE       = 53
-MIDI_CC_RESET_PRESET          = 54
-MIDI_CC_RESET_SELECTIONS      = 55
-MIDI_CC_EFFECTS_PAGE_1        = 49
-MIDI_CC_EFFECTS_PAGE_2        = 50
-MIDI_CC_EFFECTS_PAGE_3        = 51
-MIDI_CC_EFFECTS_PAGE_4        = 52
+MIDI_CC_SHIFT                      = 95
+MIDI_CC_ENTER_SAVE_MODE            = 53
+MIDI_CC_RESET_PRESET               = 54
+MIDI_CC_PREV_ACTIVE_FX_UNIT_PRESET = 55
+MIDI_CC_NEXT_ACTIVE_FX_UNIT_PRESET = 56
+MIDI_CC_EFFECTS_PAGE_1             = 49
+MIDI_CC_EFFECTS_PAGE_2             = 50
+MIDI_CC_EFFECTS_PAGE_3             = 51
+MIDI_CC_EFFECTS_PAGE_4             = 52
 
 MIDI_CC_EFFECT_1              = 49
 MIDI_CC_EFFECT_2              = 50
@@ -43,6 +44,7 @@ MIDI_CC_TURNADO_RANDOMIZE     = 95
 MIDI_CC_TURNADO_PREV_PRESET   = 36
 MIDI_CC_TURNADO_NEXT_PRESET   = 37
 MIDI_CC_TURNADO_ON_OFF        = 38
+MIDI_CC_CHANGE_ACTIVE_FX_UNIT = 39
 
 MIDI_CC_EFFECT_PARAM_1        = 70
 MIDI_CC_EFFECT_PARAM_2        = 71
@@ -52,15 +54,6 @@ MIDI_CC_EFFECT_PARAM_5        = 74
 MIDI_CC_EFFECT_PARAM_6        = 75
 MIDI_CC_EFFECT_PARAM_7        = 76
 MIDI_CC_EFFECT_PARAM_8        = 77
-
-MIDI_CC_ANIMATION_1           = 36
-MIDI_CC_ANIMATION_2           = 37
-MIDI_CC_ANIMATION_3           = 38
-MIDI_CC_ANIMATION_4           = 39
-MIDI_CC_ANIMATION_5           = 36
-MIDI_CC_ANIMATION_6           = 37
-MIDI_CC_ANIMATION_7           = 38
-MIDI_CC_ANIMATION_8           = 39
 
 # ROUTING
 
@@ -75,6 +68,8 @@ KP3_PLUS_ABCD_RELEASED       = 64
 
 PARAMS_FIRST_STORAGE_TRACK_ID = 100
 NUMBER_OF_FX_IN_PAGE          = 8
+
+FINISHER_VOODOO_MODE_NUMBER   = 50
 
 # MASTER MIXER SLOT INDICES
 MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX = 0
@@ -108,6 +103,7 @@ TURNADO_PARAMS_LIMIT          = 4000
 # PLUGIN PARAMETERS
 PANOMATIC_VOLUME_PARAM_INDEX = 1
 
+FINISHER_VOODOO_MODE_PARAM_INDEX   = 2
 FINISHER_VOODOO_EFFECT_PARAM_INDEX = 3
 FINISHER_VOODOO_VARIATION_1_PARAM_INDEX = 4
 FINISHER_VOODOO_VARIATION_2_PARAM_INDEX = 5
@@ -132,6 +128,22 @@ TURNADO_PREV_PRESET_PARAM_INDEX    = 8
 
 INVALID_PARAM = -1
 
+def getAdjustablePlugin():
+    
+    parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "S_E2_TO", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    finisher_voodoo_state = fl_helper.externalParamMapping(plugins.getParamValue(parameter_id, SYNTH_MAIN_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX))
+    
+    if 1.0 == finisher_voodoo_state:
+        return FINISHER_VOODOO_SLOT_INDEX
+    
+    parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "S_E3_TO", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    manipulator_state = fl_helper.externalParamMapping(plugins.getParamValue(parameter_id, SYNTH_MAIN_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX))
+    
+    if 1.0 == manipulator_state:
+        return MANIPULATOR_SLOT_INDEX
+    
+    return NO_ADJUSTABLE_EFFECT_AVAILABLE
+
 class FXParameter:
     FXParameter_1 = 0
     FXParameter_2 = 1
@@ -146,22 +158,6 @@ class FXParameter:
         self.__fx_param_level = 0.0
         self.__fx_param_id = fx_param_id
         self.__view = view
-    
-    def getAdjustablePlugin(self):
-        
-        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "S_E2_TO", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        finisher_voodoo_state = fl_helper.externalParamMapping(plugins.getParamValue(parameter_id, SYNTH_MAIN_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX))
-        
-        if 1.0 == finisher_voodoo_state:
-            return FINISHER_VOODOO_SLOT_INDEX
-        
-        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "S_E3_TO", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        manipulator_state = fl_helper.externalParamMapping(plugins.getParamValue(parameter_id, SYNTH_MAIN_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX))
-        
-        if 1.0 == manipulator_state:
-            return MANIPULATOR_SLOT_INDEX
-        
-        return NO_ADJUSTABLE_EFFECT_AVAILABLE
     
     def getFLParamIndex(self, adjustable_plugin_slot_index, fx_param_id):
         
@@ -204,7 +200,7 @@ class FXParameter:
     
     def setLevel(self, fx_param_level):
         
-        adjustable_plugin_slot_index = self.getAdjustablePlugin()
+        adjustable_plugin_slot_index = getAdjustablePlugin()
         
         if adjustable_plugin_slot_index != NO_ADJUSTABLE_EFFECT_AVAILABLE:
             fl_param_id = self.getFLParamIndex(adjustable_plugin_slot_index, self.__fx_param_id)
@@ -219,7 +215,7 @@ class FXParameter:
     
     def updateParamsFromPlugin(self):
         
-        adjustable_plugin_slot_index = self.getAdjustablePlugin()
+        adjustable_plugin_slot_index = getAdjustablePlugin()
         
         if adjustable_plugin_slot_index != NO_ADJUSTABLE_EFFECT_AVAILABLE:
         
@@ -234,6 +230,17 @@ class FXParameter:
             
             self.__view.setFXParameterLevel(self.__fx_param_id, self.__fx_param_level)
         
+        else:
+            
+            self.__fx_param_level = 0.0
+            self.__view.setFXParameterActivationStatus(self.__fx_param_id, 0)
+            self.__view.setFXParameterLevel(self.__fx_param_id, self.__fx_param_level)
+
+class FXUnit:
+    FX_UNIT_NONE            = 0
+    FX_UNIT_MANIPULATOR     = 1
+    FX_UNIT_FINISHER_VOODOO = 2
+            
 class FXPreset:
     
     FXPreset_1    = 0
@@ -258,12 +265,16 @@ class FXPreset:
                                  FXParameter.FXParameter_6: FXParameter(FXParameter.FXParameter_6, view),
                                  FXParameter.FXParameter_7: FXParameter(FXParameter.FXParameter_7, view),
                                  FXParameter.FXParameter_8: FXParameter(FXParameter.FXParameter_8, view) }
-    
+
+        self.__active_fx_unit = FXUnit.FX_UNIT_NONE
+
     def onInitScript(self):
         self.__loadParameters()
         
         for fx_parameter_id in self.__fx_parameters:
             self.__fx_parameters[fx_parameter_id].onInitScript()
+            
+        self.setActiveFXUnit(self.getActiveFXUnit())
     
     def update(self):
         self.__getParamsFromPlugins()
@@ -292,9 +303,43 @@ class FXPreset:
         for fx_param_id in self.__fx_parameters:
             self.__fx_parameters[fx_param_id].updateParamsFromPlugin()
     
+    def view_updateActiveFXUnit(self):
+        self.setActiveFXUnit(self.getActiveFXUnit())
+    
     def setFXParameterLevel(self, fx_param_id, fx_param_level):
         self.__fx_parameters[fx_param_id].setLevel(fx_param_level)
     
+    def getActiveFXUnit(self):
+        active_fx_unit = FXUnit.FX_UNIT_NONE
+        
+        adjustable_plugin = getAdjustablePlugin()
+        
+        if adjustable_plugin == MANIPULATOR_SLOT_INDEX:
+            active_fx_unit = FXUnit.FX_UNIT_MANIPULATOR
+        elif adjustable_plugin == FINISHER_VOODOO_SLOT_INDEX:
+            active_fx_unit = FXUnit.FX_UNIT_FINISHER_VOODOO
+
+        return active_fx_unit
+    
+    def setActiveFXUnit(self, active_fx_unit):
+        
+        manipulator_value = 0.0
+        finisher_voodoo_value = 0.0
+        
+        if active_fx_unit == FXUnit.FX_UNIT_MANIPULATOR:
+            manipulator_value = 1.0
+        elif active_fx_unit == FXUnit.FX_UNIT_FINISHER_VOODOO:
+            finisher_voodoo_value = 1.0
+            
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "S_E3_TO", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(manipulator_value, parameter_id, SYNTH_MAIN_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+            
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "S_E2_TO", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(finisher_voodoo_value, parameter_id, SYNTH_MAIN_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+
+        self.__view.setActiveFXUnit(active_fx_unit)
+        self.view_updateFXParamsFromPlugins()
+
     def __areParametersLoaded(self):
         return len(self.__parameters) != 0
     
@@ -376,7 +421,7 @@ class FXPreset:
     
     def __resetParameters(self):
         playlist.setTrackName( PARAMS_FIRST_STORAGE_TRACK_ID + ( self.__fx_page_number * NUMBER_OF_FX_IN_PAGE ) + self.__fx_number,  "")
-        
+
 class FXPresetPage:
     
     FXPresetPage_1 = 0
@@ -412,17 +457,23 @@ class FXPresetPage:
         self.__fx_presets[fx_preset_id].update()
         self.__fx_presets[fx_preset_id].view_updateFXPresetAvailability()
         self.__fx_presets[fx_preset_id].view_updateFXParamsFromPlugins()
+        self.__fx_presets[fx_preset_id].view_updateActiveFXUnit()
     
     def resetFXPreset(self, fx_preset_id):
         self.__fx_presets[fx_preset_id].reset()
         self.__fx_presets[fx_preset_id].view_updateFXPresetAvailability()
         self.__fx_presets[fx_preset_id].view_updateFXParamsFromPlugins()
+        self.__fx_presets[fx_preset_id].view_updateActiveFXUnit()
 
     def selectFXPreset(self, fx_preset_id):
         self.__selected_fx_preset_id = fx_preset_id
         self.__fx_presets[fx_preset_id].select()
         self.__fx_presets[fx_preset_id].view_updateFXPresetAvailability()
         self.__fx_presets[fx_preset_id].view_updateFXParamsFromPlugins()
+        self.__fx_presets[fx_preset_id].view_updateActiveFXUnit()
+    
+    def view_updateFXParamsFromPlugins(self):
+        self.__fx_presets[self.__selected_fx_preset_id].view_updateFXParamsFromPlugins()
     
     def setFXParameterLevel(self, fx_param_id, fx_param_level):
             self.__fx_presets[self.__selected_fx_preset_id].setFXParameterLevel(fx_param_id, fx_param_level)
@@ -434,7 +485,24 @@ class FXPresetPage:
             self.__fx_presets[fx_preset_id].view_updateFXPresetAvailability()
         
         self.__fx_presets[fx_preset_id].view_updateFXParamsFromPlugins()
+        self.__fx_presets[fx_preset_id].view_updateActiveFXUnit()
 
+    def changeActiveFXUnit(self):
+        active_fx_unit = self.__fx_presets[self.__selected_fx_preset_id].getActiveFXUnit()
+        
+        if active_fx_unit == FXUnit.FX_UNIT_NONE:
+            print(device_name + ': ' + KorgKaossPad3Plus_SynthController.changeActiveFXUnit.__name__ + ": to manipulator")
+            self.__fx_presets[self.__selected_fx_preset_id].setActiveFXUnit(FXUnit.FX_UNIT_MANIPULATOR)
+        elif active_fx_unit == FXUnit.FX_UNIT_MANIPULATOR:
+            print(device_name + ': ' + KorgKaossPad3Plus_SynthController.changeActiveFXUnit.__name__ + ": to finisher voodoo")
+            self.__fx_presets[self.__selected_fx_preset_id].setActiveFXUnit(FXUnit.FX_UNIT_FINISHER_VOODOO)
+        elif active_fx_unit == FXUnit.FX_UNIT_FINISHER_VOODOO:
+            print(device_name + ': ' + KorgKaossPad3Plus_SynthController.changeActiveFXUnit.__name__ + ": to none")
+            self.__fx_presets[self.__selected_fx_preset_id].setActiveFXUnit(FXUnit.FX_UNIT_NONE)
+    
+    def getActiveFXUnit(self):
+        return self.__fx_presets[self.__selected_fx_preset_id].getActiveFXUnit()
+        
 class FX:
     
     FX_1  = 0
@@ -475,7 +543,7 @@ class FX:
             self.__fx_level = fx_level
 
 class KorgKaossPad3Plus_SynthController:
-
+    
     def __init__(self, view):
         print(device_name + ': ' + KorgKaossPad3Plus_SynthController.__init__.__name__)
         
@@ -524,6 +592,7 @@ class KorgKaossPad3Plus_SynthController:
                 self.setTurnadoDryWetLevel(fl_helper.externalParamMapping(plugins.getParamValue(TURNADO_DRY_WET_PARAM_INDEX, SYNTH_FX2_CHANNEL, TURNADO_SLOT_INDEX )))
                 
                 self.__initialized = True
+                
             except Exception as e:
                 print(device_name + ': ' + KorgKaossPad3Plus_SynthController.onInitScript.__name__ + ": failed to initialize the script.")
                 print(e)
@@ -553,6 +622,7 @@ class KorgKaossPad3Plus_SynthController:
         print(device_name + ': ' + KorgKaossPad3Plus_SynthController.onInitScript.__name__ + ": fx page id - " + str(preset_fx_page_id))
         self.__selected_fx_preset_page = preset_fx_page_id;
         self.__fx_preset_pages[self.__selected_fx_preset_page].select()
+        
 
     def setShiftPressedState(self, shift_pressed):
         print(device_name + ': ' + KorgKaossPad3Plus_SynthController.setShiftPressedState.__name__ + ": shift pressed - " + str(shift_pressed))
@@ -576,14 +646,6 @@ class KorgKaossPad3Plus_SynthController:
         print(device_name + ': ' + KorgKaossPad3Plus_SynthController.selectFXPresetOnTheVisiblePage.__name__ + ": selected page - " + \
               str(self.__selected_fx_preset_page) + ", selected FX - " + str(preset_fx_id))
         self.__fx_preset_pages[self.__selected_fx_preset_page].selectFXPreset(preset_fx_id)
-        
-        self.setFXLevel(self.__fx_level, True)
-
-    def resetSelections(self):
-        print(device_name + ': ' + KorgKaossPad3Plus_SynthController.resetSelections.__name__)
-        
-        self.selectFXPage(FXPresetPage.FXPresetPage_1)
-        self.selectFXPreset(FXPreset.FXPreset_1)
         
         self.setFXLevel(self.__fx_level, True)
             
@@ -673,6 +735,52 @@ class KorgKaossPad3Plus_SynthController:
         
         self.setFXLevel(self.__fx_level, True)
 
+    def changeActiveFXUnit(self):
+        self.__fx_preset_pages[self.__selected_fx_preset_page].changeActiveFXUnit()
+
+    def switchActiveFXUnitToPrevPreset(self):
+        print(device_name + ': ' + KorgKaossPad3Plus_SynthController.switchActiveFXUnitToPrevPreset.__name__)
+
+        active_fx_unit = self.__fx_preset_pages[self.__selected_fx_preset_page].getActiveFXUnit()
+        
+        if active_fx_unit == FXUnit.FX_UNIT_MANIPULATOR:
+            plugins.prevPreset(SYNTH_FX_CHANNEL, MANIPULATOR_SLOT_INDEX)
+        elif active_fx_unit == FXUnit.FX_UNIT_FINISHER_VOODOO:
+            currentProgram = fl_helper.externalParamMapping(plugins.getParamValue(FINISHER_VOODOO_MODE_PARAM_INDEX, SYNTH_FX_CHANNEL, FINISHER_VOODOO_SLOT_INDEX)) * FINISHER_VOODOO_MODE_NUMBER
+            
+            targetProgram = currentProgram - 1
+            
+            if currentProgram == 0:
+                targetProgram = FINISHER_VOODOO_MODE_NUMBER - 1
+            
+            plugins.setParamValue(targetProgram / FINISHER_VOODOO_MODE_NUMBER, FINISHER_VOODOO_MODE_PARAM_INDEX, SYNTH_FX_CHANNEL, FINISHER_VOODOO_SLOT_INDEX)
+        
+        self.__view.switchActiveFXUnitToPrevPreset()
+
+        self.__fx_preset_pages[self.__selected_fx_preset_page].view_updateFXParamsFromPlugins()
+    
+    def switchActiveFXUnitToNextPreset(self):
+        print(device_name + ': ' + KorgKaossPad3Plus_SynthController.switchActiveFXUnitToNextPreset.__name__)
+        
+        active_fx_unit = self.__fx_preset_pages[self.__selected_fx_preset_page].getActiveFXUnit()
+        
+        if active_fx_unit == FXUnit.FX_UNIT_MANIPULATOR:
+            plugins.nextPreset(SYNTH_FX_CHANNEL, MANIPULATOR_SLOT_INDEX)
+        elif active_fx_unit == FXUnit.FX_UNIT_FINISHER_VOODOO:
+            currentProgram = fl_helper.externalParamMapping(plugins.getParamValue(FINISHER_VOODOO_MODE_PARAM_INDEX, SYNTH_FX_CHANNEL, FINISHER_VOODOO_SLOT_INDEX)) * FINISHER_VOODOO_MODE_NUMBER
+            
+            targetProgram = currentProgram + 1
+            
+            if currentProgram == FINISHER_VOODOO_MODE_NUMBER - 1:
+                targetProgram = 0
+            
+            plugins.setParamValue(targetProgram / FINISHER_VOODOO_MODE_NUMBER, FINISHER_VOODOO_MODE_PARAM_INDEX, SYNTH_FX_CHANNEL, FINISHER_VOODOO_SLOT_INDEX)
+        
+        self.__view.switchActiveFXUnitToNextPreset()
+        
+        self.__fx_preset_pages[self.__selected_fx_preset_page].view_updateFXParamsFromPlugins()
+        
+
 class View:
     
     def __init__(self):
@@ -755,10 +863,41 @@ class View:
         plugins.setParamValue(1.0, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(0.0, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
     
+    def switchActiveFXUnitToNextPreset(self):
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "FX_U_Next_Preset", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(0.0, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    
+    def switchActiveFXUnitToPrevPreset(self):
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "FX_U_Prev_Preset", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(0.0, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    
     def turnadoOff(self, off_value):     
         parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "T_Off", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(off_value, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
     
+    def setActiveFXUnit(self, active_fx_unit):
+        
+        manipulator_value = 0.0
+        voodoo_finisher_value = 0.0
+        none_value = 0.0
+        
+        if active_fx_unit == FXUnit.FX_UNIT_MANIPULATOR:
+            manipulator_value = 1.0
+        elif active_fx_unit == FXUnit.FX_UNIT_FINISHER_VOODOO:
+            voodoo_finisher_value = 1.0
+        elif active_fx_unit == FXUnit.FX_UNIT_NONE:
+            none_value = 1.0
+        
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "S_AFX_Manipulator", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(manipulator_value, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "S_AFX_Voodoo_Finisher", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(voodoo_finisher_value, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(SYNTH_MAIN_CHANNEL, "S_AFX_None", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(none_value, parameter_id, SYNTH_MAIN_CHANNEL, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
 view = View()
 synth_controller = KorgKaossPad3Plus_SynthController(view)
@@ -768,7 +907,7 @@ def OnInit():
     
 def OnMidiMsg(event):
 
-    #fl_helper.printAllPluginParameters(SYNTH_FX2_CHANNEL, TURNADO_SLOT_INDEX)
+    #fl_helper.printAllPluginParameters(SYNTH_FX_CHANNEL, MANIPULATOR_SLOT_INDEX)
 
     synth_controller.onInitScript()
 
@@ -782,14 +921,16 @@ def OnMidiMsg(event):
         synth_controller.selectFXPage(FXPresetPage.FXPresetPage_3)
     elif event.data1 == MIDI_CC_EFFECTS_PAGE_4 and synth_controller.getShiftPressedState():
         synth_controller.selectFXPage(FXPresetPage.FXPresetPage_4)
-    elif event.data1 == MIDI_CC_RESET_SELECTIONS and synth_controller.getShiftPressedState():
-        synth_controller.resetSelections()
     elif event.data1 == MIDI_CC_SHIFT:
         synth_controller.setShiftPressedState(event.data2 == fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_ENTER_SAVE_MODE and synth_controller.getShiftPressedState():
         synth_controller.setSaveMode(not synth_controller.isSaveMode())
     elif event.data1 == MIDI_CC_RESET_PRESET and synth_controller.getShiftPressedState():
         synth_controller.resetFXPreset()
+    elif event.data1 == MIDI_CC_PREV_ACTIVE_FX_UNIT_PRESET and synth_controller.getShiftPressedState():
+        synth_controller.switchActiveFXUnitToPrevPreset()
+    elif event.data1 == MIDI_CC_NEXT_ACTIVE_FX_UNIT_PRESET and synth_controller.getShiftPressedState():
+        synth_controller.switchActiveFXUnitToNextPreset()
     elif event.data1 == MIDI_CC_EFFECT_1 and synth_controller.isSaveMode():
         synth_controller.updateFXPreset(FXPreset.FXPreset_1)
         synth_controller.setSaveMode(False)
@@ -868,5 +1009,7 @@ def OnMidiMsg(event):
         synth_controller.switchToPrevTurnadoPreset()
     elif event.data1 == MIDI_CC_TURNADO_ON_OFF and event.data2 == KP3_PLUS_ABCD_PRESSED:
         synth_controller.turnadoOnOff()
+    elif event.data1 == MIDI_CC_CHANGE_ACTIVE_FX_UNIT and synth_controller.getShiftPressedState() and event.data2 == KP3_PLUS_ABCD_PRESSED:
+        synth_controller.changeActiveFXUnit()
         
     event.handled = True
