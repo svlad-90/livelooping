@@ -750,8 +750,10 @@ class KorgKaossPad3Plus_SynthController:
             
             targetProgram = currentProgram - 1
             
-            if currentProgram == 0:
-                targetProgram = FINISHER_VOODOO_MODE_NUMBER - 1
+            if targetProgram < -0.5:
+                targetProgram = FINISHER_VOODOO_MODE_NUMBER
+            
+            print("targetProgram - " + str(targetProgram))
             
             plugins.setParamValue(targetProgram / FINISHER_VOODOO_MODE_NUMBER, FINISHER_VOODOO_MODE_PARAM_INDEX, SYNTH_FX_CHANNEL, FINISHER_VOODOO_SLOT_INDEX)
         
@@ -771,8 +773,10 @@ class KorgKaossPad3Plus_SynthController:
             
             targetProgram = currentProgram + 1
             
-            if currentProgram == FINISHER_VOODOO_MODE_NUMBER - 1:
+            if targetProgram > FINISHER_VOODOO_MODE_NUMBER + 0.5:
                 targetProgram = 0
+                
+            print("targetProgram - " + str(targetProgram))
             
             plugins.setParamValue(targetProgram / FINISHER_VOODOO_MODE_NUMBER, FINISHER_VOODOO_MODE_PARAM_INDEX, SYNTH_FX_CHANNEL, FINISHER_VOODOO_SLOT_INDEX)
         
