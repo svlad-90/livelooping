@@ -328,19 +328,20 @@ class FXPreset:
     
     def setActiveFXUnit(self, active_fx_unit):
         
-        manipulator_value = 0.0
-        finisher_voodoo_value = 0.0
+        manipulator_activation_status_value = 0.0
+        finisher_voodoo_activation_status_value = 0.0
+        
         
         if active_fx_unit == FXUnit.FX_UNIT_MANIPULATOR:
-            manipulator_value = 1.0
+            manipulator_activation_status_value = 1.0
         elif active_fx_unit == FXUnit.FX_UNIT_FINISHER_VOODOO:
-            finisher_voodoo_value = 1.0
+            finisher_voodoo_activation_status_value = 1.0
             
         parameter_id = fl_helper.findSurfaceControlElementIdByName(self.__context.main_channel, "E3_TO", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(manipulator_value, parameter_id, self.__context.main_channel, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(manipulator_activation_status_value, parameter_id, self.__context.main_channel, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
             
         parameter_id = fl_helper.findSurfaceControlElementIdByName(self.__context.main_channel, "E2_TO", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(finisher_voodoo_value, parameter_id, self.__context.main_channel, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(finisher_voodoo_activation_status_value, parameter_id, self.__context.main_channel, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
         self.__view.setActiveFXUnit(active_fx_unit)
         self.view_updateFXParamsFromPlugins()
@@ -864,6 +865,7 @@ class KorgKaossPad3Plus_InputController:
 
     def changeActiveFXUnit(self):
         self.__fx_preset_pages[self.__selected_fx_preset_page].changeActiveFXUnit()
+        self.setFXLevel(self.__fx_level, True)
 
     def switchActiveFXUnitToPrevPreset(self):
         print(self.__context.device_name + ': ' + KorgKaossPad3Plus_InputController.switchActiveFXUnitToPrevPreset.__name__)

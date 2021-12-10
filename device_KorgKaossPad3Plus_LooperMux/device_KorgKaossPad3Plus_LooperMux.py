@@ -81,10 +81,12 @@ LOOPER_3_INITIAL_TRACK_CHANNEL = 35
 LOOPER_4_INITIAL_TRACK_CHANNEL = 43
 
 # CONSTANTS
-TEMPO_JOG_ROTATION_THRESHOLD = 5
+TEMPO_JOG_ROTATION_THRESHOLD        = 5
 
-KP3_PLUS_ABCD_PRESSED        = 100
-KP3_PLUS_ABCD_RELEASED       = 64
+KP3_PLUS_ABCD_PRESSED               = 100
+KP3_PLUS_ABCD_RELEASED              = 64
+
+SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT  = 1000
 
 # MASTER MIXER SLOT INDICES
 MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX = 0
@@ -491,11 +493,17 @@ class Looper():
     def getTrack(self, track_number):
         return self.__tracks.get(track_number)
 
-    def setLooperVolume(self, looper_volume):
+    def setLooperVolume(self, looper_volume, ignore_view = False):
         self.__looper_volume = looper_volume
-        self.__view.setLooperVolume(looper_volume)
+        
+        if ignore_view == False:
+            self.__view.setLooperVolume(looper_volume)
+        
         for track_id in self.__tracks:
             self.__tracks[track_id].setLooperVolume(self.__looper_volume)
+
+    def getLooperVolume(self):
+        return self.__looper_volume
 
     def setTrackVolume(self, track_id, track_volume):
         self.__tracks.get(track_id).setTrackVolume(track_volume)
@@ -755,6 +763,57 @@ class KorgKaossPad3Plus_LooperMux:
         else:
             self.__buttons_last_press_time[pressed_button] = pressed_time
 
+    def setInputSideChainLevel(self, track_id, sidechain_level):
+        self.__loopers[Looper.Looper_1].setInputSideChainLevel(track_id, sidechain_level)
+
+    def setLooperSideChainLevel(self, track_id, sidechain_level):
+        if self.__selected_looper != Looper.Looper_1:
+            self.__loopers[self.__selected_looper].setLooperSideChainLevel(track_id, sidechain_level)
+
+    def setDropIntencity(self, drop_intencity):
+        plugins.setParamValue(drop_intencity, ENDLESS_SMILE_PLUGIN_INTENSITY_PARAM_INDEX, LOOPER_ALL_CHANNEL, LOOPER_ALL_ENDLESS_SMILE_SLOT_INDEX)
+        self.__view.setDropIntencity(drop_intencity)
+
+    def setResampleMode(self, resample_mode):
+        
+        if resample_mode == self.getResampleMode():
+            resample_mode = ResampleMode.NONE
+        
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.setResampleMode.__name__ + ": to - " + str(resample_mode))
+        self.__resample_mode = resample_mode
+        
+        self.__view.setResampleMode(resample_mode)
+    
+    def getResampleMode(self):
+        return self.__resample_mode
+    
+    def setTurnadoDictatorLevel(self, turnado_dictator_level):
+        self.__loopers[self.__selected_looper].setTurnadoDictatorLevel(turnado_dictator_level)
+
+    def drop(self):
+        print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.drop.__name__)
+        self.setDropIntencity(0)
+        self.__loopers[Looper.Looper_1].setTrackVolume(Track.Track_1, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+        self.__loopers[Looper.Looper_1].setTrackVolume(Track.Track_2, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+        self.__loopers[Looper.Looper_1].setTrackVolume(Track.Track_3, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+        self.__loopers[Looper.Looper_1].setTrackVolume(Track.Track_4, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+        self.__loopers[Looper.Looper_1].setLooperVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
+    
+    def turnTrackOnOff(self, track_id):
+        if 0 != self.__loopers[self.__selected_looper].getTrackVolume(track_id):
+            self.__loopers[self.__selected_looper].setTrackVolume(track_id, 0.0)
+        else:
+            self.__loopers[self.__selected_looper].setTrackVolume(track_id, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+    
+    def turnLooperOnOff(self, looper_id):
+        
+        update_view = looper_id == self.__selected_looper
+        
+        if 0 != self.__loopers[looper_id].getLooperVolume():
+            self.__loopers[looper_id].setLooperVolume(0.0, not update_view)
+        else:
+            self.__loopers[looper_id].setLooperVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE, not update_view)
+            
     def __changeRecordingStateTo(self, selected_track_id, recording_state):
         if recording_state:
             self.__startRecordingTrack(selected_track_id)
@@ -798,44 +857,6 @@ class KorgKaossPad3Plus_LooperMux:
         self.__loopers[self.__selected_looper].stopRecordingTrack(track_id)
         self.__loopers[self.__selected_looper].getTrack(track_id).setRoutingLevel(0.0)
         self.setResampleMode(ResampleMode.NONE)
-
-    def setInputSideChainLevel(self, track_id, sidechain_level):
-        self.__loopers[Looper.Looper_1].setInputSideChainLevel(track_id, sidechain_level)
-
-    def setLooperSideChainLevel(self, track_id, sidechain_level):
-        if self.__selected_looper != Looper.Looper_1:
-            self.__loopers[self.__selected_looper].setLooperSideChainLevel(track_id, sidechain_level)
-
-    def setDropIntencity(self, drop_intencity):
-        plugins.setParamValue(drop_intencity, ENDLESS_SMILE_PLUGIN_INTENSITY_PARAM_INDEX, LOOPER_ALL_CHANNEL, LOOPER_ALL_ENDLESS_SMILE_SLOT_INDEX)
-        self.__view.setDropIntencity(drop_intencity)
-
-    def setResampleMode(self, resample_mode):
-        
-        if resample_mode == self.getResampleMode():
-            resample_mode = ResampleMode.NONE
-        
-        print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.setResampleMode.__name__ + ": to - " + str(resample_mode))
-        self.__resample_mode = resample_mode
-        
-        self.__view.setResampleMode(resample_mode)
-    
-    def getResampleMode(self):
-        return self.__resample_mode
-    
-    def setTurnadoDictatorLevel(self, turnado_dictator_level):
-        self.__loopers[self.__selected_looper].setTurnadoDictatorLevel(turnado_dictator_level)
-
-    def drop(self):
-        print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.drop.__name__)
-        self.setDropIntencity(0)
-        self.__loopers[Looper.Looper_1].setTrackVolume(Track.Track_1, fl_helper.MAX_VOLUME_LEVEL_VALUE)
-    
-    def turnTrackOnOff(self, track_id):
-        if 0 != self.__loopers[self.__selected_looper].getTrackVolume(track_id):
-            self.__loopers[self.__selected_looper].setTrackVolume(track_id, 0.0)
-        else:
-            self.__loopers[self.__selected_looper].setTrackVolume(track_id, fl_helper.MAX_VOLUME_LEVEL_VALUE)
     
 class View:
     def setShiftPressedState(self, shift_pressed):
@@ -1027,6 +1048,7 @@ def OnMidiMsg(event):
         looper.setResampleMode(ResampleMode.FROM_ALL_LOOPERS_TO_TRACK)
     elif event.data1 == MIDI_CC_LOOPER_1 and looper.getShiftPressedState():
         looper.selectLooper(Looper.Looper_1)
+        looper.actionOnDoubleClick(SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT + MIDI_CC_SAMPLE_LENGTH_1, looper.drop)
     elif event.data1 == MIDI_CC_LOOPER_2 and looper.getShiftPressedState():
         looper.selectLooper(Looper.Looper_2)
     elif event.data1 == MIDI_CC_LOOPER_3 and looper.getShiftPressedState():
@@ -1039,13 +1061,20 @@ def OnMidiMsg(event):
         looper.playStop()
     elif event.data1 == MIDI_CC_SAMPLE_LENGTH_1:
         looper.setSampleLength(SampleLength.LENGTH_1)
-        looper.actionOnDoubleClick(MIDI_CC_SAMPLE_LENGTH_1, looper.drop)
+        action = lambda looper = looper: looper.turnLooperOnOff(Looper.Looper_1)
+        looper.actionOnDoubleClick(MIDI_CC_SAMPLE_LENGTH_1, action)
     elif event.data1 == MIDI_CC_SAMPLE_LENGTH_2:
         looper.setSampleLength(SampleLength.LENGTH_2)
+        action = lambda looper = looper: looper.turnLooperOnOff(Looper.Looper_2)
+        looper.actionOnDoubleClick(MIDI_CC_SAMPLE_LENGTH_2, action)
     elif event.data1 == MIDI_CC_SAMPLE_LENGTH_4:
         looper.setSampleLength(SampleLength.LENGTH_4)
+        action = lambda looper = looper: looper.turnLooperOnOff(Looper.Looper_3)
+        looper.actionOnDoubleClick(MIDI_CC_SAMPLE_LENGTH_4, action)
     elif event.data1 == MIDI_CC_SAMPLE_LENGTH_8:
         looper.setSampleLength(SampleLength.LENGTH_8)
+        action = lambda looper = looper: looper.turnLooperOnOff(Looper.Looper_4)
+        looper.actionOnDoubleClick(MIDI_CC_SAMPLE_LENGTH_8, action)
     elif event.data1 == MIDI_CC_SAMPLE_LENGTH_16:
         looper.setSampleLength(SampleLength.LENGTH_16)
         action = lambda looper = looper: looper.turnTrackOnOff(Track.Track_1)
