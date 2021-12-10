@@ -55,7 +55,7 @@ MIDI_CC_TRACK_3_SAMPLING    = 38
 MIDI_CC_TRACK_4_SAMPLING    = 39
 
 MIDI_CC_TURNADO_DICTATOR    = 94
-MIDI_CC_TURNADO_RANDOMIZE   = 95
+MIDI_CC_TURNADO_DRY_WET     = 94
 
 # ROUTING
 MASTER_CHANNEL               = 0
@@ -87,6 +87,8 @@ KP3_PLUS_ABCD_PRESSED               = 100
 KP3_PLUS_ABCD_RELEASED              = 64
 
 SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT  = 1000
+
+DEFAULT_TURNADO_DRY_WET_LEVEL       = 0.5
 
 # MASTER MIXER SLOT INDICES
 MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX = 0
@@ -131,6 +133,7 @@ ENDLESS_SMILE_PLUGIN_INTENSITY_PARAM_INDEX = 0
 PANOMATIC_VOLUME_PARAM_INDEX = 1
 
 TURNADO_DICTATOR_PARAM_INDEX  = 8
+TURNADO_DRY_WET_PARAM_INDEX   = 9
 TURNADO_RANDOMIZE_PARAM_INDEX = 10
 
 class SampleLength:
@@ -458,6 +461,7 @@ class Looper():
         
         self.__looper_channel = 0
         self.__turnado_dictator_level = 0
+        self.__turnado_dry_wet_level = 0
         
         if self.__looper_number == Looper.Looper_1:
             self.__looper_channel = LOOPER_1_CHANNEL
@@ -499,6 +503,8 @@ class Looper():
         if ignore_view == False:
             self.__view.setLooperVolume(looper_volume)
         
+        self.__view.setLooperActivationStatus(self.__looper_number, looper_volume)
+        
         for track_id in self.__tracks:
             self.__tracks[track_id].setLooperVolume(self.__looper_volume)
 
@@ -514,6 +520,7 @@ class Looper():
     def clearLooper(self):
         self.setLooperVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
         self.setTurnadoDictatorLevel(0.0)
+        self.setTurnadoDryWetLevel(DEFAULT_TURNADO_DRY_WET_LEVEL)
         for track_id in self.__tracks:
             self.__tracks[track_id].clear()
             self.__tracks[track_id].resetTrackParams()
@@ -539,6 +546,7 @@ class Looper():
                 else:
                     self.__tracks[track_id_it].setTrackVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
             self.setTurnadoDictatorLevel(0.0)
+            self.setTurnadoDryWetLevel(DEFAULT_TURNADO_DRY_WET_LEVEL)
                     
         self.__tracks[track_id].stopRecording()
 
@@ -559,7 +567,8 @@ class Looper():
     
     def updateLooperStats(self):
         self.__view.setLooperVolume(self.__looper_volume)
-        self.__view.setResampleFXLevel(self.__turnado_dictator_level)
+        self.__view.setTurnadoDictatorLevel(self.__turnado_dictator_level)
+        self.__view.setTurnadoDryWetLevel(self.__turnado_dry_wet_level)
         
         if self.__looper_number != Looper.Looper_1:
             for track_id, sidechain_value in self.__sidechainLevels.items():
@@ -578,9 +587,7 @@ class Looper():
 
     def setTurnadoDictatorLevel(self, turnado_dictator_level):        
         plugins.setParamValue(turnado_dictator_level, TURNADO_DICTATOR_PARAM_INDEX, self.__looper_channel, LOOPER_TURNADO_SLOT_INDEX)
-
-        self.__turnado_dictator_level = turnado_dictator_level
-
+        
         if self.__isTurnadoTurnedOn == False and turnado_dictator_level != 0.0:
             parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "L_" + str(self.__looper_number + 1) + "_TUR_A", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
             plugins.setParamValue(1.0, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
@@ -589,8 +596,14 @@ class Looper():
             parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "L_" + str(self.__looper_number + 1) + "_TUR_A", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
             plugins.setParamValue(0.0, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
             self.__isTurnadoTurnedOn = False
-            
-        self.__view.setResampleFXLevel(turnado_dictator_level)
+        
+        self.__turnado_dictator_level = turnado_dictator_level
+        self.__view.setTurnadoDictatorLevel(turnado_dictator_level)
+    
+    def setTurnadoDryWetLevel(self, turnado_dry_wet_level):        
+        plugins.setParamValue(turnado_dry_wet_level, TURNADO_DRY_WET_PARAM_INDEX, self.__looper_channel, LOOPER_TURNADO_SLOT_INDEX)
+        self.__turnado_dry_wet_level = turnado_dry_wet_level            
+        self.__view.setTurnadoDryWetLevel(turnado_dry_wet_level)
     
     def randomizeTurnado(self):
         print(device_name + ': ' + Looper.randomizeTurnado.__name__)
@@ -790,6 +803,9 @@ class KorgKaossPad3Plus_LooperMux:
     def setTurnadoDictatorLevel(self, turnado_dictator_level):
         self.__loopers[self.__selected_looper].setTurnadoDictatorLevel(turnado_dictator_level)
 
+    def setTurnadoDryWetLevel(self, turnado_dry_wet_level):
+        self.__loopers[self.__selected_looper].setTurnadoDryWetLevel(turnado_dry_wet_level)
+
     def drop(self):
         print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.drop.__name__)
         self.setDropIntencity(0)
@@ -798,6 +814,8 @@ class KorgKaossPad3Plus_LooperMux:
         self.__loopers[Looper.Looper_1].setTrackVolume(Track.Track_3, fl_helper.MAX_VOLUME_LEVEL_VALUE)
         self.__loopers[Looper.Looper_1].setTrackVolume(Track.Track_4, fl_helper.MAX_VOLUME_LEVEL_VALUE)
         self.__loopers[Looper.Looper_1].setLooperVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
+        self.__loopers[Looper.Looper_1].setTurnadoDictatorLevel(0.0)
+        self.__loopers[Looper.Looper_1].setTurnadoDryWetLevel(DEFAULT_TURNADO_DRY_WET_LEVEL)
     
     def turnTrackOnOff(self, track_id):
         if 0 != self.__loopers[self.__selected_looper].getTrackVolume(track_id):
@@ -868,7 +886,11 @@ class View:
         parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Volume", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(looper_volume, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         self.resetToggleFlags()
-        
+    
+    def setLooperActivationStatus(self, looper_id, looper_volume):
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Looper_" + str(looper_id + 1) + "_AS", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(0.0 if looper_volume == 0.0 else 1.0, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    
     def setDropIntencity(self, drop_intencity):
         parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Drop FX", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(drop_intencity, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
@@ -1004,10 +1026,14 @@ class View:
         parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T" + str(track_id + 1) + "U", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sample_length_units / 10, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
     
-    def setResampleFXLevel(self, fx_level):
-        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "Resample FX", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(fx_level, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        
+    def setTurnadoDictatorLevel(self, turnado_dictator_level):
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T_D", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(turnado_dictator_level, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+
+    def setTurnadoDryWetLevel(self, turnado_dry_wet_level):
+        parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "T_DW", LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(turnado_dry_wet_level, parameter_id, MASTER_CHANNEL, LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    
 view = View()
 looper = KorgKaossPad3Plus_LooperMux(view)
 
@@ -1103,6 +1129,8 @@ def OnMidiMsg(event):
         looper.setShiftPressedState(event.data2 == fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_TEMPO and looper.getShiftPressedState() and not looper.isPlaying():
         looper.setTempo(800 + int((event.data2 / fl_helper.MIDI_MAX_VALUE) * 1000.0)) # from 80 to 180
+    elif event.data1 == MIDI_CC_TEMPO and looper.getShiftPressedState() and looper.isPlaying():
+        looper.setTurnadoDryWetLevel(event.data2 / fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_LOOPER_VOLUME:
         looper.setLooperVolume((event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
     elif event.data1 == MIDI_CC_TRACK_VOLUME_1:

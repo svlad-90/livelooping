@@ -58,12 +58,14 @@ MIDI_CC_EFFECT_PARAM_8        = 77
 
 # CONSTANTS
 
-KP3_PLUS_ABCD_PRESSED        = 100
-KP3_PLUS_ABCD_RELEASED       = 64
+KP3_PLUS_ABCD_PRESSED         = 100
+KP3_PLUS_ABCD_RELEASED        = 64
 
 NUMBER_OF_FX_IN_PAGE          = 8
 
 FINISHER_VOODOO_MODE_NUMBER   = 50
+
+DEFAULT_TURNADO_DRY_WET_LEVEL = 0.5
 
 # MASTER MIXER SLOT INDICES
 MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX = 0
@@ -595,7 +597,7 @@ class View:
         parameter_id = fl_helper.findSurfaceControlElementIdByName(self.__context.main_channel, "Delete", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(1.0, parameter_id, self.__context.main_channel, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
-    def setSynthVolume(self, synth_volume):
+    def setVolume(self, synth_volume):
         parameter_id = fl_helper.findSurfaceControlElementIdByName(self.__context.main_channel, "Volume", SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(synth_volume, parameter_id, self.__context.main_channel, SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
@@ -712,12 +714,7 @@ class KorgKaossPad3Plus_InputController:
                 for preset_page_id in self.__fx_preset_pages:
                     self.__fx_preset_pages[preset_page_id].onInitScript()
                 
-                self.selectFXPage(self.__selected_fx_preset_page)
-                self.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_1)
-                self.__view.setSaveMode(self.__isSaveMode)
-                
-                self.setTurnadoDictatorLevel(fl_helper.externalParamMapping(plugins.getParamValue(TURNADO_DICTATOR_PARAM_INDEX, self.__context.fx2_channel, TURNADO_SLOT_INDEX)))
-                self.setTurnadoDryWetLevel(fl_helper.externalParamMapping(plugins.getParamValue(TURNADO_DRY_WET_PARAM_INDEX, self.__context.fx2_channel, TURNADO_SLOT_INDEX )))
+                self.reset()
                 
                 self.__initialized = True
                 
@@ -786,9 +783,9 @@ class KorgKaossPad3Plus_InputController:
         self.__fx_preset_pages[self.__selected_fx_preset_page].resetFXPreset(self.getSelectedFXPresetID())
         self.__view.resetFXPreset()
 
-    def setSynthVolume(self, synth_volume):
+    def setVolume(self, synth_volume):
         mixer.setTrackVolume(self.__context.fx2_channel, synth_volume)
-        self.__view.setSynthVolume(synth_volume)
+        self.__view.setVolume(synth_volume)
 
     def setFXLevel(self, fx_level, force = False):
         for fx_id in self.__fxs:
@@ -913,6 +910,22 @@ class KorgKaossPad3Plus_InputController:
         
         self.__fx_preset_pages[self.__selected_fx_preset_page].view_updateFXParamsFromPlugins()
 
+    def reset(self):
+        print(self.__context.device_name + ': ' + KorgKaossPad3Plus_InputController.reset.__name__)
+        
+        self.__selected_fx_preset_page = FXPresetPage.FXPresetPage_1
+        self.selectFXPage(self.__selected_fx_preset_page)
+        self.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_1)
+        
+        self.__isSaveMode = False
+        self.__view.setSaveMode(self.__isSaveMode)
+        
+        self.setTurnadoDictatorLevel(0.0)
+        self.setTurnadoDryWetLevel(DEFAULT_TURNADO_DRY_WET_LEVEL)
+        
+        self.setFXLevel(1.0, True)
+        self.setVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
+
     def OnMidiMsg(self, event):
     
         #fl_helper.printAllPluginParameters(self.__context.fx1_channel, MANIPULATOR_SLOT_INDEX)
@@ -1010,14 +1023,16 @@ class KorgKaossPad3Plus_InputController:
         elif event.data1 == MIDI_CC_EFFECT_PARAM_8:
             self.setFXParameterLevel(FXParameter.FXParameter_8, event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == MIDI_CC_SYNTH_VOLUME:
-            self.setSynthVolume((event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
+            self.setVolume((event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
         elif event.data1 == MIDI_CC_TURNADO_NEXT_PRESET and event.data2 == KP3_PLUS_ABCD_PRESSED:
             self.switchToNextTurnadoPreset()
         elif event.data1 == MIDI_CC_TURNADO_PREV_PRESET and event.data2 == KP3_PLUS_ABCD_PRESSED:
             self.switchToPrevTurnadoPreset()
         elif event.data1 == MIDI_CC_TURNADO_ON_OFF and event.data2 == KP3_PLUS_ABCD_PRESSED:
             self.turnadoOnOff()
-        elif event.data1 == MIDI_CC_CHANGE_ACTIVE_FX_UNIT and self.getShiftPressedState() and event.data2 == KP3_PLUS_ABCD_PRESSED:
+        elif event.data1 == MIDI_CC_CHANGE_ACTIVE_FX_UNIT and not self.getShiftPressedState() and event.data2 == KP3_PLUS_ABCD_PRESSED:
             self.changeActiveFXUnit()
+        elif event.data1 == MIDI_CC_CHANGE_ACTIVE_FX_UNIT and self.getShiftPressedState() and event.data2 == KP3_PLUS_ABCD_PRESSED:
+            self.reset()
             
         event.handled = True
