@@ -152,6 +152,10 @@ class ResampleMode:
     FROM_LOOPER_TO_TRACK = 0
     FROM_ALL_LOOPERS_TO_TRACK = 1
 
+class ContextInterface:
+    def getSampleLength(self) -> int:
+        pass
+
 class Track():
 
     Track_1    = 0
@@ -159,16 +163,17 @@ class Track():
     Track_3    = 2
     Track_4    = 3
 
-    def __init__(self, looper_number, track_number, mixer_track, view):
-        self.__view                  = view
-        self.__looper_number         = looper_number
-        self.__track_number          = track_number
-        self.__mixer_track           = mixer_track
-        self.__sample_length         = SampleLength.LENGTH_0
-        self.__resample_mode         = ResampleMode.NONE
-        self.__volume                = fl_helper.MAX_VOLUME_LEVEL_VALUE
-        self.__isPlaybackActive      = False
-        self.__isRecordingInProgress = False
+    def __init__(self, looper_number, track_number, mixer_track, view, context_provider):
+        self.__view                   = view
+        self.__looper_number          = looper_number
+        self.__track_number           = track_number
+        self.__mixer_track            = mixer_track
+        self.__sample_length          = SampleLength.LENGTH_0
+        self.__resample_mode          = ResampleMode.NONE
+        self.__volume                 = fl_helper.MAX_VOLUME_LEVEL_VALUE
+        self.__isPlaybackActive       = False
+        self.__isRecordingInProgress  = False
+        self.__context_provider       = context_provider
 
     def onInitScript(self):
         self.resetTrackParams()
@@ -193,7 +198,7 @@ class Track():
         parameter_id = fl_helper.findSurfaceControlElementIdByName(MASTER_CHANNEL, "L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "VA", MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(track_volume_activation, parameter_id, MASTER_CHANNEL, MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
-    def clear(self):
+    def clear(self, stop_recording = False):
         plugins.setParamValue(1, AUGUSTUS_LOOP_PLUGIN_CLEAR_LOOP_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
         self.setTrackVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
         self.__view.setTrackClearState(self.__track_number, 1.0)
@@ -201,9 +206,17 @@ class Track():
         self.__isPlaybackActive = False
         self.__view.setTrackPlaybackState(self.__track_number, self.__isPlaybackActive)
         
-        if False == self.__isRecordingInProgress:
+        if stop_recording == True:
+            self.__isRecordingInProgress  = False
+            self.__view.setTrackRecordingState(self.__track_number, self.__isRecordingInProgress)
             self.__setTrackVolumeActivation(1.0)
             self.setSampleLength(SampleLength.LENGTH_0)
+        else:
+            if False == self.__isRecordingInProgress:
+                self.__setTrackVolumeActivation(1.0)
+                self.setSampleLength(SampleLength.LENGTH_0)
+            else:
+                self.setSampleLength(self.__context_provider.getSampleLength())
 
     def resetTrackParams(self):
         plugins.setParamValue(0.0, AUGUSTUS_LOOP_PLUGIN_DELAY_TIME_PARAM_INDEX, self.__mixer_track, TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX)
@@ -440,22 +453,22 @@ class Looper():
     Looper_3    = 2
     Looper_4    = 3
 
-    def __init__(self, looper_number, initial_mixer_track, view):
+    def __init__(self, looper_number, initial_mixer_track, view, context_provider):
         self.__view = view
         self.__looper_number = looper_number
         self.__INITIAL_TRACK_CHANNEL__ = initial_mixer_track
         self.__tracks = { Track.Track_1: Track(looper_number, Track.Track_1,
                                                initial_mixer_track + Track.Track_1,
-                                                   self.__view),
+                                                   self.__view, context_provider),
                           Track.Track_2: Track(looper_number, Track.Track_2,
                                                initial_mixer_track + Track.Track_2,
-                                                   self.__view),
+                                                   self.__view, context_provider),
                           Track.Track_3: Track(looper_number, Track.Track_3,
                                                initial_mixer_track + Track.Track_3,
-                                                   self.__view),
+                                                   self.__view, context_provider),
                           Track.Track_4: Track(looper_number, Track.Track_4,
                                                initial_mixer_track + Track.Track_4,
-                                                   self.__view) }
+                                                   self.__view, context_provider) }
         self.__looper_volume = fl_helper.MAX_VOLUME_LEVEL_VALUE
         self.__isTurnadoTurnedOn = False
         
@@ -522,7 +535,7 @@ class Looper():
         self.setTurnadoDictatorLevel(0.0)
         self.setTurnadoDryWetLevel(DEFAULT_TURNADO_DRY_WET_LEVEL)
         for track_id in self.__tracks:
-            self.__tracks[track_id].clear()
+            self.__tracks[track_id].clear(True)
             self.__tracks[track_id].resetTrackParams()
             self.__tracks[track_id].setInputSideChainLevel(0.0)
         
@@ -618,7 +631,7 @@ class PressedSamplerButton:
     C_PRESSED = 2;
     D_PRESSED = 3;        
 
-class KorgKaossPad3Plus_LooperMux:
+class KorgKaossPad3Plus_LooperMux(ContextInterface):
 
     def __init__(self, view):
         self.__view = view
@@ -628,16 +641,16 @@ class KorgKaossPad3Plus_LooperMux:
         self.__selected_looper = Looper.Looper_1
         self.__loopers = { Looper.Looper_1: Looper(Looper.Looper_1,
                                                    LOOPER_1_INITIAL_TRACK_CHANNEL,
-                                                   self.__view),
+                                                   self.__view, self),
                            Looper.Looper_2: Looper(Looper.Looper_2,
                                                    LOOPER_2_INITIAL_TRACK_CHANNEL,
-                                                   self.__view),
+                                                   self.__view, self),
                            Looper.Looper_3: Looper(Looper.Looper_3,
                                                    LOOPER_3_INITIAL_TRACK_CHANNEL,
-                                                   self.__view),
+                                                   self.__view, self),
                            Looper.Looper_4: Looper(Looper.Looper_4,
                                                    LOOPER_4_INITIAL_TRACK_CHANNEL,
-                                                   self.__view) }
+                                                   self.__view, self) }
         self.__initialized = False
         self.__resample_mode = ResampleMode.NONE
         self.__buttons_last_press_time = {}
@@ -660,6 +673,11 @@ class KorgKaossPad3Plus_LooperMux:
             except Exception as e:
                 print(device_name + ': ' + KorgKaossPad3Plus_LooperMux.onInitScript.__name__ + ": failed to initialize the script.")
                 print(e)
+
+    # ContextInterface Implementation
+    def getSampleLength(self) -> int:
+        return self.__selectedSampleLength
+    # ContextInterface implementation end
 
     def isPlaying(self):
         return transport.isPlaying()
@@ -1040,14 +1058,8 @@ looper = KorgKaossPad3Plus_LooperMux(view)
 def OnInit():
     looper.onInitScript()
 
-def OnMidiMsg(event):
-
-    looper.onInitScript()
-
-    #fl_helper.printAllPluginParameters(LOOPER_1_CHANNEL, LOOPER_TURNADO_SLOT_INDEX)
-
-    event.handled = False
-
+def onMidiMsgProcessing(event):
+    
     if event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
         looper.addPressedSamplerButton(PressedSamplerButton.A_PRESSED)
     elif event.data1 == MIDI_CC_TRACK_1_SAMPLING and event.data2 == KP3_PLUS_ABCD_RELEASED:
@@ -1127,9 +1139,7 @@ def OnMidiMsg(event):
         looper.clearTrack(Track.Track_4)
     elif event.data1 == MIDI_CC_SHIFT:
         looper.setShiftPressedState(event.data2 == fl_helper.MIDI_MAX_VALUE)
-    elif event.data1 == MIDI_CC_TEMPO and looper.getShiftPressedState() and not looper.isPlaying():
-        looper.setTempo(800 + int((event.data2 / fl_helper.MIDI_MAX_VALUE) * 1000.0)) # from 80 to 180
-    elif event.data1 == MIDI_CC_TEMPO and looper.getShiftPressedState() and looper.isPlaying():
+    elif event.data1 == MIDI_CC_TURNADO_DRY_WET and looper.getShiftPressedState():
         looper.setTurnadoDryWetLevel(event.data2 / fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_LOOPER_VOLUME:
         looper.setLooperVolume((event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
@@ -1165,7 +1175,27 @@ def OnMidiMsg(event):
         looper.setInputSideChainLevel(Track.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_4:
         looper.setInputSideChainLevel(Track.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
-    elif event.data1 == MIDI_CC_TURNADO_DICTATOR:
+    elif event.data1 == MIDI_CC_TURNADO_DICTATOR and looper.isPlaying():
         looper.setTurnadoDictatorLevel(event.data2 / fl_helper.MIDI_MAX_VALUE)
+
+def OnMidiMsg(event):
+
+    looper.onInitScript()
+
+    #fl_helper.printAllPluginParameters(LOOPER_1_CHANNEL, LOOPER_TURNADO_SLOT_INDEX)
+
+    event.handled = False
+
+    if not looper.isPlaying():
+        if event.data1 == MIDI_CC_TEMPO and not looper.isPlaying():
+            looper.setTempo(800 + int((event.data2 / fl_helper.MIDI_MAX_VALUE) * 1000.0)) # from 80 to 180
+        else:            
+            if ( not event.data1 == MIDI_CC_SHIFT and not event.data2 == 0 ) \
+            and ( not event.data1 == MIDI_CC_PLAY_STOP and not looper.getShiftPressedState() ):
+                looper.playStop()
+            
+            onMidiMsgProcessing(event)
+    else:
+        onMidiMsgProcessing(event)
 
     event.handled = True
