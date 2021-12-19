@@ -20,7 +20,7 @@ MIDI_CC_PLAY_STOP           = 56
 MIDI_CC_TEMPO               = 94
 MIDI_CC_LOOPER_1            = 49
 MIDI_CC_LOOPER_2            = 50
-MIDI_CC_LOOPER_3            = 51
+MIDI_CC_LOOPER_3            = 51 
 MIDI_CC_LOOPER_4            = 52
 MIDI_CC_LOOPER_VOLUME       = 93
 MIDI_CC_TRACK_VOLUME_1      = 70
@@ -1160,7 +1160,7 @@ def onMidiMsgProcessing(event):
     elif event.data1 == MIDI_CC_TRACK_4_SAMPLING and event.data2 == KP3_PLUS_ABCD_PRESSED:
         looper.changeRecordingState(Track.Track_4)
     elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_1 and looper.getShiftPressedState():
-        looper.setLooperSideChainLevel(Track.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
+        looper.setLooperSideChainLevel(Track.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE) 
     elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_2 and looper.getShiftPressedState():
         looper.setLooperSideChainLevel(Track.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
     elif event.data1 == MIDI_CC_TRACK_SIDECHAIN_3 and looper.getShiftPressedState():
