@@ -341,13 +341,14 @@ class Track():
             mixer.setRouteTo(LOOPER_ALL_CHANNEL, self.__mixer_track, 1)
             mixer.setRouteTo(self.__mixer_track, LOOPER_ALL_FX_1_CHANNEL, 1)
 
+        # important to have this statement here
+        self.__isRecordingInProgress = True
+
         if self.getResampleMode() == ResampleMode.NONE:
             self.__view.setTrackRecordingState(self.__track_number, 1.0)
         else:
             self.clear()
             self.__view.setTrackResamplingState(self.__track_number, 1.0)
-                 
-        self.__isRecordingInProgress = True
 
     def stopRecording(self):
         
