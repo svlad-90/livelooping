@@ -28,9 +28,9 @@ Let me place here the screen-shot of the logical device's views, without explain
 
 I'm pretty sure, that my colleagues loopers will recognize main features :)
 
-**"Looper" logical device:**
+**"LooperMux" logical device:**
 
-![Looper logical device](./md/looper.png)
+![LooperMux logical device](./md/looper-mux.png)
 
 **"Input controller" logical device:**
 
@@ -104,7 +104,7 @@ But all the above ones are part of the FL Studio delivery. So you do not need to
   ![Korg Kaoss Pad 3+](./md/kp3+.png)  
   
   The project consists of the 3 logical devices:
-  - 1 instance of the "looper" device. This device is in control of the recorded tracks.
+  - 1 instance of the "LooperMux" device. This device is in control of the recorded tracks.
   - 2 instances of the "input controller" devices. Each instance can be used to process one audio input channgel. E.g. I'm using one of such devices for mic, and the other for synthesizer.
 
   Each device is controlled by a separate instance of the **Korg Kaoss Pad 3+** - https://www.korg.com/us/products/dj/kaoss_pad_kp3_plus/
@@ -195,16 +195,106 @@ In order to install the project one would need to:
 
 ----
 
-## Quick start
+## LooperMux
 
-This section is for those, who wants to play around with the set-up right away, without digging deep into the features.
+### Selecting the looper instance
 
-TODO
+The "LooperMux" logical device consists of 4 looper instaces:
+
+![Looper instances](./md/looper-instance.png)
+
+By default looper **#1** is selected.
+
+You can switch to other loopers using the **"Hold + X"** shortcut on KP3+, where X is one of the digits from 1 to 4:
+
+![Selecting looper instance](./md/selecting-looper-instance.png)
+
+**Note!** When you are selecting the looper, majority of the parameters will represent the state of the selected looper, leaving the non-selected loopers in shadow.
+
+----
+
+## Selecting the sample length
+
+After the target looper is selected, the next thing any normal looper would think of is to select the length of the recorded phrase:
+
+![Sample length](./md/sample-length.png)
+
+The supported sample lengths are from 1, 2, 4, 8, 16, 32, 64 and 128 beats. You can select the length using the 1-8 digits:
+
+![Selecting sample length](./md/selecting-sample-length.png)
+
+----
+
+## Recording audio to the track
+
+Each looper instance has 4 tracks:
+
+![Looper tracks](./md/looper-tracks.png)
+
+So, in sum you have 4 loopers * 4 tracks = 16 tracks to work with.
+
+Someone would say that it is not enough, and it would be better to have unlimited number of tracks. I'm saying:
+- It is already more than in majority of the available physical loopers
+- Constraints increase your creativity
+- Do not judge yet, as there is a resampling functionality, which allows you to resample multiple tracks back to any other track. Be patient :)
+
+You can start recording to the track using the A, B, C, D buttons on the KP3+ instance:
+
+![Start recording](./md/start-recording.png)
+
+**A** button will start recording on the first track of the selected looper.
+
+**B** - on the second.
+
+**C** - on third.
+
+**D** - on fourth.
+
+Quite intuitive.
+
+Once the recording is started, the view will reflect that:
+
+![Recording startedg](./md/recording-started.png)
+
+The following things will change:
+- The **Recording** status label of the selected track will become red.
+- The **Length** value will change from 000 to the active length value.
+
+In order to stop the recording - press the button of the recorded track ( A, B, C or D ) once again.
+
+The view will change its status to play-back:
+
+![Playback](./md/playback.png)
+
+**Note!** I should mention the following aspects here:
+- If recording is not stopped after reaching the "sample length", the second and further layers will be recorded on top of the initially recorded phrase. So, remember to stop recording in  time. In other cases it might be even a usefull feature, e.g. in order to make a vocal chords.
+- If recording is being stopped and is then started again to the same track, 2 variants are possible:
+  * If the sample length of the track **IS EQUAL** to the currently selected sample length - additional audio data will be layered on top of the existing audio materials
+  * If the sample length of the track **IS NOT EQUAL** to the currently selected sample length - the track will be cleared and new data will be recorded instead of it
+- If recording to the track X is ongoing, but you are starting recording to the Y track - recording of X track will stop
+- If recording to the track X is ongoing, but you are selecting another active looper - the recording of track X will stop
+
+----
+
+## Erasing the track
+
+In order to erase the track you the **"Hold + X"** shortcut on KP3+, where X is one of the track buttons from A to D:
+
+![Erasing the track](./md/erasing-track.png)
+
+Once the track is erased, the view will change its state to "all off":
+
+![Erased track](./md/erased-track.png)
+
+As you can see, there are no active status anymore. Also, that length of the track is reset to 000.
 
 ----
 
 ## Additional materials
 
-The following video, which gives some insides on the "Beardytron 5000" project, is a basic idea of what is implemented here. Watch it, if you wish to have a deep dive into the topic:
+- The following video, which gives some insides on the "Beardytron 5000" project, is a basic idea of what is implemented here. Watch it, if you wish to have a deep dive into the topic:
 
-[![Beardytron 5000](https://i.ytimg.com/an_webp/atViS0jukHw/mqdefault_6s.webp?du=3000&sqp=COSi1o8G&rs=AOn4CLDi5XiLFAvWqrK1MrviPeZh_5SIKw)](https://www.youtube.com/watch?v=atViS0jukHw "Beardytron 5000")
+  [![Beardytron 5000](https://i.ytimg.com/an_webp/atViS0jukHw/mqdefault_6s.webp?du=3000&sqp=COSi1o8G&rs=AOn4CLDi5XiLFAvWqrK1MrviPeZh_5SIKw)](https://www.youtube.com/watch?v=atViS0jukHw "Beardytron 5000")
+
+- FL MIDI scripting API reference - https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/midi_scripting.htm
+- FL MIDI scripting forum - https://forum.image-line.com/viewforum.php?f=1994
