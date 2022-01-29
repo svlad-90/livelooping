@@ -28,17 +28,17 @@ Let me place here the screen-shot of the logical device's views, without explain
 
 I'm pretty sure, that my colleagues loopers will recognize main features :)
 
-**"LooperMux" logical device:**
+**"Looper mux" logical device:**
 
-![LooperMux logical device](./md/looper-mux.png)
+![Looper mux logical device](./md/screenshots/looper-mux.png)
 
 **"Input controller" logical device:**
 
-![Input controller logical device](./md/input-controller.png)
+![Input controller logical device](./md/screenshots/input-controller.png)
 
 **All devices put together:**
 
-![All devices together](./md/working-area.png)
+![All devices together](./md/screenshots/working-area.png)
 
 The idea behind each knob and button and details regarding how all that works will be described below.
 
@@ -50,7 +50,7 @@ This project won't work out of the box, just because you have a PC. You'll need 
 
 ### DAW
 
-![FL Studio producer edition](./md/fl_studio_producer.jpg)
+![FL Studio producer edition](./md/daw/fl_studio_producer.jpg)
 
 The **FL Studio** DAW of at least **"Producer edition"** or higher - https://www.image-line.com/fl-studio/compare-editions/
 
@@ -67,17 +67,17 @@ Probably, you will need to have the latest version of the FL Studio, because:
 The project is building the logical devices on the top of the FL Studio DAW and bunch of the VST plugins. Here is the list of the external VST plugins, which you'll need to have on top of the FL studio in order to have the project running:
 
 - **Edless Smile by DADA LIFE** - https://dadalife.com/plugins/
-![Endless Smile VST plugin](./md/endless_smile.png)
+![Endless Smile VST plugin](./md/vst-plugins/endless_smile.png)
 - **Turnado 2 by sugar-bytes** - https://sugar-bytes.de/turnado
-![Turnado 2 VST plugin](./md/turnado_2.png)
+![Turnado 2 VST plugin](./md/vst-plugins/turnado_2.png)
 - **Fab filter Pro-Q 3** - https://www.fabfilter.com/products/pro-q-3-equalizer-plug-in
-![Fab filter pro Q 3 VST plugin](./md/fab_filter_pro_q_3.png)
+![Fab filter pro Q 3 VST plugin](./md/vst-plugins/fab_filter_pro_q_3.png)
 - **Finisher VOODOO by ujam** - https://www.ujam.com/finisher/voodoo/
-![Finisher Voodoo VST plugin](./md/finisher_voodoo.png)
+![Finisher Voodoo VST plugin](./md/vst-plugins/finisher_voodoo.png)
 - **Manipulator by polyverse music** - https://polyversemusic.com/products/manipulator/
-![Manipulator VST plugin](./md/manipulator.png)
+![Manipulator VST plugin](./md/vst-plugins/manipulator.png)
 - **Augustus Loop by Expert Sleepers** - https://www.expert-sleepers.co.uk/augustusloop.html
-![Augustus loop VST plugin](./md/augustus_loop.png)
+![Augustus loop VST plugin](./md/vst-plugins/augustus_loop.png)
 
 Just buy, and install the above set of the VST plugins, to have the project up and running.
 
@@ -101,10 +101,10 @@ But all the above ones are part of the FL Studio delivery. So you do not need to
 
 - **2-3 instances of the Korg Kaoss Pad 3+**
 
-  ![Korg Kaoss Pad 3+](./md/kp3+.png)  
+  ![Korg Kaoss Pad 3+](./md/hardware/kp3+.png)  
   
   The project consists of the 3 logical devices:
-  - 1 instance of the "LooperMux" device. This device is in control of the recorded tracks.
+  - 1 instance of the "looper mux" device. This device is in control of the recorded tracks.
   - 2 instances of the "input controller" devices. Each instance can be used to process one audio input channgel. E.g. I'm using one of such devices for mic, and the other for synthesizer.
 
   Each device is controlled by a separate instance of the **Korg Kaoss Pad 3+** - https://www.korg.com/us/products/dj/kaoss_pad_kp3_plus/
@@ -117,7 +117,7 @@ But all the above ones are part of the FL Studio delivery. So you do not need to
 
   To work with the livelooping project, I'm using the **Zoom UAC-8 Audio converter** - https://zoomcorp.com/en/jp/audio-interface/audio-interfaces/uac-8/.
   
-  ![Zoom UAC 8](./md/Zoom-UAC-8.png)  
+  ![Zoom UAC 8](./md/hardware/Zoom-UAC-8.png)  
   
   Usage of it with 96000 Hz sample rate and 512 smp buffer length allows to have ~6 ms latency, while having nice and stable workflow.
 
@@ -127,17 +127,17 @@ But all the above ones are part of the FL Studio delivery. So you do not need to
 
   If you would work with vocals or beatboxing ( like I do ), you'll definitely need a mike. For beatboxing I would suggest the following 3 models:
   - Sure SM58 - https://www.shure.com/en-US/products/microphones/sm58
-  ![Shure sm 58](./md/shure-sm-58.png)
+  ![Shure sm 58](./md/hardware/shure-sm-58.png)
   - Sennheiser e-945 - https://en-us.sennheiser.com/vocal-microphone-dynamic-super-cardioid-e-945
-  ![Sennheiser e-945](./md/sennheiser-e-945.jpg)
+  ![Sennheiser e-945](./md/hardware/sennheiser-e-945.jpg)
   - DPA d:facto FA4018 - https://www.dpamicrophones.com/handheld/vocal-microphone ( used on GBB )
-  ![DPA d:facto FA4018](./md/d_facto_4018.jpg)
+  ![DPA d:facto FA4018](./md/hardware/d_facto_4018.jpg)
 
 - **Headphones**
 
   For sure you are free to use the speakers, but my experience shows, that you might want to practise not producing too much noise. The headphones which I'm using are:
   - Beyerdynamic DT 770 PRO - https://europe.beyerdynamic.com/dt-770-pro.html
-  ![Beyerdynamic DT 770 PRO](./md/beyerdynamic-dt-770-pro.jpg)
+  ![Beyerdynamic DT 770 PRO](./md/hardware/beyerdynamic-dt-770-pro.jpg)
 
 ----
 
@@ -159,11 +159,11 @@ In order to install the project one would need to:
 - Open the **"live_looping.flp"** project inside the DAW
 - Enter the MIDI settings:
 
-  ![Midi settings context menu](./md/midi-settings-context-menu.png)
+  ![Midi settings context menu](./md/daw/midi-settings-context-menu.png)
 
 - Assign the scripts to the KP3+ instances:
 
-  ![Midi settings](./md/midi-settings.png)
+  ![Midi settings](./md/daw/midi-settings.png)
 
   **Note!** In my case, one of the KP3+ is sending MIDI data through the ZOOM UAC-8 MIDI. That's why you see **"KP3+ 1 PAD"**, **"KP3+ 2 PAD"** and **"ZOOM UAC-8 MIDI"**. Anyway, the roles are properly assigned:
   
@@ -177,15 +177,15 @@ In order to install the project one would need to:
 - Move the knobs and see whether the logical device's views react on the input
 - Enter the mixer view:
 
-  ![Mixer view context menu](./md/mixer-view-context-menu.png)
+  ![Mixer view context menu](./md/daw/mixer-view-context-menu.png)
 
 - Visit channel 6 and assign the input source in a way that your mic's signal goes there:
 
-  ![Mic source setting](./md/mic-source-setting.png)
+  ![Mic source setting](./md/daw/mic-source-setting.png)
 
 - Visit channel 10 and assign the input source in a way that your synth's ( or any second instrument's ) signal goes there:
 
-  ![Synth source setting](./md/synth-source-setting.png)
+  ![Synth source setting](./md/daw/synth-source-setting.png)
 
   **Note!** In the above 2 steps the "Input X", which you'll select will depend on commutation of your hardware. Do not blindly follow this instruction :)
 
@@ -195,41 +195,41 @@ In order to install the project one would need to:
 
 ----
 
-## LooperMux
+## Looper mux
 
 ### Selecting the looper instance
 
-The "LooperMux" logical device consists of 4 looper instaces:
+The "looper mux" logical device consists of 4 looper instaces:
 
-![Looper instances](./md/looper-instance.png)
+![Looper instances](./md/looper-mux/looper-instance.png)
 
 By default looper **#1** is selected.
 
 You can switch to other loopers using the **"Hold + X"** shortcut on KP3+, where X is one of the digits from 1 to 4:
 
-![Selecting looper instance](./md/selecting-looper-instance.png)
+![Selecting looper instance](./md/looper-mux/selecting-looper-instance.png)
 
 **Note!** When you are selecting the looper, majority of the parameters will represent the state of the selected looper, leaving the non-selected loopers in shadow.
 
 ----
 
-## Selecting the sample length
+### Selecting the sample length
 
 After the target looper is selected, the next thing any normal looper would think of is to select the length of the recorded phrase:
 
-![Sample length](./md/sample-length.png)
+![Sample length](./md/looper-mux/sample-length.png)
 
 The supported sample lengths are from 1, 2, 4, 8, 16, 32, 64 and 128 beats. You can select the length using the 1-8 digits:
 
-![Selecting sample length](./md/selecting-sample-length.png)
+![Selecting sample length](./md/looper-mux/selecting-sample-length.png)
 
 ----
 
-## Recording audio to the track
+### Recording audio to the track
 
 Each looper instance has 4 tracks:
 
-![Looper tracks](./md/looper-tracks.png)
+![Looper tracks](./md/looper-mux/looper-tracks.png)
 
 So, in sum you have 4 loopers * 4 tracks = 16 tracks to work with.
 
@@ -240,7 +240,7 @@ Someone would say that it is not enough, and it would be better to have unlimite
 
 You can start recording to the track using the A, B, C, D buttons on the KP3+ instance:
 
-![Start recording](./md/start-recording.png)
+![Start recording](./md/looper-mux/start-recording.png)
 
 **A** button will start recording on the first track of the selected looper.
 
@@ -254,7 +254,7 @@ Quite intuitive.
 
 Once the recording is started, the view will reflect that:
 
-![Recording startedg](./md/recording-started.png)
+![Recording startedg](./md/looper-mux/recording-started.png)
 
 The following things will change:
 - The **Recording** status label of the selected track will become red.
@@ -264,7 +264,7 @@ In order to stop the recording - press the button of the recorded track ( A, B, 
 
 The view will change its status to play-back:
 
-![Playback](./md/playback.png)
+![Playback](./md/looper-mux/playback.png)
 
 **Note!** I should mention the following aspects here:
 - If recording is not stopped after reaching the "sample length", the second and further layers will be recorded on top of the initially recorded phrase. So, remember to stop recording in  time. In other cases it might be even a usefull feature, e.g. in order to make a vocal chords.
@@ -276,17 +276,73 @@ The view will change its status to play-back:
 
 ----
 
-## Erasing the track
+### Erasing the track
 
 In order to erase the track you the **"Hold + X"** shortcut on KP3+, where X is one of the track buttons from A to D:
 
-![Erasing the track](./md/erasing-track.png)
+![Erasing the track](./md/looper-mux/erasing-track.png)
+
+Once clear option is selected, the clear button of the track will blink once in the view:
+
+![Clear button blink](./md/looper-mux/clear-button-blink.png)
 
 Once the track is erased, the view will change its state to "all off":
 
-![Erased track](./md/erased-track.png)
+![Erased track](./md/looper-mux/erased-track.png)
 
 As you can see, there are no active status anymore. Also, that length of the track is reset to 000.
+
+**Note!** Erasing the track **DOES NOT** stop recording to it. It is a useful option, as it allows you to instantly clear the part of the audio, which has an "error", without stopping further recording. You can consider it as a fast "let's try it again" option.
+
+----
+
+### Changing the volume of the loopers
+
+The volume of the selected looper can be changed using the level fader of the KP3+:
+
+![Changing the looper's volume](./md/looper-mux/changing-looper-volume.png)
+
+The view will reflect it on the **"Volume"** slider inside the DAW:
+
+![Changed volume](./md/looper-mux/changed-volume.png)
+
+On top of that you can instantly mute and unmute each individual looper by double clicking on digits 1 to 4:
+
+![Mute unmute loopers](./md/looper-mux/mute-unmute-looper.png)
+
+The used number identifies the number of the affected looper.
+
+The mute status would be reflected in the view:
+
+![Mute unmute loopers](./md/looper-mux/muted-loopers.png)
+
+Moreover, the looper's volume value would also change to 0:
+
+![Zero looper volume](./md/looper-mux/looper-volume-zero.png)
+
+**Note!** Actually, the mute tearm means "set the volume of the looper to 0%". And unmute means "set the volume of the looper to 100%". So, both approaches to set the looper volume ( via level fader and via double-click ) do actually operate on the same "Volume" parameter. That also means, that any touch to the volume fader will "unmute" the selected looper, as it will change the value of the volume parameter.
+
+**Note!** If looper has non-zero volume ( even if it is 1% ), it is considered as unmuted. Thus, the first double-click will first set the volume to 0.
+
+----
+
+# Resetting the looper
+
+You can reset a single looper to the initial state, using the **"Hold + 7"** shortcut:
+
+![Resetting the looper](./md/looper-mux/resetting-looper.png)
+
+That will erase all recorded tracks and set all the looper's parameters back to initial state.
+
+----
+
+# Resseting the looper mux
+
+You can reset the whole "looper mux" logical device, using the **"Hold + 8"** shortcut:
+
+![Resetting the looper mux](./md/looper-mux/resetting-looper-mux.png)
+
+That will reset each individual looper. Also it will set all non-looper-specific parameters back to the initial state.
 
 ----
 
