@@ -18,12 +18,13 @@
     * [Resampling within the selected looper](#resampling-within-the-selected-looper)
 	* [Resampling all loopers](#resampling-all-loopers)
   * [Applying Turnado effect to the looper](#applying-turnado-effect-to-the-looper)
-    * [General idea](#general-idea)
 	* [Changing the Turnado dictator value](#changing-the-turnado-dictator-value)
 	* [Changing the Turnado Dry/Wet value](#changing-the-turnado-dry-wet-value)
 	* [Randomizing Turnado](#randomizing-turnado)
   * [Drop FX](#drop-fx)
   * [Sidechain](#sidechain)
+    * [Input sources sidechain](#input-sources-sidechain)
+	* [Loopers sidechain](#loopers-sidechain)
   
 ----
 
@@ -321,8 +322,6 @@ In order to resample all loopers:
 
 ## Applying Turnado effect to the looper
 
-### General idea
-
 As of now Turnado is the one and only effect, which you can apply on top of the recorded data. Still, in many cases it might be enough, as it provides infinite possibilities to randomly change your sounds.
 
 The idea behind turnado is the following one:
@@ -419,6 +418,64 @@ So, the best practise regarding this feature is to:
 ----
 
 ## Sidechain
+
+In terms of this project the sidechain means, that any of the tracks, recorded to the looper #1 can independently:
+- impact the volume of the input sources ( mic, synth, etc. )
+- impact the volume of the other loopers
+
+The most obvious use-case:
+- Record the square kick to the looper #1
+- Enable sidechain of the input sources
+- Record bass, using your mic or synth, which will duck to the kick, resolving the kick bass conflict
+
+Another possible use-case:
+- You want to switch from the track #1 to the track #2
+- Turn on the sidechain of the loopers #2, #3, #4 to the kick drums. It will totally change the meaning of those sidechained instruments
+- Start to record new material and then fade out and reset the loopers #2, #3 and #4
+
+----
+
+### Input sources sidechain
+
+**Note!!** The sidechain would be applied to signal of both "input controller" logical devices.
+
+In order to change the sidechain settings of the input sources, use the **5-8** vertical faders on the KP3+ touch screen:
+
+![Changing input sources sidechain settings](./resources/changing-input-sources-sidechain-settings.jpg)
+
+Fader **5** will change the side-chain level to the **track #1** of the **looper #1**.
+
+Fader **6** - to the track **track #2** of the **looper #1**.
+
+Fader **7** - same, but to the **track #3**.
+
+Fader **8** - same, but to the **track #4**.
+
+The view will reflect that in the following way within the DAW:
+
+![Input sources sidechain settings changed](./resources/input-sources-sidechain-settings-changed.jpg)
+
+----
+
+### Loopers sidechain
+
+**Note!** It does not make logical sense to allow looper #1 to side-chain to its own tracks. Thus, it is not possible to adjust these settings for looper #1, but only for the other loopers.
+
+In order to change the sidechain settings of the selected looper, use the **"Hold + 5-8 vertical faders"** short-cut on the KP3+ touch screen:
+
+![Changing selected looper sidechain settings](./resources/changing-selected-looper-sidechain-settings.jpg)
+
+Fader **5** will change the side-chain level to the **track #1** of the **looper #1**.
+
+Fader **6** - to the track **track #2** of the **looper #1**.
+
+Fader **7** - same, but to the **track #3**.
+
+Fader **8** - same, but to the **track #4**.
+
+The view will reflect that in the following way within the DAW:
+
+![Selected looper sidechain settings changed](./resources/selected-looper-sidechain-settings-changed.jpg)
 
 ----
 
