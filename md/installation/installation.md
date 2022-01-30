@@ -13,6 +13,12 @@ In order to install the project one would need to:
 - Connect and set-up your audio interface
 - Connect your input devices ( mic, synth ) to your audio interface
 - Connect the KP3+ instances to your PC via the USB and set-up the drivers
+- Start the "KP3+ Editor" and set each KP3+ instance to use "Pattern 4" for the touch screen:
+
+  ![KP3+ editor](./resources/kp3_plus_editor.jpg)
+  
+  We need this setting to be applied, as the touch screen is being used as 8 independent vertical sliders. Also, make sure, that used CC# for the sliders are from 70 to 77.
+  
 - Copy the **"${project_root}\device_KorgKaossPad3Plus_LooperMux"** folder to the **"C:\Users\<your_user>\Documents\Image-Line\FL Studio\Settings\Hardware"**
 - Copy the **"${project_root}\device_KorgKaossPad3Plus_SynthController"** folder to the **"C:\Users\<your_user>\Documents\Image-Line\FL Studio\Settings\Hardware"**
 - Copy the **"${project_root}\device_KorgKaossPad3Plus_MicController"** folder to the **"C:\Users\<your_user>\Documents\Image-Line\FL Studio\Settings\Hardware"**

@@ -1,8 +1,12 @@
-![Logo](./md/misc/logo.jpg)
-
 # The LIVELOOPING project
 
-### BEEP... this document is in "work in progress" state.
+![Logo](./md/misc/logo.jpg)
+
+----
+
+## BEEP... this document is in "work in progress" state.
+
+----
 
 ## Table of contents
 
