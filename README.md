@@ -12,7 +12,7 @@
 
 - [Where am I?](#where-am-i)
 - [Thanks to](#thanks-to)
-- [Some dust in your eyes](#some-dust-in-your-eyes)
+- [Pull the wool over your eyes](#pull-the-wool-in-your-eyes)
 - [Sub-articles](#sub-articles)
 - [Additional materials](#additional-materials)
 
@@ -28,6 +28,10 @@ It is something similar to what Boss RC-505, RC-300, Korg KP3+ propose on the ma
 
 But on top of it the "second device", the effector, is also in place. The set-up does not need any Line 6 Helix, or something similar. All effects you need are within the used DAW.
 
+One advantage of the project is the sound quality, which you'll get.
+
+Another one is that it is an open-source project. With not so much efforts you can exchange the set of the used FX plugins with your own favorite ones. Or you can implement additional feature. Or support usage of the project with your custom MIDI controllers.
+
 ----
 
 ## Thanks to
@@ -36,13 +40,13 @@ This project is inspired by [Beardyman](https://www.beardyman.co.uk/), who is th
 
 ----
 
-## Some dust in your eyes
+## Pull the wool over your eyes
 
-This section should contain something, that will make you read till the end. 
+This section should contain something, that will make you read the document till the end. 
 
-Let me place here the screen-shot of the logical device's views, without explaining what is located there.
+Let me place here the screen-shot of the logical device's views, without explaining what is located there. This should pique your interest.
 
-I'm pretty sure, that my colleagues loopers will recognize main features :)
+I'm pretty sure, that my colleagues, loopers, will recognize the main features :)
 
 **"Looper mux" logical device:**
 
@@ -62,8 +66,8 @@ The idea behind each knob and button and details regarding how all that works wi
 
 ## Sub-articles
 
-### [Prerequisites](./md/prerequisites/prerequisites.md) - what do you need to run the project?
-### [Installation](./md/installation/installation.md) - how to install the project?
+### [Prerequisites](./md/prerequisites/prerequisites.md) - what do you need to run this project?
+### [Installation](./md/installation/installation.md) - how to install this project?
 ### [Looper mux](./md/looper-mux/looper-mux.md) - details regarding usage of the "looper mux" logical device
 
 ----

@@ -18,6 +18,12 @@
     * [Resampling within the selected looper](#resampling-within-the-selected-looper)
 	* [Resampling all loopers](#resampling-all-loopers)
   * [Applying Turnado effect to the looper](#applying-turnado-effect-to-the-looper)
+    * [General idea](#general-idea)
+	* [Changing the Turnado dictator value](#changing-the-turnado-dictator-value)
+	* [Changing the Turnado Dry/Wet value](#changing-the-turnado-dry-wet-value)
+	* [Randomizing Turnado](#randomizing-turnado)
+  * [Drop FX](#drop-fx)
+  * [Sidechain](#sidechain)
   
 ----
 
@@ -180,7 +186,7 @@ That will erase all recorded tracks and set all the looper's parameters back to 
 
 ----
 
-## Resseting the looper mux
+## Resetting the looper mux
 
 You can reset the whole "looper mux" logical device, using the **"Hold + 8"** shortcut:
 
@@ -188,7 +194,11 @@ You can reset the whole "looper mux" logical device, using the **"Hold + 8"** sh
 
 That will reset each individual looper. Also it will set all non-looper-specific parameters back to the initial state.
 
-**Note!** Resetting the looper mux changes its state to "non-playing" mode. In this state you can change the tempo.
+The "Clear all" button in the view will blink, and the "Play" mode will be turned off:
+
+![Reset looper mux applied](./resources/reset-looper-mux-applied.jpg)
+
+**Note!** Resetting the looper mux changes its state to "non-playing" mode. **In this state you can change the tempo.**
 
 ----
 
@@ -310,6 +320,105 @@ In order to resample all loopers:
 ----
 
 ## Applying Turnado effect to the looper
+
+### General idea
+
+As of now Turnado is the one and only effect, which you can apply on top of the recorded data. Still, in many cases it might be enough, as it provides infinite possibilities to randomly change your sounds.
+
+The idea behind turnado is the following one:
+- Turnado provides 24 different effects.
+- Out of those 24 effects you can select 8 active effects and fine-tune them.
+- Turnado has a "dictator" killing feature, which allows you to manipulate 8 active effects with one single fader.
+- This VST has a "randomize" option, which can randomly change everything - active effects, their setting, settings of the dictator fader.
+
+In the "looper mux" logical device I've integrated usage of the 2 last points. You can use the dictator fader and randomize the effects.
+
+Important point is that each looper has a dedicated instance of Turnado assigned to it. So you can have 4 different loopers having applied 4 different set of complex effects. Be careful, as it might blow your mind!
+
+----
+
+### Changing the Turnado dictator value
+
+In order to change the turnado dictator value, use the **"FX DEPTH"** knowb on the KP3+:
+
+![Changing turnado dictator level](./resources/changing-turnado-dictator-level.jpg)
+
+Changing that parameter will do the following thing on Turnado's side:
+
+![Turnado dictator usage](./resources/turnado-dictator.gif)
+
+The view will reflect this in the following way within the DAW:
+
+![Turnado dictator level changed](./resources/turnado-dictator-level-changed.jpg)
+
+----
+
+### Changing the Turnado Dry-Wet value
+
+In order to change the turnado dictator value, use the **"Hold + FX DEPTH"** shortcut on the KP3+:
+
+![Changing turnado Dry/Wet value](./resources/changing-turnado-dry-wet-value.jpg)
+
+The view will reflect this in the following way within the DAW:
+
+![Turnado dictator level changed](./resources/turnado-dictator-dry-wet-changed.jpg)
+
+----
+
+### Randomizing Turnado
+
+In order to randomize the Turnado use the **"double-click on the Hold button"** short-cut:
+
+![Randomizing turnado](./resources/randomizing-turnado.jpg)
+
+The short-cut will change the selected effects, their settings, and split between effects within the dictator section.
+
+The view does not reflect that. There seems to be no real reason to visualize that.
+
+**Note!** in order to Randmize function to work, you need to have Turnado instance be **IN FOREGROUND** within the DAW. That's why you'll find all Turnado instances being hidden somewhere in the right bottom corner of the screen, while still being in foreground. It is by intention. Do not close them.
+
+**TODO** - I'm thinking of allowing the user to switch between the presets, as it is done in the "input controller" logical device. It would be prefferable option, as "randomize" sometimes gives unpredictable results. Currently, I'm searching free to use shortcuts, to implement this feature. It will arrive soon after I'll finish this documentation :)
+
+----
+
+## Drop FX
+
+Look at the GBB contesters. They all are doing **DROPS** in their tracks.
+
+A special feature is here to help out with that.
+
+It is a mixture of reverb, delay and filter applied on top of all the loopers output, which allows you to create a "drop-is-coming" effect with one single fader.
+
+In order to mix-in the Drop FX use the "Hold + level" short-cut on KP3+ side:
+
+![Mix in the Drop FX](./resources/drop-fx-mix-in.jpg)
+
+As you can see above, it is a reverse controller, where the down point of the fader means maximum application of the effect. It was done like that as it plays better within the overall workflow.
+
+The view will reflect it in the following way within the DAW:
+
+![Drop Fx in the view](./resources/drop-fx-in-the-view.jpg)
+
+To apply the **DROP**, use the **"Hold + double-click on digit 1"** short-cut on the KP3+ side:
+
+![Applying the drop](./resources/applying-the-drop.jpg)
+
+**Note!** Application of the drop will:
+- Disable the Drop Fx
+- Recover volume of looper #1 to 100
+- Recover volume of each track of the looper #1 to 100
+- Turn off the Turnado FX
+
+So, the best practise regarding this feature is to:
+- Switch to the looper #1, which usually contains the drums
+- Turn off some of the drums and apply the Drop FX
+- Apply some turnado magic
+- Sing something special
+- And finally - apply the drop :)
+
+----
+
+## Sidechain
 
 ----
 
