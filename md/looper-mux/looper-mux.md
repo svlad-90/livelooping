@@ -1,5 +1,18 @@
-[Go to the previous page](../../README.md)
+[Go to the previous page](../../README.md#sub-articles)
 
+----
+
+# Table of contents
+
+- ["Looper mux" logical device](#looper-mux-logical-device)
+  * [Selecting the looper instance](#selecting-the-looper-instance)
+  * [Selecting the sample length](#selecting-the-sample-length)
+  * [Recording audio to the track](#recording-audio-to-the-track)
+  * [Erasing the track](#erasing-the-track)
+  * [Changing the volume of the loopers](#changing-the-volume-of-the-loopers)
+  * [Resetting the looper](#resetting-the-looper)
+  * [Resseting the looper mux](#resseting-the-looper-mux)
+  
 ----
 
 # "Looper mux" logical device
@@ -155,4 +168,4 @@ That will reset each individual looper. Also it will set all non-looper-specific
 
 ----
 
-[Go to the previous page](../../README.md)
+[Go to the previous page](../../README.md#sub-articles)

@@ -1,4 +1,4 @@
-[Go to the previous page](../../README.md)
+[Go to the previous page](../../README.md#sub-articles)
 
 ----
 
@@ -8,6 +8,8 @@
   * [DAW](#daw)
   * [VST plugins](#vst-plugins)
   * [Hardware](#hardware)
+
+----
 
 # Prerequisites
 
@@ -106,4 +108,4 @@ But all the above ones are part of the FL Studio delivery. So you do not need to
 
 ----
 
-[Go to the previous page](../../README.md)
+[Go to the previous page](../../README.md#sub-articles)

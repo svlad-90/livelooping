@@ -1,6 +1,7 @@
-[Go to the previous page](../../README.md)
+[Go to the previous page](../../README.md#sub-articles)
 
 ----
+
 
 # Installation
 
@@ -56,4 +57,4 @@ In order to install the project one would need to:
 
 ----
 
-[Go to the previous page](../../README.md)
+[Go to the previous page](../../README.md#sub-articles)

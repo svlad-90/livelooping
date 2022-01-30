@@ -1,4 +1,6 @@
-# The Livelooping project
+![Logo](./md/misc/logo.jpg)
+
+# The LIVELOOPING project
 
 ### BEEP... this document is in "work in progress" state.
 
@@ -8,14 +10,13 @@
 - [Thanks to](#thanks-to)
 - [Some dust in your eyes](#some-dust-in-your-eyes)
 - [Sub-articles](#sub-articles)
-  * [Prerequisites](#prerequisites)
-  * [Installation](#installation)
-  * [Looper mux](#looper-mux)
 - [Additional materials](#additional-materials)
+
+----
 
 ## Where am I?
 
-You are on the page of the svlad-90's **Livelooping** project!
+You are on the page of the svlad-90's **LIVELOOPING** project!
 
 It implements a set of the logical devices, that allows you to create music live, using beatboxing, vocals, or any other type of instrument(s), which you have under your hand.
 
@@ -57,9 +58,9 @@ The idea behind each knob and button and details regarding how all that works wi
 
 ## Sub-articles
 
-### [Prerequisites](./md/prerequisites/prerequisites.md)
-### [Installation](./md/installation/installation.md)
-### [Looper mux](./md/looper-mux/looper-mux.md)
+### [Prerequisites](./md/prerequisites/prerequisites.md) - what do you need to run the project?
+### [Installation](./md/installation/installation.md) - how to install the project?
+### [Looper mux](./md/looper-mux/looper-mux.md) - details regarding usage of the "looper mux" logical device
 
 ----
 
