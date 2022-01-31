@@ -60,7 +60,7 @@ class PersistencyItem:
 
     # general operations
     def resetStorage(self):
-        self.__data[constants.PERSISTENCY_VERSION_KEY] = constants.PERSISTENCY_CURRENT_VERSION
+        self.resetData()
         playlist.setTrackName(self.__track_id,  "")
 
     def writeToStorage(self):

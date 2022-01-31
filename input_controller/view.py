@@ -22,9 +22,8 @@ class View:
         self.resetToggleFlags()
 
     def resetToggleFlags(self):
-        parameter_id = fl_helper.findParameterByName(self.__context.main_channel, "Delete", constants.SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(0.0, parameter_id, self.__context.main_channel, constants.SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-
+        pass
+    
     def selectFXPage(self, preset_fx_page_id):
         for i in range(4):
             value = 0.0
@@ -47,6 +46,10 @@ class View:
 
         self.resetToggleFlags()
 
+    def setDeleteMode(self, delete_mode):
+        parameter_id = fl_helper.findParameterByName(self.__context.main_channel, "Delete mode", constants.SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(delete_mode, parameter_id, self.__context.main_channel, constants.SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+
     def setSaveMode(self, save_mode):
         parameter_id = fl_helper.findParameterByName(self.__context.main_channel, "Save mode", constants.SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(save_mode, parameter_id, self.__context.main_channel, constants.SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
@@ -54,11 +57,7 @@ class View:
     def setMidiMappingSaveMode(self, midi_mapping_save_mode):
         parameter_id = fl_helper.findParameterByName(self.__context.main_channel, "Midi mapping save mode", constants.SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(midi_mapping_save_mode, parameter_id, self.__context.main_channel, constants.SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-
-    def resetFXPreset(self):
-        parameter_id = fl_helper.findParameterByName(self.__context.main_channel, "Delete", constants.SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(1.0, parameter_id, self.__context.main_channel, constants.SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-
+        
     def setVolume(self, synth_volume):
         parameter_id = fl_helper.findParameterByName(self.__context.main_channel, "Volume", constants.SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(synth_volume, parameter_id, self.__context.main_channel, constants.SYNTH_CONTROL_SURFACE_MIXER_SLOT_INDEX)

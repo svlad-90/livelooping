@@ -36,6 +36,7 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
                                    FXPresetPage.FXPresetPage_3: FXPresetPage(self.__context, FXPresetPage.FXPresetPage_3, self.__view),
                                    FXPresetPage.FXPresetPage_4: FXPresetPage(self.__context, FXPresetPage.FXPresetPage_4, self.__view) }
         self.__is_save_mode = False
+        self.__is_delete_mode = False
         self.__is_midi_mapping_save_mode = False
         self.__fxs = { FX.FX_1 : FX(self.__context, FX.FX_1, self.__view),
                       FX.FX_2 : FX(self.__context, FX.FX_2, self.__view),
@@ -98,11 +99,19 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
 
     def isSaveMode(self):
         return self.__is_save_mode
+    
+    def isDeleteMode(self):
+        return self.__is_delete_mode
 
     def setSaveMode(self, save_mode):
         print(self.__context.device_name + ': ' + KorgKaossPad3Plus_InputController.setSaveMode.__name__ + ": save mode - " + str(save_mode))
         self.__is_save_mode = save_mode
         self.__view.setSaveMode(save_mode)
+
+    def setDeleteMode(self, delete_mode):
+        print(self.__context.device_name + ': ' + KorgKaossPad3Plus_InputController.setDeleteMode.__name__ + ": save mode - " + str(delete_mode))
+        self.__is_delete_mode = delete_mode
+        self.__view.setDeleteMode(delete_mode)
 
     def isMidiMappingSaveMode(self):
         return self.__is_midi_mapping_save_mode
@@ -155,10 +164,9 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
         print(self.__context.device_name + ': ' + KorgKaossPad3Plus_InputController.updateFXPreset.__name__)
         self.__fx_preset_pages[self.__selected_fx_preset_page].updateFXPreset(fx_preset_id)
 
-    def resetFXPreset(self):
+    def resetFXPreset(self, fx_preset_id):
         print(self.__context.device_name + ': ' + KorgKaossPad3Plus_InputController.resetFXPreset.__name__)
-        self.__fx_preset_pages[self.__selected_fx_preset_page].resetFXPreset(self.getSelectedFXPresetID())
-        self.__view.resetFXPreset()
+        self.__fx_preset_pages[self.__selected_fx_preset_page].resetFXPreset(fx_preset_id)
 
     def setVolume(self, synth_volume):
         mixer.setTrackVolume(self.__context.fx2_channel, synth_volume)
@@ -297,6 +305,9 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
 
         self.__is_save_mode = False
         self.__view.setSaveMode(self.__is_save_mode)
+        
+        self.__is_delete_mode = False
+        self.__view.setDeleteMode(self.__is_delete_mode)
 
         self.setTurnadoDictatorLevel(0.0)
         self.setTurnadoDryWetLevel(constants.DEFAULT_TURNADO_DRY_WET_LEVEL)
@@ -329,7 +340,8 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
             if True == self.isMidiMappingSaveMode():
                 if event.data1 == constants.MIDI_CC_ENTER_SAVE_MODE and self.getShiftPressedState():
                     action = lambda self = self: ( self.setMidiMappingSaveMode(not self.isMidiMappingSaveMode()), \
-                                                   self.setSaveMode(False) )
+                                                   self.setSaveMode(False), \
+                                                   self.setDeleteMode(False) )
                     self.actionOnDoubleClick(constants.MIDI_CC_ENTER_SAVE_MODE + constants.ENTER_MIDI_MAPPING_SAVE_MODE_SHIFT, action)
                 elif event.data1 == constants.MIDI_CC_SHIFT:
                     self.setShiftPressedState(event.data2 == fl_helper.MIDI_MAX_VALUE)
@@ -353,15 +365,47 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
                     action = lambda self = self: ( self.setMidiMappingSaveMode(not self.isMidiMappingSaveMode()), \
                                                    self.setSaveMode(False) )
                     self.actionOnDoubleClick(constants.MIDI_CC_ENTER_SAVE_MODE + constants.ENTER_MIDI_MAPPING_SAVE_MODE_SHIFT, action)
-                elif event.data1 == constants.MIDI_CC_RESET_PRESET and self.getShiftPressedState():
-                    self.resetFXPreset()
+                elif event.data1 == constants.MIDI_CC_ENTER_DELETE_MODE and self.getShiftPressedState():
+                    self.setDeleteMode(not self.isDeleteMode())
                 elif event.data1 == constants.MIDI_CC_PREV_ACTIVE_FX_UNIT_PRESET and self.getShiftPressedState():
                     self.switchActiveFXUnitToPrevPreset()
                 elif event.data1 == constants.MIDI_CC_NEXT_ACTIVE_FX_UNIT_PRESET and self.getShiftPressedState():
                     self.switchActiveFXUnitToNextPreset()
+                elif event.data1 == constants.MIDI_CC_EFFECT_1 and self.isDeleteMode():
+                    self.resetFXPreset(FXPreset.FXPreset_1)
+                    self.setDeleteMode(False)
+                    self.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_1)
+                elif event.data1 == constants.MIDI_CC_EFFECT_2 and self.isDeleteMode():
+                    self.resetFXPreset(FXPreset.FXPreset_2)
+                    self.setDeleteMode(False)
+                    self.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_2)
+                elif event.data1 == constants.MIDI_CC_EFFECT_3 and self.isDeleteMode():
+                    self.resetFXPreset(FXPreset.FXPreset_3)
+                    self.setDeleteMode(False)
+                    self.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_3)
+                elif event.data1 == constants.MIDI_CC_EFFECT_4 and self.isDeleteMode():
+                    self.resetFXPreset(FXPreset.FXPreset_4)
+                    self.setDeleteMode(False)
+                    self.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_4)
+                elif event.data1 == constants.MIDI_CC_EFFECT_5 and self.isDeleteMode():
+                    self.resetFXPreset(FXPreset.FXPreset_5)
+                    self.setDeleteMode(False)
+                    self.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_5)
+                elif event.data1 == constants.MIDI_CC_EFFECT_6 and self.isDeleteMode():
+                    self.resetFXPreset(FXPreset.FXPreset_6)
+                    self.setDeleteMode(False)
+                    self.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_6)
+                elif event.data1 == constants.MIDI_CC_EFFECT_7 and self.isDeleteMode():
+                    self.resetFXPreset(FXPreset.FXPreset_7)
+                    self.setDeleteMode(False)
+                    self.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_7)
+                elif event.data1 == constants.MIDI_CC_EFFECT_8 and self.isDeleteMode():
+                    self.resetFXPreset(FXPreset.FXPreset_8)
+                    self.setDeleteMode(False)
+                    self.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_8)
                 elif event.data1 == constants.MIDI_CC_EFFECT_1 and self.isSaveMode():
-                    self.updateFXPreset(FXPreset.FXPreset_1)
-                    self.setSaveMode(False)
+                    self.resetFXPreset(FXPreset.FXPreset_1)
+                    self.setDeleteMode(False)
                     self.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_1)
                 elif event.data1 == constants.MIDI_CC_EFFECT_2 and self.isSaveMode():
                     self.updateFXPreset(FXPreset.FXPreset_2)

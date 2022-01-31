@@ -4,7 +4,7 @@
 
 ----
 
-## BEEP... this document is in "work in progress" state.
+## BEEP... this document is in "work in progress" state. The work is ongoing RIGHT NOW. It will be done in the several days.
 
 ----
 
@@ -69,6 +69,7 @@ The idea behind each knob and button and details regarding how all that works wi
 ### [Prerequisites](./md/prerequisites/prerequisites.md) - what do you need to run this project?
 ### [Installation](./md/installation/installation.md) - how to install this project?
 ### [Looper mux](./md/looper-mux/looper-mux.md) - details regarding usage of the "looper mux" logical device
+### [Input controller](./md/input-controller/input-controller.md) - details regarding usage of the "input controller" logical device
 
 ----
 

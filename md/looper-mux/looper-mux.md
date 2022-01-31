@@ -30,6 +30,10 @@
 
 # "Looper mux" logical device
 
+![Looper mux view](../screenshots/looper-mux.jpg)
+
+The "looper-mux" logical device is a thing that allows you to manage the recording of the looped audio phrases. It's purpose is to replace your RC-505 :)
+
 ## Selecting the active looper instance
 
 The "looper mux" logical device consists of 4 looper instaces:
@@ -324,7 +328,7 @@ In order to resample all loopers:
 
 As of now Turnado is the one and only effect, which you can apply on top of the recorded data. Still, in many cases it might be enough, as it provides infinite possibilities to randomly change your sounds.
 
-The idea behind turnado is the following one:
+The idea behind the Turnado VST is the following one:
 - Turnado provides 24 different effects.
 - Out of those 24 effects you can select 8 active effects and fine-tune them.
 - Turnado has a "dictator" killing feature, which allows you to manipulate 8 active effects with one single fader.
@@ -338,7 +342,7 @@ Important point is that each looper has a dedicated instance of Turnado assigned
 
 ### Changing the Turnado dictator value
 
-In order to change the turnado dictator value, use the **"FX DEPTH"** knowb on the KP3+:
+In order to change the turnado dictator value, use the **"FX DEPTH"** knob on the KP3+:
 
 ![Changing turnado dictator level](./resources/changing-turnado-dictator-level.jpg)
 
