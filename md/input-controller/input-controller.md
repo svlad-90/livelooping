@@ -20,7 +20,10 @@
 	* [Changing the Turnado Dry/Wet value](#changing-the-turnado-dry-wet-value)
 	* [Randomizing Turnado](#randomizing-turnado)
 	* [Switching between the Turnado VST presets](#switching-between-the-turnado-vst-presets)
-  * [Changing the active FX unit](#changing-the-active-fx-unit)
+  * [FX parameters](#fx-parameters)
+    * [Changing FX parameter values](#changing-fx-parameter-values)
+    * [FX units](#fx-units)
+	* [MIDI mapping assignment](#midi-mapping-assignment)
 ----
 
 # "Input controller" logical device
@@ -202,6 +205,8 @@ The implementation of the project will traverse all values of all the parameters
 
   ![Active FX unit](./resources/active-fx-unit.jpg)
 
+  You can check what is the FX unit [here](#fx-units). For this section it is important to know only that active fx unit type is also the part of the stored pattern.
+
 ### MIDI mapping
 
 
@@ -288,7 +293,100 @@ In the view, the corresponding buttons will blink in case of usage:
 
 ----
 
-### Changing the active FX unit
+## FX parameters
+
+The possibility to save complex patterns and instantly switch between them is awesome. But it is not eanough. You should be able to manipulate with the selected sound at realtime, in order to add additional diversity.
+
+In order to do this you can use 8 FX parameters:
+
+![FX parameters](./resources/fx-parameters.jpg)
+
+Depending on the confitions, which are described [here](#fx-units), those parameters can be assigned to different control elements of the VST plugins.
+
+----
+
+### Changing FX parameter values
+
+In order to change the FX parameter values, use 8 virtual faders on the touch-screen:
+
+![Changing FX parameters](./resources/changing_fx_parameters.jpg)
+
+The view will reflect the changes accordingly.
+
+----
+
+### FX units
+
+Active FX unit represents, which set of VST parameters are assigned to the FX parameters of the logical device at current moment.
+
+Currently there are 3 supported FX unit types available:
+
+![Active FX unit](./resources/active-fx-unit.jpg)
+
+Here is a brief description of each FX unit type:
+
+|FX unit type|Comment|
+|---|---|
+|Manipulator|FX parameters are associated with the Manipulator VST instance|
+|Voodoo Finisher|FX parameters are associated with the Voodoo Finisher VST instance|
+|Custom|FX parameters are assigned manually by the user. The mapping is persisted as part of the preset.|
+
+Here is description of the mapping between the VST parameters and FX parameters used in each FX unit:
+
+#### Manipulator
+
+|Parameter id|Parameter name|
+|---|---|
+|1|Formant|
+|2|Pitch|
+|3|Ratio|
+|4|Harmonics|
+|5|FM|
+|6|Alternator|
+|7|Octave|
+|8|Wet/Dry|
+
+#### Voodoo Finisher
+
+|Parameter id|Parameter name|
+|---|---|
+|1|Variation 1|
+|2|Variation 2|
+|3|Variation 3|
+|4|Variation 4|
+|5|Not used|
+|6|Not used|
+|7|Not used|
+|8|Wet/Dry|
+
+#### Custom
+
+The idea of the custom FX unit type is that user has a possibility to assign MIDI mapping to any of the parameters within the [list of the device's VST-s](#vst-parameters). So table here would look like this:
+
+|Parameter id|Parameter name|
+|---|---|
+|1|Assigned by the user|
+|2|Assigned by the user|
+|3|Assigned by the user|
+|4|Assigned by the user|
+|5|Assigned by the user|
+|6|Assigned by the user|
+|7|Assigned by the user|
+|8|Assigned by the user|
+
+The selected mapping is persisted as part of the preset. So you can select different parameters for each created preset.
+
+To change the active FX unit use the **"D"** button on the KP3+:
+
+![Changing the active FX unit](./resources/changing-active-f-unit.jpg)
+
+The view will reflect the change in the DAW. An active FX unit will be highlighted:
+
+![Active FX unit changed](./resources/active-fx-unit-changed.jpg)
+
+----
+
+### MIDI mapping assignment
 
 
 
