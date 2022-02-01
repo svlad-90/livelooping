@@ -108,10 +108,16 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
         self.__is_save_mode = save_mode
         self.__view.setSaveMode(save_mode)
 
+        if True == save_mode and True == self.isDeleteMode():
+            self.setDeleteMode(False)
+
     def setDeleteMode(self, delete_mode):
         print(self.__context.device_name + ': ' + KorgKaossPad3Plus_InputController.setDeleteMode.__name__ + ": save mode - " + str(delete_mode))
         self.__is_delete_mode = delete_mode
         self.__view.setDeleteMode(delete_mode)
+        
+        if True == delete_mode and True == self.isSaveMode():
+            self.setSaveMode(False)
 
     def isMidiMappingSaveMode(self):
         return self.__is_midi_mapping_save_mode
@@ -131,7 +137,7 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
     def selectFXPage(self, preset_fx_page_id):
         print(self.__context.device_name + ': ' + KorgKaossPad3Plus_InputController.selectFXPage.__name__ + ": fx page id - " + str(preset_fx_page_id))
         self.__selected_fx_preset_page = preset_fx_page_id;
-        self.__fx_preset_pages[self.__selected_fx_preset_page].select()
+        self.__fx_preset_pages[self.__selected_fx_preset_page].select(not self.isSaveMode())
         
         self.setFXLevel(self.__fx_level, True)
 
@@ -404,8 +410,8 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
                     self.setDeleteMode(False)
                     self.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_8)
                 elif event.data1 == constants.MIDI_CC_EFFECT_1 and self.isSaveMode():
-                    self.resetFXPreset(FXPreset.FXPreset_1)
-                    self.setDeleteMode(False)
+                    self.updateFXPreset(FXPreset.FXPreset_1)
+                    self.setSaveMode(False)
                     self.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_1)
                 elif event.data1 == constants.MIDI_CC_EFFECT_2 and self.isSaveMode():
                     self.updateFXPreset(FXPreset.FXPreset_2)

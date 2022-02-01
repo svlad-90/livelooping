@@ -29,8 +29,8 @@ class FXPresetPage:
                        FXPreset.FXPreset_8: FXPreset(self.__context, fx_page_number, FXPreset.FXPreset_8, self.__view) }
         self.__initialized = False
 
-    def select(self):
-        self.selectFXPreset(self.__selected_fx_preset_id)
+    def select(self, select_preset = True):
+        self.selectFXPreset(self.__selected_fx_preset_id, select_preset)
         self.__view_updateStats()
 
     def getSelectedFXPresetID(self):
@@ -57,13 +57,17 @@ class FXPresetPage:
         self.__fx_presets[fx_preset_id].view_updateFXParamsFromPlugins()
         self.__fx_presets[fx_preset_id].view_updateActiveFXUnit()
 
-    def selectFXPreset(self, fx_preset_id):
+    def selectFXPreset(self, fx_preset_id, select_preset = True):
         print(self.__context.device_name + '_FXPresetPage' + ': ' + FXPresetPage.selectFXPreset.__name__ + " page - " + str(self.__fx_page_number) + ", preset - " + str(fx_preset_id))
         self.__selected_fx_preset_id = fx_preset_id
-        self.__fx_presets[fx_preset_id].select()
-        self.__fx_presets[fx_preset_id].view_updateFXPresetAvailability()
-        self.__fx_presets[fx_preset_id].view_updateFXParamsFromPlugins()
-        self.__fx_presets[fx_preset_id].view_updateActiveFXUnit()
+        
+        if True == select_preset:
+            self.__fx_presets[fx_preset_id].select()
+            self.__fx_presets[fx_preset_id].view_updateFXPresetAvailability()
+            self.__fx_presets[fx_preset_id].view_updateFXParamsFromPlugins()
+            self.__fx_presets[fx_preset_id].view_updateActiveFXUnit()
+        else:
+            self.__view.selectFXPreset(self.__selected_fx_preset_id)
 
     def setMidiMapping(self, fx_parameter_number, midi_mapping):
         self.__fx_presets[self.__selected_fx_preset_id].setMidiMapping(fx_parameter_number, midi_mapping)
