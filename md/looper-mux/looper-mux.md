@@ -380,7 +380,7 @@ The view does not reflect that. There seems to be no real reason to visualize th
 
 **Note!** in order to Randmize function to work, you need to have Turnado instance be **IN FOREGROUND** within the DAW. That's why you'll find all Turnado instances being hidden somewhere in the right bottom corner of the screen, while still being in foreground. It is by intention. Do not close them.
 
-**TODO** - I'm thinking of allowing the user to switch between the presets, as it is done in the "input controller" logical device. It would be prefferable option, as "randomize" sometimes gives unpredictable results. Currently, I'm searching free to use shortcuts, to implement this feature. It will arrive soon after I'll finish this documentation :)
+**TODO**: I'm thinking of allowing the user to switch between the presets, as it is done in the "input controller" logical device. It would be prefferable option, as "randomize" sometimes gives unpredictable results. Currently, I'm searching free to use shortcuts, to implement this feature. It will arrive soon after I'll finish this documentation :)
 
 ----
 

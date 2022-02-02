@@ -13,8 +13,10 @@
   * [Deleting the preset](#deleting-the-preset)
   * [Creating and editing the preset](#creating-and-editing-the-preset)
     * [VST parameters](#vst-parameters)
+	* [VST activation statuses](#vst-activation-statuses)
 	* [Active FX unit](#active-fx-unit)
 	* [MIDI mapping](#midi-mapping)
+  * [What is used as a persistency for the presets?](#what-is-used-as-a-persistency-for-the-presets)
   * [Applying Turnado effect to the input controller](#applying-turnado-effect-to-the-input-controller)
 	* [Changing the Turnado dictator value](#changing-the-turnado-dictator-value)
 	* [Changing the Turnado Dry/Wet value](#changing-the-turnado-dry-wet-value)
@@ -23,7 +25,10 @@
   * [FX parameters](#fx-parameters)
     * [Changing FX parameter values](#changing-fx-parameter-values)
     * [FX units](#fx-units)
-	* [MIDI mapping assignment](#midi-mapping-assignment)
+	* [Changing the active FX unit](#changing-the-active-fx-unit)
+	* [Switching the FX unit presets](#switching-the-fx-unit-presets)
+	* [Assigning MIDI mapping](#assigning-midi-mapping)
+	* [Deleting MIDI mapping](#deleting-midi-mapping)
 ----
 
 # "Input controller" logical device
@@ -162,7 +167,7 @@ The preset consists of the following types of data:
 - **The selected active FX unit**
 - **The MIDI mapping of the custom FX unit**
 
-More details regarding each stored data type below.
+More details regarding each stored data type are shown below.
 
 ----
 
@@ -201,15 +206,90 @@ Currently, first instance of the input controller is using mixer channel **#5** 
 
 The implementation of the project will traverse all values of all the parameters, and will store them to persistency.
 
+----
+
+### VST activation statuses
+
+**TODO**: Revisit this flow to simplify it.
+
+Each VST from the [above section](#vst-parameters) can be enabled or disabled.
+
+Unfortunately, the way to change the activation status of the VST effects is not the most comfortable one. 
+
+In order to change it, do the following:
+
+- Open the mixer
+
+  ![Opening the mixer](./resources/opening-the-mixer.jpg)
+
+- Open the input controller's instance main mixer channel:
+
+  |Instance id|Main mixer channel number|
+  |---|---|
+  |#1|6|
+  |#2|10|
+
+  ![Input controller main mixer channels](./resources/input-controller-main-mixer-channels.jpg)
+
+- Open the MIDI routing view:
+
+  ![Opening MIDI routing view](./resources/opening-midi-routing-view.jpg)
+
+- Change the VST activation status clicking on one of the **E1_TO - E10_TO** buttons:
+
+  ![Changing VST activation status](./resources/changing-vst-activation-status.jpg)
+
+- [Change the FX level](#changing-the-fx-level) on KP3+ to apply the change
+
+Once again, we will revisit this section soon.
+
+----
+
 ### Active FX unit
 
   ![Active FX unit](./resources/active-fx-unit.jpg)
 
-  You can check what is the FX unit [here](#fx-units). For this section it is important to know only that active fx unit type is also the part of the stored pattern.
+  You can check what is the FX unit [here](#fx-units). For this section it's only important to know that active fx unit type is also the part of the stored pattern.
+
+----
 
 ### MIDI mapping
 
+  MIDI mapping data is also saved as part of the dedicated preset.
+  
+  You can read more on what is the MIDI mapping [here](#assigning-midi-mapping). For this section it's only important to know that midi mapping is also the part of the stored pattern.
 
+----
+
+## What is used as a persistency for the presets?
+
+**Note!** This section describes an implementation detail. It provides no useful information for the average user. Still, it allows to avoid confusion for the users, which would like to deeply investigate the **LIVELOOPING's** flp project.
+
+This is an interesting question. Actually, FL Studio does not ship the io python module inside its python interpreter. So there is no way to store any data to the file-system.
+
+But we've found the way out. 
+
+The name of the tracks in the playlist of the DAW is used to save all the data. You can see it yourself. Just:
+
+- Open the playlist:
+
+  ![Opening the playlist](./resources/opening-playlist.jpg)
+
+- Scroll to the track 100 or 200. See the track names:
+
+  ![The stored data](./resources/stored-data.jpg)
+
+  Range 100-200 is reserved for the needs of the first "input controller' logical device. Range 200-300 is reserved for the needs of the second "input controller' logical device.
+
+Actually, there is a lot of data inside each track name:
+
+```
+{'PLUGIN_PARAMS': {10: ['1.0', '1.0', '0.0', '0.0', '0.0', '1.0', '1.0', '0.0', '1.0', '1.0'], 0: ['1.0', '1.0', '0.31585195660591125', '0.6239166855812073', '0.20491667091846466', '1.0', '1.0', '0.5272108316421509', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '1.0', '1.0', '0.8641238808631897', '0.6380952000617981', '0.3851388692855835', '1.0', '1.0', '0.6069444417953491', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '1.0', '1.0', '0.5554232001304626', '0.6632652878761292', '0.355611115694046', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '1.0', '1.0', '0.22962868213653564', '0.0', '0.5', '1.0', '1.0', '0.5317777991294861', '0.25', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '0.25', '0.5', '0.5', '0.5', '0.0', '0.0', '0.0', '0.0', '1.0', '1.0', '1.52587890625e-05', '0.5', '0.6666666865348816', '0.5', '0.75', '0.0', '1.0', '1.0', '1.0', '0.0', '0.5', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0'], 1: ['0.6309999823570251', '0.6309999823570251', '0.5510203838348389', '0.0', '0.4881889820098877', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0'], 2: ['0.0', '0.25', '0.5', '0.8732812404632568', '0.11339999735355377', '0.2445833384990692', '1.0', '1.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.0', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5121874809265137', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.0', '0.0', '0.0', '0.0', '1.0', '1.0', '1.0', '1.0', '0.2666666805744171', '0.5', '0.2666666805744171', '0.5', '0.2666666805744171', '0.5', '0.2666666805744171', '0.5', '0.0', '0.2666666805744171', '0.5', '0.2666666805744171', '0.0', '0.2666666805744171', '0.5', '0.2666666805744171', '0.0', '0.2666666805744171', '0.5', '0.2666666805744171', '0.0', '0.2666666805744171', '0.5', '0.2666666805744171', '0.0', '0.0', '0.0', '0.0', '0.33799999952316284', '0.0', '0.30094006657600403', '0.6247779130935669', '0.33799999952316284', '0.0', '0.33799999952316284', '0.0', '1.0', '0.0', '1.0', '0.0', '1.0', '0.0', '1.0', '0.0', '0.5', '0.6913415193557739', '0.8535534739494324', '0.9619399905204773', '1.0', '0.9619399905204773', '0.8535534739494324', '0.6913415193557739', '0.5', '0.30865851044654846', '0.2603493332862854', '0.32477864623069763', '0.0', '0.32478293776512146', '0.2603493332862854', '0.30865851044654846', '1.0', '0.0', '0.8535534739494324', '0.0', '1.0', '0.0', '0.9807692170143127', '0.0', '0.7884615659713745', '0.0', '0.8461538553237915', '0.0', '1.0', '0.0', '1.0', '0.30865851044654846', '0.5', '0.6913415193557739', '0.8535534739494324', '0.9619399905204773', '1.0', '0.9619399905204773', '0.8535534739494324', '0.6913415193557739', '0.5', '0.30865851044654846', '0.2603493332862854', '0.32477864623069763', '0.0', '0.32478293776512146', '0.2603493332862854', '0.30865851044654846', '0.5', '0.6913415193557739', '0.8535534739494324', '0.9619399905204773', '1.0', '0.9619399905204773', '0.8535534739494324', '0.6913415193557739', '0.5', '0.30865851044654846', '0.2603493332862854', '0.32477864623069763', '0.0', '0.32478293776512146', '0.2603493332862854', '0.30865851044654846', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '1.0', '1.0', '0.75', '1.0', '1.0', '0.0', '0.0', '0.5', '0.5', '0.0', '0.0', '1.0', '0.0', '0.0', '0.0', '0.0', '0.0'], 3: ['0.5', '0.4444444444444444', '0.0', '0.8359375', '0.8671875'], 4: ['0.5', '0.8', '0.5', '0.3466796875', '1.0', '0.0'], 5: ['0.018785642401878563', '0.16203703703703703', '0.0', '0.494949494949495', '1.0', '0.06030150753768844', '0.16203703703703703', '0.2857142857142857', '0.24050632911392406', '0.5', '0.8', '0.4', '0.2125', '0.333984375', '0.0'], 6: ['0.015625', '0.475', '0.8', '0.14960629921259844', '0.12385919165580182', '0.5', '1.0', '1.0'], 7: ['0.982421875', '0.0', '1.0', '1.0', '1.0', '0.0'], 8: ['0.47333333333333333', '0.25675675675675674', '0.7283333333333334', '0.0375', '0.04976244061015254', '0.0'], 9: ['0.589', '1.0', '0.5', '0.1115', '0.2857142857142857', '0.5', '0.2857142857142857', '0.2882', '1.0', '0.5', '0.5', '0.0', '0.6666', '0.0', '0.065', '1.0', '0.0', '0.4187']}, 'MIDI_MAPPING': {0: [1, 4], 1: [-1, -1], 2: [-1, -1], 3: [-1, -1], 4: [-1, -1], 5: [-1, -1], 6: [-1, -1], 7: [-1, -1]}, 'ACTIVE_FX_UNIT': 0, 'VERSION': 1.0}
+```
+
+Actually, we are lucky that FL studio team made this field unlimited in size. Otherwise, it would not be possible to store any data as aprt of the project.
+
+I hope thay'll never change it :)
 
 ----
 
@@ -333,7 +413,7 @@ Here is a brief description of each FX unit type:
 
 Here is description of the mapping between the VST parameters and FX parameters used in each FX unit:
 
-#### Manipulator
+#### Manipulator FX unit
 
 |Parameter id|Parameter name|
 |---|---|
@@ -346,7 +426,7 @@ Here is description of the mapping between the VST parameters and FX parameters 
 |7|Octave|
 |8|Wet/Dry|
 
-#### Voodoo Finisher
+#### Voodoo Finisher FX unit
 
 |Parameter id|Parameter name|
 |---|---|
@@ -359,7 +439,7 @@ Here is description of the mapping between the VST parameters and FX parameters 
 |7|Not used|
 |8|Wet/Dry|
 
-#### Custom
+#### Custom FX unit
 
 The idea of the custom FX unit type is that user has a possibility to assign MIDI mapping to any of the parameters within the [list of the device's VST-s](#vst-parameters). So table here would look like this:
 
@@ -374,6 +454,10 @@ The idea of the custom FX unit type is that user has a possibility to assign MID
 |7|Assigned by the user|
 |8|Assigned by the user|
 
+----
+
+### Changing the active FX unit
+
 The selected mapping is persisted as part of the preset. So you can select different parameters for each created preset.
 
 To change the active FX unit use the **"D"** button on the KP3+:
@@ -386,9 +470,155 @@ The view will reflect the change in the DAW. An active FX unit will be highlight
 
 ----
 
-### MIDI mapping assignment
+### Switching the FX unit presets
 
+The described above **"Manipulator"** and **"Voodoo Finisher"** fx unit types have one to one relation to VST plugins with the same names.
 
+That means, that when working in those modes, it would be useful for the user to be able to change the presets of those VST-s without touching the DAW.
+
+**LIVELOOPING** project implements such possibility. User can jump between the presets of the 2 above-mentioned VST plugins, using:
+  - **"Hold + 8"** short-cut on KP3+ to select the next VST preset
+  - **"Hold + 7"** short-cut on KP3+ to select the previous VST preset
+
+![Switching the FX unit type presets](./resources/switching-fx-unit-type-presets.jpg)
+
+Such feature allows the following workflow:
+
+- [Select the active fx unit type](#changing-the-active-fx-unit), Choose **"Manipulator"** or **"Voodoo Finisher"**. For **"Custom"** this feature has no effect.
+- Jump between the presets and select one as a base-line for your sound idea
+- [Play around with the FX parameter values](#changing-fx-parameter-values) to fine tune the sound
+- [Save the preset](#saving-the-preset)
+
+----
+
+### Assigning MIDI mapping
+
+As mentioned [here](#custom-fx-unit), when user selects the "custom" fx unit type, he is capable of assigning individual MIDI mappings to the VST parameters. This section describes such a procedure.
+
+**Note!** FYI. This paragraph is the advanced one. You will not need to modify any source code to proceed. But, as the possibilities of the DAW's view are limited, the part of the interaction within this scenario would be done in the "script output" console.
+
+Let's imagine, that I want to assign the Reverb's VST Wet level to the FX parameter **#2**. 
+
+In order to achieve that, let's follow such a steps:
+
+- Open the "script output" console:
+
+  ![Opening the script output console](./resources/opening-script-output-console.jpg)
+
+  Place it in a way that you see both the console and the target logical device on the screen.
+
+- Select the tab with the target device. It would be either the one with the output from "device_KorgKaossPad3Plus_MicController" class or from "device_KorgKaossPad3Plus_SynthController" class. Specific tab depends on the instance of the "input controller" logical device, which you are using:
+
+  ![Script output console](./resources/script-output-console.jpg)
+
+- Enter the "Midi mapping save mode" using the **"Hold + double click on digit 5"** short-cut on the KP3+:
+
+  ![Activating MIDI mapping save mode](./resources/activating-midi-mapping-save-mode.jpg)
+
+  The view will reflect this in the DAW in the following way:
+
+  ![MIDI mapping save mode activated](./resources/midi-mapping-save-mode-activated.jpg)
+
+  On top of that you'll see the following message in the console:
+  
+  ```
+  MIDI mapping input dialog >>> Please, enter fx parameter number.
+  ```
+
+- Select the target fx parameter, using the **1-8** digits on the KP3+:
+
+  ![Selecting the target preset slot](./resources/selecting-the-target-preset-slot.jpg)
+
+  I've selected the slot **#2**.
+  
+  After the slot is selected, you'll see the following messages in the console:
+  
+  ```
+  MIDI mapping input dialog >>> Fx parameter number '1' was selected
+  MIDI mapping input dialog >>> Please, select the target plugin
+  MIDI mapping input dialog >>> Current cursor position is - #0 'FabFilter Pro-Q 3'
+  ```
+
+- Select the target VST plugin. Use the following controls on the KP3+ to navigate: 
+  
+  |Control|Meaning|
+  |---|---|
+  |**"A"**|Previous item|
+  |**"B"**|Next item|
+  |**"C"**|Select item and proceed to the next step|
+  |**"D"**|Cancel the operation| 
+
+  ![Navigation within the items list](./resources/navigating-within-the-items-list.jpg)
+
+  In my case, I've pressed **"B + B + B + B + B + C"** to select the "Fruity Reverb 2" VST. I've seen the following output in the console:
+  
+  ```
+  MIDI mapping input dialog >>> Current cursor position is - #1 'FIN-VOOD'
+  MIDI mapping input dialog >>> Current cursor position is - #2 'Manipulator'
+  MIDI mapping input dialog >>> Current cursor position is - #3 'Fruity Fast Dist'
+  MIDI mapping input dialog >>> Current cursor position is - #4 'Fruity Stereo Enhancer'
+  MIDI mapping input dialog >>> Current cursor position is - #5 'Fruity Reeverb 2'
+  MIDI mapping input dialog >>> Plugin #5 'Fruity Reeverb 2' was selected
+  MIDI mapping input dialog >>> Please, select the target parameter
+  MIDI mapping input dialog >>> Current cursor position is - #0 'Low cut'
+  ```
+
+- Select the target VST parameter. The navigation is totally the same as in the previous point.
+
+  I've pressed **"B"** until I've scrolled to the parameter #12 'Wet level'. Then I've pressed **"C"**. I've seen the following output in the console:
+  
+  ```
+  MIDI mapping input dialog >>> Current cursor position is - #1 'High cut'
+  MIDI mapping input dialog >>> Current cursor position is - #2 'Predelay'
+  MIDI mapping input dialog >>> Current cursor position is - #3 'Room size'
+  MIDI mapping input dialog >>> Current cursor position is - #4 'Diffusion'
+  MIDI mapping input dialog >>> Current cursor position is - #5 'Decay time'
+  MIDI mapping input dialog >>> Current cursor position is - #6 'High damping'
+  MIDI mapping input dialog >>> Current cursor position is - #7 'Bass multiplier'
+  MIDI mapping input dialog >>> Current cursor position is - #8 'Crossover'
+  MIDI mapping input dialog >>> Current cursor position is - #9 'Stereo separation'
+  MIDI mapping input dialog >>> Current cursor position is - #10 'Dry level'
+  MIDI mapping input dialog >>> Current cursor position is - #11 'Early reflection level'
+  MIDI mapping input dialog >>> Current cursor position is - #12 'Wet level'
+  MIDI mapping input dialog >>> Parameter #12 'Wet level' was selected
+  device_KorgKaossPad3Plus_MicController: setMidiMappingSaveMode: midi mapping save mode - False
+  ```
+
+- The MIDI mapping was already assigned at this stage. The FX parameter slot will become "non-empty". The level of the parameter would be fetched from the VST plugin:
+
+  ![MIDI mapping assigned](./resources/midi-mapping-assigned.jpg)
+
+  You can open the Reverb VST and check out, that changing the FX parameter 2 has effect on the Reverb level:
+
+  ![MIDI mapping check](./resources/midi-mapping-check.gif)
+
+- If you like the created MIDI mapping - **DO NOT FORGET TO [SAVE THE PRESET](#saving-the-preset)**. Only after that the MIDI mapping data will be persistently stored.
+
+----
+
+### Deleting MIDI mapping
+
+**Note!** Read [this previous paragraph](#assigning-midi-mapping) to understand what we are talking about.
+
+Let's imagine, that I want to delete MIDI mapping, which I've created [at the previous step](#assigning-midi-mapping).
+
+In order to achieve that:
+
+- Do all the steps from the [the previous paragraph](#assigning-midi-mapping) up to **SELECTING THE TARGET FX PARAMETER**.
+
+- press the **"Hold + 6"** short-cut on the KP3+:
+
+  ![MIDI mapping check](./resources/deleting-midi-mapping.jpg)
+
+  That will delete the MIDI mapping. You'll see the following message in the console:
+  
+  ```
+  MIDI mapping input dialog >>> Mapping was deleted.
+  ```
+
+  The FX parameter slot will become empty in the view:
+  
+  ![MIDI mapping empty slot](./resources/midi-mapping-empty-slot.jpg)
 
 ----
 
