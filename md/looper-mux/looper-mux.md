@@ -32,11 +32,11 @@
 
 ![Looper mux view](../screenshots/looper-mux.jpg)
 
-The "looper-mux" logical device is a thing that allows you to manage the recording of the looped audio phrases. It's purpose is to replace your RC-505 :)
+The "looper-mux" logical device is a thing that allows you to manage the recording of the looped audio phrases. Its purpose is to replace your RC-505 :)
 
 ## Selecting the active looper instance
 
-The "looper mux" logical device consists of 4 looper instaces:
+The "looper mux" logical device consists of 4 looper instances:
 
 ![Looper instances](./resources/looper-instance.png)
 
@@ -46,7 +46,7 @@ You can switch to other loopers using the **"Hold + X"** shortcut on KP3+, where
 
 ![Selecting looper instance](./resources/selecting-looper-instance.jpg)
 
-**Note!** When you are selecting the looper, majority of the parameters will represent the state of the selected looper, leaving the non-selected loopers in shadow.
+**Note!** When you are selecting the looper, the majority of the parameters will represent the state of the selected looper, leaving the non-selected loopers in shadow.
 
 ----
 
@@ -56,7 +56,7 @@ After the target looper is selected, the next thing any normal looper would thin
 
 ![Sample length](./resources/sample-length.png)
 
-The supported sample lengths are from 1, 2, 4, 8, 16, 32, 64 and 128 beats. You can select the length using the 1-8 digits:
+The supported sample lengths are from 1, 2, 4, 8, 16, 32, 64, and 128 beats. You can select the length using the 1-8 digits:
 
 ![Selecting sample length](./resources/selecting-sample-length.jpg)
 
@@ -68,10 +68,10 @@ Each looper instance has 4 tracks:
 
 ![Looper tracks](./resources/looper-tracks.png)
 
-So, in sum you have 4 loopers * 4 tracks = 16 tracks to work with.
+So, in sum, you have 4 loopers * 4 tracks = 16 tracks to work with.
 
-Someone would say that it is not enough, and it would be better to have unlimited number of tracks. I'm saying:
-- It is already more than in majority of the available physical loopers
+Someone would say that it is not enough, and it would be better to have an unlimited number of tracks. I'm saying:
+- It is already more than in the majority of the available physical loopers
 - Constraints increase your creativity
 - Do not judge yet, as there is a resampling functionality, which allows you to resample multiple tracks back to any other track. Be patient :)
 
@@ -97,15 +97,15 @@ The following things will change:
 - The **Recording** status label of the selected track will become red.
 - The **Length** value will change from 000 to the active length value.
 
-In order to stop the recording - press the button of the recorded track ( A, B, C or D ) once again.
+In order to stop the recording - press the button of the recorded track ( A, B, C, or D ) once again.
 
 The view will change its status to play-back:
 
 ![Playback](./resources/playback.png)
 
 **Note!** I should mention the following aspects here:
-- If recording is not stopped after reaching the "sample length", the second and further layers will be recorded on top of the initially recorded phrase. So, remember to stop recording in  time. In other cases it might be even a usefull feature, e.g. in order to make a vocal chords.
-- If recording is being stopped and is then started again to the same track, 2 variants are possible:
+- If the recording is not stopped after reaching the "sample length", the second and further layers will be recorded on top of the initially recorded phrase. So, remember to stop recording in time. In other cases, it might be even a useful feature, e.g. in order to make vocal chords.
+- If the recording is being stopped and is then started again to the same track, 2 variants are possible:
   * If the sample length of the track **IS EQUAL** to the currently selected sample length - additional audio data will be layered on top of the existing audio materials
   * If the sample length of the track **IS NOT EQUAL** to the currently selected sample length - the track will be cleared and new data will be recorded instead of it
 - If recording to the track X is ongoing, but you are starting recording to the Y track - recording of X track will stop
@@ -119,7 +119,7 @@ In order to erase the track you the **"Hold + X"** shortcut on KP3+, where X is 
 
 ![Erasing the track](./resources/erasing-track.jpg)
 
-Once clear option is selected, the clear button of the track will blink once in the view:
+Once the clear option is selected, the clear button of the track will blink once in the view:
 
 ![Clear button blink](./resources/clear-button-blink.png)
 
@@ -127,7 +127,7 @@ Once the track is erased, the view will change its state to "all off":
 
 ![Erased track](./resources/erased-track.png)
 
-As you can see, there are no active status anymore. Also, that length of the track is reset to 000.
+As you can see, there is no active status anymore. Also, the length of the track is reset to 000.
 
 **Note!** Erasing the track **DOES NOT** stop recording to it. It is a useful option, as it allows you to instantly clear the part of the audio, which has an "error", without stopping further recording. You can consider it as a fast "let's try it again" option.
 
@@ -139,7 +139,7 @@ The volume of the selected looper can be changed, using the level fader of the K
 
 ![Changing the looper's volume](./resources/changing-looper-volume.jpg)
 
-Alternatively, you can instantly change the volume of the individual looper between 0 and 100 by double clicking on digits 1 to 4:
+Alternatively, you can instantly change the volume of the individual looper between 0 and 100 by double-clicking on digits 1 to 4:
 
 ![Mute unmute loopers](./resources/mute-unmute-looper.jpg)
 
@@ -153,7 +153,7 @@ Also, the 0 volume status of each looper would be reflected in the view:
 
 ![Mute unmute loopers](./resources/muted-loopers.png)
 
-**Note!** If looper has non-zero volume ( even if it is 1 ), it is considered as unmuted. In such a case, the first double-click will set the volume of the looper to 0.
+**Note!** If the looper has non-zero volume ( even if it is 1 ), it is considered unmuted. In such a case, the first double-click will set the volume of the looper to 0.
 
 ----
 
@@ -163,7 +163,7 @@ The volume of the tracks of the selected looper can be changed, using the first 
 
 ![Changing tracks volume](./resources/changing-track-volume.jpg)
 
-Alternativaly, you can instantly change the volume of each track, by double-clicking the digits from 5 to 8:
+Alternatively, you can instantly change the volume of each track, by double-clicking the digits from 5 to 8:
 
 ![Mute unmute tracks](./resources/mute-unmute-tracks.jpg)
 
@@ -187,7 +187,7 @@ You can reset a single looper to the initial state, using the **"Hold + 7"** sho
 
 ![Resetting the looper](./resources/resetting-looper.jpg)
 
-That will erase all recorded tracks and set all the looper's parameters back to initial state.
+That will erase all recorded tracks and set all the looper's parameters back to the initial state.
 
 ----
 
@@ -197,7 +197,7 @@ You can reset the whole "looper mux" logical device, using the **"Hold + 8"** sh
 
 ![Resetting the looper mux](./resources/resetting-looper-mux.jpg)
 
-That will reset each individual looper. Also it will set all non-looper-specific parameters back to the initial state.
+That will reset each individual looper. Also, it will set all non-looper-specific parameters back to the initial state.
 
 The "Clear all" button in the view will blink, and the "Play" mode will be turned off:
 
@@ -209,7 +209,7 @@ The "Clear all" button in the view will blink, and the "Play" mode will be turne
 
 ## Changing the tempo
 
-Currently, the change of the tempo in the middle of the jamming session is not supported. That is caused by the underlying "Augustus loop" VST plugin, which ruines the sync between the tracks once the tempo was changed.
+Currently, the change of tempo in the middle of the jamming session is not supported. That is caused by the underlying "Augustus loop" VST plugin, which ruins the sync between the tracks once the tempo was changed.
 
 Thus, the change is allowed only when the "looper mux" device **IS NOT** in the **Play** mode.
 
@@ -231,9 +231,9 @@ In order to change the tempo:
   
   ![Tempo changed](./resources/tempo-changed.jpg)
 
-  **Note!** The supported tempo range is from **80** to **180** BPM. Actually, there is no any limitation on that. It is done only to allow faster selection of the tempo from the most frequently used BPM range.
+  **Note!** The supported tempo range is from **80** to **180** BPM. Actually, there is no limitation on that. It is done only to allow faster selection of the tempo from the most frequently used BPM range.
   
-  **Note!** The tempo change is done in jumps by **5** BPM-s: 80, 85, 90, 95, etc. The reason is the same - to allow select the target BPM faster.
+  **Note!** The tempo change is done in jumps by **5** BPM-s: 80, 85, 90, 95, etc. The reason is the same - to allow selecting the target BPM faster.
 
 - After the target BPM was selected, you can proceed with any other actions.
 
@@ -241,19 +241,19 @@ In order to change the tempo:
 
 ## Resampling
 
-Usually, the liveloopig artist is sampling the audio input to one of the tracks of the looper device:
+Usually, the live looping artist is sampling the audio input to one of the tracks of the looper device:
 
 ![Looping to track](./resources/looping-to-track.png)
 
-But there are use-cases, when you need to resample the already recorded sounds back to one of the tracks.
+But there are use-cases when you need to resample the already recorded sounds back to one of the tracks.
 
 The project supports 2 ways of resampling:
 
-- Resampling of output of the looper to the specified track:
+- Resampling of the output of the looper to the specified track:
 
   ![Looper resampling](./resources/looper-resampling.png)
 
-- Resampling of output of all the loopers to the specified track:
+- Resampling of the output of all the loopers to the specified track:
 
   ![All looper resampling](./resources/all-loopers-resampling.png)
 
@@ -261,8 +261,8 @@ The obvious use-cases for resampling are:
 - You've got all 16 tracks already recorded, but you do not want to erase what is already playing. In such case, you can:
   - resample 15 tracks of all loopers back to one of the tracks
   - resample 3 tracks of individual looper back to one of the tracks
-  It'll save majority of the sound information and will let you have empty tracks to move on.
-- In order to achieve the richer sound, you want to add additional effects on top of what was already recorded, and record the modified sound back to one of the tracks.
+  It'll save the majority of the sound information and will let you have empty tracks to move on.
+- In order to achieve the richer sound, you want to add additional effects on top of what was already recorded and record the modified sound back to one of the tracks.
 
 Both use-cases are valid for the LIVELOOPING project.
 
@@ -288,11 +288,11 @@ In order to resample within the selected looper:
 
 - Stop [recording](#recording-audio-to-the-track) as usual.
 
-- After recording is finished, all the tracks, which were recorded to the target track would be automatically muted:
+- After the recording is finished, all the tracks, which were recorded to the target track would be automatically muted:
 
   ![Resampling of the selected looper finished](./resources/resample-selected-looper-finished.jpg)
   
-  The content of those track would be still available. So you can turn them back on in case if needed.
+  The content of those tracks would be still available. So you can turn them back on in case needed.
   
   The volume of the target resampling track would be restored to 100.
 
@@ -316,17 +316,17 @@ In order to resample all loopers:
 
 - Stop [recording](#recording-audio-to-the-track) as usual.
 
-- After recording is finished, all the tracks, which were recorded to the target track would be automatically **CLEARED**:
+- After the recording is finished, all the tracks, which were recorded to the target track would be automatically **CLEARED**:
 
   ![Resampling of all loopers finished](./resources/resample-all-loopers-finished.jpg)
   
-  This aspect is different to resampling within the single looper. The intention is that in this case it would be hard to keep the status of the 15 resampled tracks under control. Thus, it is better erase them.
+  This aspect is different from resampling within the single looper. The intention is that in this case, it would be hard to keep the status of the 15 resampled tracks under control. Thus, it is better to erase them.
 
 ----
 
 ## Applying Turnado effect to the looper
 
-As of now Turnado is the one and only effect, which you can apply on top of the recorded data. Still, in many cases it might be enough, as it provides infinite possibilities to randomly change your sounds.
+As of now, Turnado is the one and only effect, which you can apply on top of the recorded data. Still, in many cases, it might be enough, as it provides infinite possibilities to randomly change your sounds.
 
 The idea behind the Turnado VST is the following one:
 - Turnado provides 24 different effects.
@@ -336,7 +336,7 @@ The idea behind the Turnado VST is the following one:
 
 In the "looper mux" logical device I've integrated usage of the 2 last points. You can use the dictator fader and randomize the effects.
 
-Important point is that each looper has a dedicated instance of Turnado assigned to it. So you can have 4 different loopers having applied 4 different set of complex effects. Be careful, as it might blow your mind!
+Important point is that each looper has a dedicated instance of Turnado assigned to it. So you can have 4 different loopers having applied 4 different sets of complex effects. Be careful, as it might blow your mind!
 
 ----
 
@@ -370,7 +370,7 @@ The view will reflect this in the following way within the DAW:
 
 ### Randomizing Turnado
 
-In order to randomize the Turnado use the **"double-click on the Hold button"** short-cut:
+In order to randomize the Turnado use the **" double-click on the Hold button"** short-cut:
 
 ![Randomizing turnado](./resources/randomizing-turnado.jpg)
 
@@ -378,9 +378,9 @@ The short-cut will change the selected effects, their settings, and split betwee
 
 The view does not reflect that. There seems to be no real reason to visualize that.
 
-**Note!** in order to Randmize function to work, you need to have Turnado instance be **IN FOREGROUND** within the DAW. That's why you'll find all Turnado instances being hidden somewhere in the right bottom corner of the screen, while still being in foreground. It is by intention. Do not close them.
+**Note!** in order to use the randomize function, you need to have Turnado instance be **IN FOREGROUND** within the DAW. That's why you'll find all Turnado instances being hidden somewhere in the right bottom corner of the screen, while still being in foreground. It is done by intention. Do not close them.
 
-**TODO**: I'm thinking of allowing the user to switch between the presets, as it is done in the "input controller" logical device. It would be prefferable option, as "randomize" sometimes gives unpredictable results. Currently, I'm searching free to use shortcuts, to implement this feature. It will arrive soon after I'll finish this documentation :)
+**TODO**: I'm thinking of allowing the user to switch between the presets, as it is done in the "input controller" logical device. It would be preferable option, as "randomize" sometimes gives unpredictable results. Currently, I'm searching free to use shortcuts, to implement this feature. It will arrive soon after I'll finish this documentation :)
 
 ----
 
@@ -396,7 +396,7 @@ In order to mix-in the Drop FX use the "Hold + level" short-cut on KP3+ side:
 
 ![Mix in the Drop FX](./resources/drop-fx-mix-in.jpg)
 
-As you can see above, it is a reverse controller, where the down point of the fader means maximum application of the effect. It was done like that as it plays better within the overall workflow.
+As you can see above, it is a reverse controller, where the down point of the fader means the maximum application of the effect. It was done like that as it plays better within the overall workflow.
 
 The view will reflect it in the following way within the DAW:
 
@@ -412,7 +412,7 @@ To apply the **DROP**, use the **"Hold + double-click on digit 1"** short-cut on
 - Recover volume of each track of the looper #1 to 100
 - Turn off the Turnado FX
 
-So, the best practise regarding this feature is to:
+So, the best practice regarding this feature is to:
 - Switch to the looper #1, which usually contains the drums
 - Turn off some of the drums and apply the Drop FX
 - Apply some turnado magic
@@ -433,15 +433,15 @@ The most obvious use-case:
 - Record bass, using your mic or synth, which will duck to the kick, resolving the kick bass conflict
 
 Another possible use-case:
-- You want to switch from the track #1 to the track #2
+- You want to switch from track #1 to track #2
 - Turn on the sidechain of the loopers #2, #3, #4 to the kick drums. It will totally change the meaning of those sidechained instruments
-- Start to record new material and then fade out and reset the loopers #2, #3 and #4
+- Start to record new material and then fade out and reset the loopers #2, #3, and #4
 
 ----
 
 ### Input sources sidechain
 
-**Note!!** The sidechain would be applied to signal of both "input controller" logical devices.
+**Note!!** The sidechain would be applied to the signal of both "input controller" logical devices.
 
 In order to change the sidechain settings of the input sources, use the **5-8** vertical faders on the KP3+ touch screen:
 

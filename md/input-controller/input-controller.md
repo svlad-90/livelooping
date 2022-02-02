@@ -35,7 +35,7 @@
 
 ![Looper mux view](../screenshots/input-controller.jpg)
 
-The "input controller" logical device is something, that works with your input audio signal before it reaches the [looper mux](../looper-mux/looper-mux.md). It's purpose is to replace your "second device", e.g. Helix Line 6, Boss GT10b, etc.
+The "input controller" logical device is something, that works with your input audio signal before it reaches the [looper mux](../looper-mux/looper-mux.md). Its purpose is to replace your "second device", e.g. Helix Line 6, Boss GT10b, etc.
 
 The **LIVELOOPING** project supports 2 instances of the "input controller" logical device. Meaning that you can independently operate on 2 instruments:
 
@@ -43,13 +43,13 @@ The **LIVELOOPING** project supports 2 instances of the "input controller" logic
 
 For sure, it is not mandatory to use the second instance of the "input controller" device.
 
-E.g. if you perform purely as "beatbox-only" and "everything from the mouth" artist, it will be sufficient for you to use only one instance.
+E.g. if you perform purely as a "beatbox-only" and "everything from the mouth" artist, it will be sufficient for you to use only one instance.
 
 ----
 
 ## Selecting the preset page
 
-"Input controller" logical device consists of the **4 preset pages**. Each preset page can store **8 presets**. In sum, the user can store **32 different presets** .
+"Input controller" logical device consists of the **4 preset pages**. Each preset page can store **8 presets**. In sum, the user can store **32 different presets**.
 
 Which information is part of the preset will be described in a dedicated section.
 
@@ -107,7 +107,7 @@ The view will reflect the input within the DAW in the following way:
 
 ## Saving the preset
 
-The user has possibility to adjust the preset settings in order to achieve the desired sound.
+The user has the possibility to adjust the preset settings in order to achieve the desired sound.
 
 Once all settings are specified, you can save the preset in the following way:
 
@@ -125,7 +125,7 @@ Once all settings are specified, you can save the preset in the following way:
 
   **Selecting the preset in the "Save mode" will cause the data to be saved into the selected slot.**
 
-  After the preset is saved, the view will represet, that there is some data available in the slot, meaning that it is not empty anymore:
+  After the preset is saved, the view will represent, that there is some data available in the slot, meaning that it is not empty anymore:
   
   ![Not empty preset slot](./resources/not-empty-preset-slot.jpg)
 
@@ -133,7 +133,7 @@ Once all settings are specified, you can save the preset in the following way:
 
 ## Deleting the preset
 
-User can not only save new preset, but also delete the existing one.
+Users can not only save newly created preset but also delete the existing one.
 
 You can delete the preset in the following way:
 
@@ -151,7 +151,7 @@ You can delete the preset in the following way:
 
   **Selecting the preset in the "Delete mode" will cause the data to be deleted from the selected slot.**
 
-  After the preset is deleted, the view will represet, that there is no more data available in the slot, meaning that it is empty:
+  After the preset is deleted, the view will represent, that there is no more data available in the slot, meaning that it is empty:
   
   ![Empty preset slot](./resources/empty-preset-slot.jpg)
 
@@ -192,19 +192,19 @@ The list of the VST plugins includes the following one:
 
 From my experience, the above list is enough to create a wide range of different sounds. The live_looping.flp project already comes with several dozens of saved presets. Try it out!
 
-**Still, if there would be a need from the audience to extend the number of the supported plugins - I can add one more fx channel with another 10 effects. Also we can think of more  generic mechanism to replace the used VST plugins.**
+**Still, if there would be a need from the audience to extend the number of the supported plugins - I can add one more fx channel with another 10 effects. Also, we can think of a more generic mechanism to replace the used VST plugins.**
 
-**Note!** As of now you can't change the order or exchange the elements of the list without touching the source code. And without loosing already saved presets.
+**Note!** As of now you can't change the order or exchange the elements of the list without touching the source code. And without losing already saved presets.
 
-Currently, first instance of the input controller is using mixer channel **#5** as the  **FX_CHANNEL**. The second instance is using the mixer channel **#9** as the **FX_CHANNEL**:
+Currently, the first instance of the input controller is using mixer channel **#5** as the  **FX_CHANNEL**. The second instance is using the mixer channel **#9** as the **FX_CHANNEL**:
 
 ![FX channels](./resources/fx_channels.jpg)
 
 **Q: So, tell me at last, what should I do to change the parameters? Anything complex?**
 
-**A: NO! Simply open the plugins within the above-mentioned mixer channels in the DAW, and play around with the parameters. As soon as sound fits to your needs - [save the preset](#saving-the-preset) as usual.**
+**A: NO! Simply open the plugins within the above-mentioned mixer channels in the DAW, and play around with the parameters. As soon as sound fits your needs - [save the preset](#saving-the-preset) as usual.**
 
-The implementation of the project will traverse all values of all the parameters, and will store them to persistency.
+The implementation of the project will traverse all values of all the parameters and will store them to persistency.
 
 ----
 
@@ -235,7 +235,7 @@ In order to change it, do the following:
 
   ![Opening MIDI routing view](./resources/opening-midi-routing-view.jpg)
 
-- Change the VST activation status clicking on one of the **E1_TO - E10_TO** buttons:
+- Change the VST activation status by clicking on one of the **E1_TO - E10_TO** buttons:
 
   ![Changing VST activation status](./resources/changing-vst-activation-status.jpg)
 
@@ -249,7 +249,7 @@ Once again, we will revisit this section soon.
 
   ![Active FX unit](./resources/active-fx-unit.jpg)
 
-  You can check what is the FX unit [here](#fx-units). For this section it's only important to know that active fx unit type is also the part of the stored pattern.
+  You can check what is the FX unit [here](#fx-units). For this section, it's only important to know that the active fx unit type is also part of the stored pattern.
 
 ----
 
@@ -257,15 +257,15 @@ Once again, we will revisit this section soon.
 
   MIDI mapping data is also saved as part of the dedicated preset.
   
-  You can read more on what is the MIDI mapping [here](#assigning-midi-mapping). For this section it's only important to know that midi mapping is also the part of the stored pattern.
+  You can read more on what is the MIDI mapping [here](#assigning-midi-mapping). For this section, it's only important to know that midi mapping is also part of the stored pattern.
 
 ----
 
 ## What is used as a persistency for the presets?
 
-**Note!** This section describes an implementation detail. It provides no useful information for the average user. Still, it allows to avoid confusion for the users, which would like to deeply investigate the **LIVELOOPING's** flp project.
+**Note!** This section describes an implementation detail. It provides no useful information for the average user. Still, it allows avoiding confusion for the users, which would like to deeply investigate the **LIVELOOPING's** flp project.
 
-This is an interesting question. Actually, FL Studio does not ship the io python module inside its python interpreter. So there is no way to store any data to the file-system.
+This is an interesting question. Actually, FL Studio does not ship the io python module inside its python interpreter. So there is no way to store any data in the file system.
 
 But we've found the way out. 
 
@@ -275,7 +275,7 @@ The name of the tracks in the playlist of the DAW is used to save all the data. 
 
   ![Opening the playlist](./resources/opening-playlist.jpg)
 
-- Scroll to the track 100 or 200. See the track names:
+- Scroll to track 100 or 200. See the track names:
 
   ![The stored data](./resources/stored-data.jpg)
 
@@ -287,9 +287,9 @@ Actually, there is a lot of data inside each track name:
 {'PLUGIN_PARAMS': {10: ['1.0', '1.0', '0.0', '0.0', '0.0', '1.0', '1.0', '0.0', '1.0', '1.0'], 0: ['1.0', '1.0', '0.31585195660591125', '0.6239166855812073', '0.20491667091846466', '1.0', '1.0', '0.5272108316421509', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '1.0', '1.0', '0.8641238808631897', '0.6380952000617981', '0.3851388692855835', '1.0', '1.0', '0.6069444417953491', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '1.0', '1.0', '0.5554232001304626', '0.6632652878761292', '0.355611115694046', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '1.0', '1.0', '0.22962868213653564', '0.0', '0.5', '1.0', '1.0', '0.5317777991294861', '0.25', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '1.0', '0.5751884579658508', '0.5', '0.5', '1.0', '1.0', '0.5', '0.0', '0.1111111119389534', '0.5', '0.10000000149011612', '0.0', '0.0', '0.25', '0.5', '0.5', '0.5', '0.0', '0.0', '0.0', '0.0', '1.0', '1.0', '1.52587890625e-05', '0.5', '0.6666666865348816', '0.5', '0.75', '0.0', '1.0', '1.0', '1.0', '0.0', '0.5', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0'], 1: ['0.6309999823570251', '0.6309999823570251', '0.5510203838348389', '0.0', '0.4881889820098877', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0'], 2: ['0.0', '0.25', '0.5', '0.8732812404632568', '0.11339999735355377', '0.2445833384990692', '1.0', '1.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.0', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5121874809265137', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.5', '0.0', '0.0', '0.0', '0.0', '1.0', '1.0', '1.0', '1.0', '0.2666666805744171', '0.5', '0.2666666805744171', '0.5', '0.2666666805744171', '0.5', '0.2666666805744171', '0.5', '0.0', '0.2666666805744171', '0.5', '0.2666666805744171', '0.0', '0.2666666805744171', '0.5', '0.2666666805744171', '0.0', '0.2666666805744171', '0.5', '0.2666666805744171', '0.0', '0.2666666805744171', '0.5', '0.2666666805744171', '0.0', '0.0', '0.0', '0.0', '0.33799999952316284', '0.0', '0.30094006657600403', '0.6247779130935669', '0.33799999952316284', '0.0', '0.33799999952316284', '0.0', '1.0', '0.0', '1.0', '0.0', '1.0', '0.0', '1.0', '0.0', '0.5', '0.6913415193557739', '0.8535534739494324', '0.9619399905204773', '1.0', '0.9619399905204773', '0.8535534739494324', '0.6913415193557739', '0.5', '0.30865851044654846', '0.2603493332862854', '0.32477864623069763', '0.0', '0.32478293776512146', '0.2603493332862854', '0.30865851044654846', '1.0', '0.0', '0.8535534739494324', '0.0', '1.0', '0.0', '0.9807692170143127', '0.0', '0.7884615659713745', '0.0', '0.8461538553237915', '0.0', '1.0', '0.0', '1.0', '0.30865851044654846', '0.5', '0.6913415193557739', '0.8535534739494324', '0.9619399905204773', '1.0', '0.9619399905204773', '0.8535534739494324', '0.6913415193557739', '0.5', '0.30865851044654846', '0.2603493332862854', '0.32477864623069763', '0.0', '0.32478293776512146', '0.2603493332862854', '0.30865851044654846', '0.5', '0.6913415193557739', '0.8535534739494324', '0.9619399905204773', '1.0', '0.9619399905204773', '0.8535534739494324', '0.6913415193557739', '0.5', '0.30865851044654846', '0.2603493332862854', '0.32477864623069763', '0.0', '0.32478293776512146', '0.2603493332862854', '0.30865851044654846', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '0.0', '1.0', '1.0', '0.75', '1.0', '1.0', '0.0', '0.0', '0.5', '0.5', '0.0', '0.0', '1.0', '0.0', '0.0', '0.0', '0.0', '0.0'], 3: ['0.5', '0.4444444444444444', '0.0', '0.8359375', '0.8671875'], 4: ['0.5', '0.8', '0.5', '0.3466796875', '1.0', '0.0'], 5: ['0.018785642401878563', '0.16203703703703703', '0.0', '0.494949494949495', '1.0', '0.06030150753768844', '0.16203703703703703', '0.2857142857142857', '0.24050632911392406', '0.5', '0.8', '0.4', '0.2125', '0.333984375', '0.0'], 6: ['0.015625', '0.475', '0.8', '0.14960629921259844', '0.12385919165580182', '0.5', '1.0', '1.0'], 7: ['0.982421875', '0.0', '1.0', '1.0', '1.0', '0.0'], 8: ['0.47333333333333333', '0.25675675675675674', '0.7283333333333334', '0.0375', '0.04976244061015254', '0.0'], 9: ['0.589', '1.0', '0.5', '0.1115', '0.2857142857142857', '0.5', '0.2857142857142857', '0.2882', '1.0', '0.5', '0.5', '0.0', '0.6666', '0.0', '0.065', '1.0', '0.0', '0.4187']}, 'MIDI_MAPPING': {0: [1, 4], 1: [-1, -1], 2: [-1, -1], 3: [-1, -1], 4: [-1, -1], 5: [-1, -1], 6: [-1, -1], 7: [-1, -1]}, 'ACTIVE_FX_UNIT': 0, 'VERSION': 1.0}
 ```
 
-Actually, we are lucky that FL studio team made this field unlimited in size. Otherwise, it would not be possible to store any data as aprt of the project.
+Actually, we are lucky that the FL studio team made this field unlimited in size. Otherwise, it would not be possible to store any data as part of the project.
 
-I hope thay'll never change it :)
+I hope they'll never change it :)
 
 ----
 
@@ -327,7 +327,7 @@ In order to change the turnado dictator value, use the **"Hold + FX DEPTH"** sho
 
 ![Changing turnado Dry/Wet value](./resources/changing-turnado-dry-wet-value.jpg)
 
-Alternatively you can use the **"C"** button to instantly switch the Dry/Wet value between 0 and 100:
+Alternatively, you can use the **"C"** button to instantly switch the Dry/Wet value between 0 and 100:
 
 ![Instant turnado Dry/Wet on off](./resources/instant-turnado-on-off.jpg)
 
@@ -351,13 +351,13 @@ The short-cut will change the selected effects, their settings, and split betwee
 
 The view does not reflect that. There seems to be no real reason to visualize that.
 
-**Note!** in order to Randmize function to work, you need to have Turnado instance be **IN FOREGROUND** within the DAW. That's why you'll find all Turnado instances being hidden somewhere in the right bottom corner of the screen, while still being in foreground. It is by intention. Do not close them.
+**Note!** in order to use the randomize function, you need to have Turnado instance be **IN FOREGROUND** within the DAW. That's why you'll find all Turnado instances being hidden somewhere in the right bottom corner of the screen, while still being in the foreground. It is done by intention. Do not close them.
 
 ----
 
 ### Switching between the Turnado VST presets
 
-"Randomize" option is quite handy, but sometimes it gives unpredictable results.
+The "Randomize" option is quite handy, but sometimes it gives unpredictable results.
 
 Thus, it is more common to switch between the fine-tuned pre-saved presets. In order to do that, one could use **"A"** and **"B"** buttons:
 
@@ -375,13 +375,13 @@ In the view, the corresponding buttons will blink in case of usage:
 
 ## FX parameters
 
-The possibility to save complex patterns and instantly switch between them is awesome. But it is not eanough. You should be able to manipulate with the selected sound at realtime, in order to add additional diversity.
+The possibility to save complex patterns and instantly switch between them is awesome. But it is not enough. You should be able to manipulate the selected sound in real time, in order to add additional diversity.
 
 In order to do this you can use 8 FX parameters:
 
 ![FX parameters](./resources/fx-parameters.jpg)
 
-Depending on the confitions, which are described [here](#fx-units), those parameters can be assigned to different control elements of the VST plugins.
+Depending on the conditions, which are described [here](#fx-units), those parameters can be assigned to different control elements of the VST plugins.
 
 ----
 
@@ -397,7 +397,7 @@ The view will reflect the changes accordingly.
 
 ### FX units
 
-Active FX unit represents, which set of VST parameters are assigned to the FX parameters of the logical device at current moment.
+Active FX unit represents, which set of VST parameters are assigned to the FX parameters of the logical device at the current moment.
 
 Currently there are 3 supported FX unit types available:
 
@@ -411,7 +411,7 @@ Here is a brief description of each FX unit type:
 |Voodoo Finisher|FX parameters are associated with the Voodoo Finisher VST instance|
 |Custom|FX parameters are assigned manually by the user. The mapping is persisted as part of the preset.|
 
-Here is description of the mapping between the VST parameters and FX parameters used in each FX unit:
+Here is a description of the mapping between the VST parameters and FX parameters used in each FX unit:
 
 #### Manipulator FX unit
 
@@ -441,7 +441,7 @@ Here is description of the mapping between the VST parameters and FX parameters 
 
 #### Custom FX unit
 
-The idea of the custom FX unit type is that user has a possibility to assign MIDI mapping to any of the parameters within the [list of the device's VST-s](#vst-parameters). So table here would look like this:
+The idea of the custom FX unit type is that the user has the possibility to assign MIDI mapping to any of the parameters within the [list of the device's VST-s](#vst-parameters). So table here would look like this:
 
 |Parameter id|Parameter name|
 |---|---|
@@ -472,11 +472,11 @@ The view will reflect the change in the DAW. An active FX unit will be highlight
 
 ### Switching the FX unit presets
 
-The described above **"Manipulator"** and **"Voodoo Finisher"** fx unit types have one to one relation to VST plugins with the same names.
+The described above **"Manipulator"** and **"Voodoo Finisher"** fx unit types have one-to-one relation to VST plugins with the same names.
 
 That means, that when working in those modes, it would be useful for the user to be able to change the presets of those VST-s without touching the DAW.
 
-**LIVELOOPING** project implements such possibility. User can jump between the presets of the 2 above-mentioned VST plugins, using:
+**LIVELOOPING** project implements such a possibility. Users can jump between the presets of the 2 above-mentioned VST plugins, using:
   - **"Hold + 8"** short-cut on KP3+ to select the next VST preset
   - **"Hold + 7"** short-cut on KP3+ to select the previous VST preset
 
@@ -486,20 +486,20 @@ Such feature allows the following workflow:
 
 - [Select the active fx unit type](#changing-the-active-fx-unit), Choose **"Manipulator"** or **"Voodoo Finisher"**. For **"Custom"** this feature has no effect.
 - Jump between the presets and select one as a base-line for your sound idea
-- [Play around with the FX parameter values](#changing-fx-parameter-values) to fine tune the sound
+- [Play around with the FX parameter values](#changing-fx-parameter-values) to fine-tune the sound
 - [Save the preset](#saving-the-preset)
 
 ----
 
 ### Assigning MIDI mapping
 
-As mentioned [here](#custom-fx-unit), when user selects the "custom" fx unit type, he is capable of assigning individual MIDI mappings to the VST parameters. This section describes such a procedure.
+As mentioned [here](#custom-fx-unit), when the user selects the "custom" fx unit type, he is capable of assigning individual MIDI mappings to the VST parameters. This section describes such a procedure.
 
 **Note!** FYI. This paragraph is the advanced one. You will not need to modify any source code to proceed. But, as the possibilities of the DAW's view are limited, the part of the interaction within this scenario would be done in the "script output" console.
 
 Let's imagine, that I want to assign the Reverb's VST Wet level to the FX parameter **#2**. 
 
-In order to achieve that, let's follow such a steps:
+In order to achieve that, let's follow such steps:
 
 - Open the "script output" console:
 
@@ -529,7 +529,7 @@ In order to achieve that, let's follow such a steps:
 
   ![Selecting the target preset slot](./resources/selecting-the-target-preset-slot.jpg)
 
-  I've selected the slot **#2**.
+  I've selected slot **#2**.
   
   After the slot is selected, you'll see the following messages in the console:
   
@@ -565,7 +565,7 @@ In order to achieve that, let's follow such a steps:
 
 - Select the target VST parameter. The navigation is totally the same as in the previous point.
 
-  I've pressed **"B"** until I've scrolled to the parameter #12 'Wet level'. Then I've pressed **"C"**. I've seen the following output in the console:
+  I've pressed **"B"** until I've scrolled to parameter #12 'Wet level'. Then I've pressed **"C"**. I've seen the following output in the console:
   
   ```
   MIDI mapping input dialog >>> Current cursor position is - #1 'High cut'
@@ -588,11 +588,11 @@ In order to achieve that, let's follow such a steps:
 
   ![MIDI mapping assigned](./resources/midi-mapping-assigned.jpg)
 
-  You can open the Reverb VST and check out, that changing the FX parameter 2 has effect on the Reverb level:
+  You can open the Reverb VST and check out, that changing the FX parameter 2 has an effect on the Reverb level:
 
   ![MIDI mapping check](./resources/midi-mapping-check.gif)
 
-- If you like the created MIDI mapping - **DO NOT FORGET TO [SAVE THE PRESET](#saving-the-preset)**. Only after that the MIDI mapping data will be persistently stored.
+- If you like the created MIDI mapping - **DO NOT FORGET TO [SAVE THE PRESET](#saving-the-preset)**. Only after that, the MIDI mapping data will be persistently stored.
 
 ----
 

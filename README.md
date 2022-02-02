@@ -4,10 +4,6 @@
 
 ----
 
-## BEEP... this document is in "work in progress" state. The work is ongoing RIGHT NOW. It will be done in the several days.
-
-----
-
 ## Table of contents
 
 - [Where am I?](#where-am-i)
@@ -22,7 +18,7 @@
 
 You are on the page of the svlad-90's **LIVELOOPING** project!
 
-It implements a set of the logical devices, that allows you to create music live, using beatboxing, vocals, or any other type of instrument(s), which you have under your hand.
+It implements a set of logical devices, that allows you to create music live, using beatboxing, vocals, or any other type of instrument(s), which you have under your hand.
 
 It is something similar to what Boss RC-505, RC-300, Korg KP3+ propose on the market.
 
@@ -30,13 +26,13 @@ But on top of it the "second device", the effector, is also in place. The set-up
 
 One advantage of the project is the sound quality, which you'll get.
 
-Another one is that it is an open-source project. With not so much efforts you can exchange the set of the used FX plugins with your own favorite ones. Or you can implement additional feature. Or support usage of the project with your custom MIDI controllers.
+Another one is that it is an open-source project. With not so much effort you can exchange the set of the used FX plugins with your own favorite ones. Or you can implement the additional features. Or support usage of the project with your custom MIDI controllers.
 
 ----
 
 ## Thanks to
 
-This project is inspired by [Beardyman](https://www.beardyman.co.uk/), who is the pioneer in live-looping area for around 15 years. Kudos to you, Beardyman! ))
+This project is inspired by [Beardyman](https://www.beardyman.co.uk/), who is the pioneer in the live-looping area for around 15 years. Kudos to you, Beardyman! ))
 
 ----
 
@@ -44,7 +40,7 @@ This project is inspired by [Beardyman](https://www.beardyman.co.uk/), who is th
 
 This section should contain something, that will make you read the document till the end. 
 
-Let me place here the screen-shot of the logical device's views, without explaining what is located there. This should pique your interest.
+Let me place here the screenshot of the logical device's views, without explaining what is located there. This should pique your interest.
 
 I'm pretty sure, that my colleagues, loopers, will recognize the main features :)
 
@@ -75,7 +71,7 @@ The idea behind each knob and button and details regarding how all that works wi
 
 ## Additional materials
 
-- The following video, which gives some insides on the "Beardytron 5000" project, is a basic idea of what is implemented here. Watch it, if you wish to have a deep dive into the topic:
+- The following video, gives some insides on the "Beardytron 5000" project. Some basic concepts were borrowed from there. Watch it, if you wish to have a deep dive into the topic:
 
   [![Beardytron 5000](./md/misc/mqdefault_6s.webp)](https://www.youtube.com/watch?v=atViS0jukHw "Beardytron 5000")
 
