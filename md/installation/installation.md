@@ -18,7 +18,11 @@ In order to install the project one would need to:
   ![KP3+ editor](./resources/kp3_plus_editor.jpg)
   
   We need this setting to be applied, as the touch screen is being used as 8 independent vertical sliders. Also, make sure, that the used CC# for the sliders are from 70 to 77.
-  
+
+- Use **"Shift + 8"** short-cut on each instance of the KP3+ to switch it to **"EXT CTRL"** mode:
+
+  ![Switch KP3+ to external controller mode](./resources/switch-kp3-plus-to-ext-ctrl-mode.jpg)
+
 - Copy the **"${project_root}\device_KorgKaossPad3Plus_LooperMux"** folder to the **"C:\Users\<your_user>\Documents\Image-Line\FL Studio\Settings\Hardware"**
 - Copy the **"${project_root}\device_KorgKaossPad3Plus_SynthController"** folder to the **"C:\Users\<your_user>\Documents\Image-Line\FL Studio\Settings\Hardware"**
 - Copy the **"${project_root}\device_KorgKaossPad3Plus_MicController"** folder to the **"C:\Users\<your_user>\Documents\Image-Line\FL Studio\Settings\Hardware"**
@@ -41,7 +45,6 @@ In order to install the project one would need to:
   
   In your case, the **"ZOOM UAC-8 MIDI** might be replaced with **"KP3+ 3 PAD"**. That's it
 
-- Move each KP3+ instance to the "MIDI Controller" mode, using the **"Shift + 8"** shortcut
 - Move the knobs and see whether the logical device's views react to the input
 - Enter the mixer view:
 

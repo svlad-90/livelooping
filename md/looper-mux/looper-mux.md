@@ -32,7 +32,7 @@
 
 ![Looper mux view](../screenshots/looper-mux.jpg)
 
-The "looper-mux" logical device is a thing that allows you to manage the recording of the looped audio phrases. Its purpose is to replace your RC-505 :)
+The "looper-mux" logical device is a thing that allows you to manage the recording of the looped audio phrases. I can say that its purpose is to replace the RC-505 :)
 
 ## Selecting the active looper instance
 
@@ -42,21 +42,21 @@ The "looper mux" logical device consists of 4 looper instances:
 
 By default looper **#1** is selected.
 
-You can switch to other loopers using the **"Hold + X"** shortcut on KP3+, where X is one of the digits from 1 to 4:
+You can switch to other loopers using the **"Hold + X"** shortcut on KP3+, where X is one of the digits from 1 to 4, depending on which looper instance you want to select:
 
 ![Selecting looper instance](./resources/selecting-looper-instance.jpg)
 
-**Note!** When you are selecting the looper, the majority of the parameters will represent the state of the selected looper, leaving the non-selected loopers in shadow.
+**Note!** When you are selecting the looper, the majority of the parameters will represent the state of the selected looper, leaving the parameters of the non-selected loopers in shadow.
 
 ----
 
 ## Selecting the sample length
 
-After the target looper is selected, the next thing any normal looper would think of is to select the length of the recorded phrase:
+After the target looper is selected, the next thing any looper artist would think of is to select the length of the recorded phrase:
 
 ![Sample length](./resources/sample-length.png)
 
-The supported sample lengths are from 1, 2, 4, 8, 16, 32, 64, and 128 beats. You can select the length using the 1-8 digits:
+The supported sample lengths are 1, 2, 4, 8, 16, 32, 64, and 128 beats. You can select the length using the **1-8** digits:
 
 ![Selecting sample length](./resources/selecting-sample-length.jpg)
 
@@ -70,7 +70,7 @@ Each looper instance has 4 tracks:
 
 So, in sum, you have 4 loopers * 4 tracks = 16 tracks to work with.
 
-Someone would say that it is not enough, and it would be better to have an unlimited number of tracks. I'm saying:
+Someone would say that it is not enough, and it would be better to have an unlimited number of tracks. But I'm saying that:
 - It is already more than in the majority of the available physical loopers
 - Constraints increase your creativity
 - Do not judge yet, as there is a resampling functionality, which allows you to resample multiple tracks back to any other track. Be patient :)
@@ -104,18 +104,18 @@ The view will change its status to play-back:
 ![Playback](./resources/playback.png)
 
 **Note!** I should mention the following aspects here:
-- If the recording is not stopped after reaching the "sample length", the second and further layers will be recorded on top of the initially recorded phrase. So, remember to stop recording in time. In other cases, it might be even a useful feature, e.g. in order to make vocal chords.
+- If the recording is not stopped after reaching the "sample length", the second and further layers will be recorded on top of the initially recorded phrase. So, remember to stop recording in time. In some cases, it might be a useful feature, e.g. in order to make vocal chords.
 - If the recording is being stopped and is then started again to the same track, 2 variants are possible:
-  * If the sample length of the track **IS EQUAL** to the currently selected sample length - additional audio data will be layered on top of the existing audio materials
-  * If the sample length of the track **IS NOT EQUAL** to the currently selected sample length - the track will be cleared and new data will be recorded instead of it
-- If recording to the track X is ongoing, but you are starting recording to the Y track - recording of X track will stop
-- If recording to the track X is ongoing, but you are selecting another active looper - the recording of track X will stop
+  * If the sample length of the track **IS EQUAL** to the currently selected sample length - additional audio data will be layered on top of the existing audio material
+  * If the sample length of the track **IS NOT EQUAL** to the currently selected sample length - the track will be cleared and the new data will be recorded to it from scratch
+- If recording to the track X is ongoing, but you are starting recording to the Y track - recording of X track will be stopped
+- If recording to the track X is ongoing, but you are selecting another active looper - the recording of track X will be stopped
 
 ----
 
 ## Erasing the track
 
-In order to erase the track you the **"Hold + X"** shortcut on KP3+, where X is one of the track buttons from A to D:
+In order to erase the track you can use the **"Hold + X"** shortcut on KP3+, where X is one of the track buttons from A to D, depending on the track you want to erase:
 
 ![Erasing the track](./resources/erasing-track.jpg)
 
@@ -129,7 +129,7 @@ Once the track is erased, the view will change its state to "all off":
 
 As you can see, there is no active status anymore. Also, the length of the track is reset to 000.
 
-**Note!** Erasing the track **DOES NOT** stop recording to it. It is a useful option, as it allows you to instantly clear the part of the audio, which has an "error", without stopping further recording. You can consider it as a fast "let's try it again" option.
+**Note!** If recording is active, erasing the track **DOES NOT** stop recording to it. It is a useful option, as it allows you to instantly clear the part of the audio, which has an "error", without stopping further recording. You can consider it as a fast "let's try it again" option.
 
 ----
 
@@ -143,7 +143,7 @@ Alternatively, you can instantly change the volume of the individual looper betw
 
 ![Mute unmute loopers](./resources/mute-unmute-looper.jpg)
 
-The used number identifies the number of the affected looper.
+The used number identifies the number of the target looper.
 
 In both cases, the view will reflect the changes on the **"Volume"** slider inside the DAW:
 
@@ -189,6 +189,8 @@ You can reset a single looper to the initial state, using the **"Hold + 7"** sho
 
 That will erase all recorded tracks and set all the looper's parameters back to the initial state.
 
+**Note!** The other loopers will keep their status unchanged.
+
 ----
 
 ## Resetting the looper mux
@@ -197,13 +199,13 @@ You can reset the whole "looper mux" logical device, using the **"Hold + 8"** sh
 
 ![Resetting the looper mux](./resources/resetting-looper-mux.jpg)
 
-That will reset each individual looper. Also, it will set all non-looper-specific parameters back to the initial state.
+That will reset each individual looper. Moreover, it will set all non-looper-specific parameters back to the initial state.
 
-The "Clear all" button in the view will blink, and the "Play" mode will be turned off:
+The "Clear all" button in the view will blink once, and the "Play" mode will be turned off:
 
 ![Reset looper mux applied](./resources/reset-looper-mux-applied.jpg)
 
-**Note!** Resetting the looper mux changes its state to "non-playing" mode. **In this state you can change the tempo.**
+**Note!** Resetting the looper mux changes its state to "non-playing" mode, **in which you can change the tempo.**
 
 ----
 
@@ -221,7 +223,7 @@ In order to change the tempo:
 
 - If "looper mux" is playing, [reset it](#resetting-the-looper-mux), to allow the tempo change.
 
-  **Note!** Any input to the "looper mux" except the tempo change will switch it back to the playing mode.
+  **Note!** Any input to the "looper mux" except the tempo change will switch it back to the playing mode. So apply the tempo change right after stopping the looper mux.
 
 - Then, use the "FX DEPTH" on the KP3+ to change the tempo:
 
@@ -235,7 +237,7 @@ In order to change the tempo:
   
   **Note!** The tempo change is done in jumps by **5** BPM-s: 80, 85, 90, 95, etc. The reason is the same - to allow selecting the target BPM faster.
 
-- After the target BPM was selected, you can proceed with any other actions.
+- After the target BPM is selected, you can proceed with any other actions.
 
 ----
 
@@ -247,9 +249,9 @@ Usually, the live looping artist is sampling the audio input to one of the track
 
 But there are use-cases when you need to resample the already recorded sounds back to one of the tracks.
 
-The project supports 2 ways of resampling:
+The **LIVELOOPING** project supports 2 ways of resampling:
 
-- Resampling of the output of the looper to the specified track:
+- Resampling of the output of the selected looper to the specified track:
 
   ![Looper resampling](./resources/looper-resampling.png)
 
@@ -259,14 +261,12 @@ The project supports 2 ways of resampling:
 
 The obvious use-cases for resampling are:
 - You've got all 16 tracks already recorded, but you do not want to erase what is already playing. In such case, you can:
-  - resample 15 tracks of all loopers back to one of the tracks
-  - resample 3 tracks of individual looper back to one of the tracks
+  - resample 3 tracks of the selected looper back to any track of that looper
+  - resample 15 tracks of all loopers back to one of the tracks of the selected looper
   It'll save the majority of the sound information and will let you have empty tracks to move on.
 - In order to achieve the richer sound, you want to add additional effects on top of what was already recorded and record the modified sound back to one of the tracks.
 
-Both use-cases are valid for the LIVELOOPING project.
-
-**Note!** As of now, there is only one instance of Turnado VST assigned to each looper. So one could say, that capabilities to change the already recorded sounds are limited. Still, even this single thing is VERY POWERFUL. See the corresponding [section](#applying-turnado-effect-to-the-looper)
+**Note!** As of now, there is only one instance of Turnado VST assigned to each looper. So one could say, that capabilities to change the already recorded sounds are limited. Still, even this single thing is VERY POWERFUL. See the [corresponding section](#applying-turnado-effect-to-the-looper)
 
 ----
 
@@ -286,7 +286,7 @@ In order to resample within the selected looper:
 
   ![Resampling of the selected looper in progress](./resources/resample-selected-looper-in-progress.jpg)
 
-- Stop [recording](#recording-audio-to-the-track) as usual.
+- Once done, [stop the recording](#recording-audio-to-the-track) as usual.
 
 - After the recording is finished, all the tracks, which were recorded to the target track would be automatically muted:
 
@@ -314,7 +314,7 @@ In order to resample all loopers:
 
   ![Resampling of all loopers in progress](./resources/resample-all-loopers-in-progress.jpg)
 
-- Stop [recording](#recording-audio-to-the-track) as usual.
+- Once done, [stop the recording](#recording-audio-to-the-track) as usual.
 
 - After the recording is finished, all the tracks, which were recorded to the target track would be automatically **CLEARED**:
 

@@ -22,11 +22,11 @@ It implements a set of logical devices, that allows you to create music live, us
 
 It is something similar to what Boss RC-505, RC-300, Korg KP3+ propose on the market.
 
-But on top of it the "second device", the effector, is also in place. The set-up does not need any Line 6 Helix, or something similar. All effects you need are within the used DAW.
+But on top of that, the "second device", the effector, is also in place. The set-up does not need any Line 6 Helix, or something similar. All effects you need are within the used DAW.
 
-One advantage of the project is the sound quality, which you'll get.
+One advantage of the project is the sound quality, which you'll get. It is much higher, than on the average looping set up.
 
-Another one is that it is an open-source project. With not so much effort you can exchange the set of the used FX plugins with your own favorite ones. Or you can implement the additional features. Or support usage of the project with your custom MIDI controllers.
+Another one is that it is an open-source project. With not so much effort you can exchange the set of the used FX plugins with your own favorite ones. Or you can implement the additional features. Or support usage of the project with your custom MIDI controller(s).
 
 ----
 
