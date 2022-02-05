@@ -38,9 +38,18 @@ This project is inspired by [Beardyman](https://www.beardyman.co.uk/), who is th
 
 ## Pull the wool over your eyes
 
-This section should contain something, that will make you read the document till the end. 
+This section should contain something, that will make you read the document till the end.
 
-Let me place here the screenshot of the logical device's views, without explaining what is located there. This should pique your interest.
+----
+
+First, let me leave some example of what this piece of SW can do:
+
+<iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1210554007&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"></iframe><div style="font-size: 10px; color: #cccccc;line-break: anywhere;word-break: normal;overflow: hidden;white-space: nowrap;text-overflow: ellipsis; font-family: Interstate,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Garuda,Verdana,Tahoma,sans-serif;font-weight: 100;"><a href="https://soundcloud.com/gzg6szurhiz1" title="Engineer" target="_blank" style="color: #cccccc; text-decoration: none;">Engineer</a> · <a href="https://soundcloud.com/gzg6szurhiz1/jamming-session-05-feb-2022" title="Jamming Session 05 Feb 2022" target="_blank" style="color: #cccccc; text-decoration: none;">Jamming Session 05 Feb 2022</a></div>
+
+
+----
+
+Also, I'll place here the screenshot of the logical device's views, without explaining what is located there. This should pique your interest.
 
 I'm pretty sure, that my colleagues, loopers, will recognize the main features :)
 
