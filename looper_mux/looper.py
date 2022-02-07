@@ -183,3 +183,17 @@ class Looper():
         plugins.setParamValue(0.0, constants.TURNADO_RANDOMIZE_PARAM_INDEX, self.__looper_channel, constants.LOOPER_TURNADO_SLOT_INDEX)
         plugins.setParamValue(1.0, constants.TURNADO_RANDOMIZE_PARAM_INDEX, self.__looper_channel, constants.LOOPER_TURNADO_SLOT_INDEX)
         plugins.setParamValue(0.0, constants.TURNADO_RANDOMIZE_PARAM_INDEX, self.__looper_channel, constants.LOOPER_TURNADO_SLOT_INDEX)
+
+    def switchToNextTurnadoPreset(self):
+        plugins.nextPreset(self.__looper_channel, constants.LOOPER_TURNADO_SLOT_INDEX)
+        self.__restoreParams()
+        self.__view.switchToNextTurnadoPreset()
+
+    def switchToPrevTurnadoPreset(self):
+        plugins.prevPreset(self.__looper_channel, constants.LOOPER_TURNADO_SLOT_INDEX)
+        self.__restoreParams()
+        self.__view.switchToPrevTurnadoPreset()
+
+    def __restoreParams(self):
+        plugins.setParamValue(self.__turnado_dictator_level, constants.TURNADO_DICTATOR_PARAM_INDEX, self.__looper_channel, constants.LOOPER_TURNADO_SLOT_INDEX)
+        plugins.setParamValue(self.__turnado_dry_wet_level, constants.TURNADO_DRY_WET_PARAM_INDEX, self.__looper_channel, constants.LOOPER_TURNADO_SLOT_INDEX)

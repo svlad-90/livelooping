@@ -92,9 +92,11 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
 
         if (pressed_time - self.__buttons_last_press_time[pressed_button]) < 0.5:
             # double click
+            self.__buttons_last_press_time.clear()
             self.__buttons_last_press_time[pressed_button] = 0
             action()
         else:
+            self.__buttons_last_press_time.clear()
             self.__buttons_last_press_time[pressed_button] = pressed_time
 
     def isSaveMode(self):

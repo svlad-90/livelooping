@@ -21,6 +21,7 @@
 	* [Changing the Turnado dictator value](#changing-the-turnado-dictator-value)
 	* [Changing the Turnado Dry/Wet value](#changing-the-turnado-dry-wet-value)
 	* [Randomizing Turnado](#randomizing-turnado)
+	* [Switching between the Turnado VST presets](#switching-between-the-turnado-vst-presets)
   * [Drop FX](#drop-fx)
   * [Sidechain](#sidechain)
     * [Input sources sidechain](#input-sources-sidechain)
@@ -380,7 +381,23 @@ The view does not reflect that. There seems to be no real reason to visualize th
 
 **Note!** in order to use the randomize function, you need to have Turnado instance be **IN FOREGROUND** within the DAW. That's why you'll find all Turnado instances being hidden somewhere in the right bottom corner of the screen, while still being in foreground. It is done by intention. Do not close them.
 
-**TODO**: I'm thinking of allowing the user to switch between the presets, as it is done in the "input controller" logical device. It would be preferable option, as "randomize" sometimes gives unpredictable results. Currently, I'm searching free to use shortcuts, to implement this feature. It will arrive soon after I'll finish this documentation :)
+----
+
+### Switching between the Turnado VST presets
+
+The "Randomize" option is quite handy, but sometimes it gives unpredictable results.
+
+Thus, it is more common to switch between the fine-tuned pre-saved presets. In order to do that, one could use **"Hold + double-click on digit 5"** short-cut to switch to the previous preset. Or **"Hold + double-click on digit 6"** short-cut to switch to the next preset:
+
+![Switching turnado between presets](./resources/turnado-switch-between-presets.jpg)
+
+In the view, the corresponding buttons will blink in case of usage:
+
+![Turnado switched to the previous pattern](./resources/turnado-previous-pattern-selected.jpg)
+
+![Turnado switched to the next pattern](./resources/turnado-next-pattern-selected.jpg)
+
+**Note!** The presets mentioned here are simple VST presets. They are not the composite presets implemented by the **LIVELOOPING** project.
 
 ----
 

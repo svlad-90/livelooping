@@ -53,7 +53,7 @@ class View:
         plugins.setParamValue(0.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         
     def __clearTracksOff(self):
-        for i in range(constants.Track_3 + 1):
+        for i in range(constants.Track_4 + 1):
             parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T" + str(i + 1) + "_Clear", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
             plugins.setParamValue(0.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
     
@@ -170,3 +170,12 @@ class View:
         parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T_DW", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(turnado_dry_wet_level, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
     
+    def switchToNextTurnadoPreset(self):
+        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T_Next_Preset", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(0.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+
+    def switchToPrevTurnadoPreset(self):
+        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T_Previous_Preset", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(1.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(0.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)

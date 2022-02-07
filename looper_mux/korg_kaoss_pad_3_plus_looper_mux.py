@@ -106,6 +106,16 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         if(True == shift_pressed):
             self.actionOnDoubleClick(constants.MIDI_CC_SHIFT, self.__loopers[self.__selected_looper].randomizeTurnado)
 
+    def switchToNextTurnadoPreset(self):
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.switchToNextTurnadoPreset.__name__)
+        self.__loopers[self.__selected_looper].switchToNextTurnadoPreset()
+
+        self.__view.switchToNextTurnadoPreset()
+
+    def switchToPrevTurnadoPreset(self):
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.switchToPrevTurnadoPreset.__name__)
+        self.__loopers[self.__selected_looper].switchToPrevTurnadoPreset()
+
     def getShiftPressedState(self):
         return self.__shift_pressed
 
@@ -182,9 +192,11 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         
         if (pressed_time - self.__buttons_last_press_time[pressed_button]) < 0.5:
             # double click
+            self.__buttons_last_press_time.clear()
             self.__buttons_last_press_time[pressed_button] = 0
             action()
         else:
+            self.__buttons_last_press_time.clear()
             self.__buttons_last_press_time[pressed_button] = pressed_time
 
     def setInputSideChainLevel(self, track_id, sidechain_level):
@@ -311,8 +323,17 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.setDropIntencity( (fl_helper.MIDI_MAX_VALUE - event.data2) / fl_helper.MIDI_MAX_VALUE )
         elif event.data1 == constants.MIDI_CC_RESAMPLE_MODE_FROM_LOOPER_TO_TRACK and self.getShiftPressedState():
             self.setResampleMode(ResampleMode.FROM_LOOPER_TO_TRACK)
+            
+            action = lambda self = self: ( self.setResampleMode(ResampleMode.NONE), \
+                                           self.switchToPrevTurnadoPreset())
+            self.actionOnDoubleClick(constants.MIDI_CC_RESAMPLE_MODE_FROM_LOOPER_TO_TRACK, action)
+            
         elif event.data1 == constants.MIDI_CC_RESAMPLE_MODE_FROM_ALL_LOOPERS_TO_TRACK and self.getShiftPressedState():
             self.setResampleMode(ResampleMode.FROM_ALL_LOOPERS_TO_TRACK)
+
+            action = lambda self = self: ( self.setResampleMode(ResampleMode.NONE), \
+                                           self.switchToNextTurnadoPreset())
+            self.actionOnDoubleClick(constants.MIDI_CC_RESAMPLE_MODE_FROM_ALL_LOOPERS_TO_TRACK, action)
         elif event.data1 == constants.MIDI_CC_LOOPER_1 and self.getShiftPressedState():
             self.selectLooper(constants.Looper_1)
             self.actionOnDoubleClick(constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT + constants.MIDI_CC_SAMPLE_LENGTH_1, self.drop)
@@ -419,8 +440,8 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             if event.data1 == constants.MIDI_CC_TEMPO and not self.isPlaying():
                 self.setTempo(800 + int((event.data2 / fl_helper.MIDI_MAX_VALUE) * 1000.0)) # from 80 to 180
             else:            
-                if ( not event.data1 == constants.MIDI_CC_SHIFT and not event.data2 == 0 ) \
-                and ( not event.data1 == constants.MIDI_CC_PLAY_STOP and not self.getShiftPressedState() ):
+                if ( not ( event.data1 == constants.MIDI_CC_SHIFT and event.data2 == 0 ) \
+                and ( not ( event.data1 == constants.MIDI_CC_PLAY_STOP and self.getShiftPressedState() ) ) ):
                     self.playStop()
                 
                 self.onMidiMsgProcessing(event)
