@@ -3,3 +3,4 @@ xcopy "D:\Development\Projects\Live-looping\Livelooping\device_KorgKaossPad3Plus
 xcopy "D:\Development\Projects\Live-looping\Livelooping\device_KorgKaossPad3Plus_MicController\" "C:\Users\Dream Machines\Documents\Image-Line\FL Studio\Settings\Hardware\device_KorgKaossPad3Plus_MicController\" /E /Y
 xcopy "D:\Development\Projects\Live-looping\Livelooping\common\" "D:\Music development\FL Studio 20\Shared\Python\Lib\common\" /E /Y
 xcopy "D:\Development\Projects\Live-looping\Livelooping\input_controller\" "D:\Music development\FL Studio 20\Shared\Python\Lib\input_controller\" /E /Y
+xcopy "D:\Development\Projects\Live-looping\Livelooping\looper_mux\" "D:\Music development\FL Studio 20\Shared\Python\Lib\looper_mux\" /E /Y
