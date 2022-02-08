@@ -326,14 +326,14 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             
             action = lambda self = self: ( self.setResampleMode(ResampleMode.NONE), \
                                            self.switchToPrevTurnadoPreset())
-            self.actionOnDoubleClick(constants.MIDI_CC_RESAMPLE_MODE_FROM_LOOPER_TO_TRACK, action)
+            self.actionOnDoubleClick(constants.MIDI_CC_RESAMPLE_MODE_FROM_LOOPER_TO_TRACK + constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT, action)
             
         elif event.data1 == constants.MIDI_CC_RESAMPLE_MODE_FROM_ALL_LOOPERS_TO_TRACK and self.getShiftPressedState():
             self.setResampleMode(ResampleMode.FROM_ALL_LOOPERS_TO_TRACK)
 
             action = lambda self = self: ( self.setResampleMode(ResampleMode.NONE), \
                                            self.switchToNextTurnadoPreset())
-            self.actionOnDoubleClick(constants.MIDI_CC_RESAMPLE_MODE_FROM_ALL_LOOPERS_TO_TRACK, action)
+            self.actionOnDoubleClick(constants.MIDI_CC_RESAMPLE_MODE_FROM_ALL_LOOPERS_TO_TRACK + constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT, action)
         elif event.data1 == constants.MIDI_CC_LOOPER_1 and self.getShiftPressedState():
             self.selectLooper(constants.Looper_1)
             self.actionOnDoubleClick(constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT + constants.MIDI_CC_SAMPLE_LENGTH_1, self.drop)
@@ -344,9 +344,11 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         elif event.data1 == constants.MIDI_CC_LOOPER_4 and self.getShiftPressedState():
             self.selectLooper(constants.Looper_4)
         elif event.data1 == constants.MIDI_CC_CLEAR_LOOPER and self.getShiftPressedState():
-            self.clearCurrentLooper()
+            action = lambda self = self: ( self.clearCurrentLooper() )
+            self.actionOnDoubleClick(constants.MIDI_CC_CLEAR_LOOPER, action)
         elif event.data1 == constants.MIDI_CC_PLAY_STOP and self.getShiftPressedState():
-            self.playStop()
+            action = lambda self = self: ( self.playStop() )
+            self.actionOnDoubleClick(constants.MIDI_CC_PLAY_STOP, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_1:
             self.setSampleLength(SampleLength.LENGTH_1)
             action = lambda self = self: self.turnLooperOnOff(constants.Looper_1)

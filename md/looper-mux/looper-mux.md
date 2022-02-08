@@ -184,7 +184,7 @@ In both cases, the view will reflect the changes of the volume of each track ins
 
 ## Resetting the looper
 
-You can reset a single looper to the initial state, using the **"Hold + 7"** shortcut:
+You can reset a single looper to the initial state, using the **"Hold + double-click on digit 7"** shortcut:
 
 ![Resetting the looper](./resources/resetting-looper.jpg)
 
@@ -196,7 +196,7 @@ That will erase all recorded tracks and set all the looper's parameters back to 
 
 ## Resetting the looper mux
 
-You can reset the whole "looper mux" logical device, using the **"Hold + 8"** shortcut:
+You can reset the whole "looper mux" logical device, using the **"Hold + double-click on digit 8"** shortcut:
 
 ![Resetting the looper mux](./resources/resetting-looper-mux.jpg)
 
