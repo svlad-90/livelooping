@@ -6,6 +6,7 @@ Created on Jan 24, 2022
 
 import time
 
+import midi
 import device
 import plugins
 import mixer
@@ -60,6 +61,9 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
         self.__should_start_midi_loop = False
         self.__midi_mapping_input_dialog = None
 
+        self.__save_from_preset_page_id = None
+        self.__save_from_preset_id = None
+
     def onInitScript(self, event):
 
         if False == self.__initialized:
@@ -101,7 +105,7 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
 
     def isSaveMode(self):
         return self.__is_save_mode
-    
+
     def isDeleteMode(self):
         return self.__is_delete_mode
 
@@ -110,6 +114,13 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
         self.__is_save_mode = save_mode
         self.__view.setSaveMode(save_mode)
 
+        if True == save_mode:
+            self.__save_from_preset_page_id = self.__selected_fx_preset_page
+            self.__save_from_preset_id = self.getSelectedFXPresetID()
+        else:
+            self.__save_from_preset_page_id = None
+            self.__save_from_preset_id = None
+
         if True == save_mode and True == self.isDeleteMode():
             self.setDeleteMode(False)
 
@@ -117,7 +128,7 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
         print(self.__context.device_name + ': ' + KorgKaossPad3Plus_InputController.setDeleteMode.__name__ + ": save mode - " + str(delete_mode))
         self.__is_delete_mode = delete_mode
         self.__view.setDeleteMode(delete_mode)
-        
+
         if True == delete_mode and True == self.isSaveMode():
             self.setSaveMode(False)
 
@@ -126,13 +137,13 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
 
     def setMidiMappingSaveMode(self, midi_mapping_save_mode):
         print(self.__context.device_name + ': ' + KorgKaossPad3Plus_InputController.setMidiMappingSaveMode.__name__ + ": midi mapping save mode - " + str(midi_mapping_save_mode))
-        
+
         if True == midi_mapping_save_mode:
             self.__midi_mapping_input_dialog = MidiMappingInputDialog(self.__context.fx1_channel, self)
             self.__fx_preset_pages[self.__selected_fx_preset_page].setActiveFXUnit(FXUnit.FX_UNIT_CUSTOM)
         else:
             self.__midi_mapping_input_dialog = None
-        
+
         self.__is_midi_mapping_save_mode = midi_mapping_save_mode
         self.__view.setMidiMappingSaveMode(midi_mapping_save_mode)
 
@@ -140,7 +151,7 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
         print(self.__context.device_name + ': ' + KorgKaossPad3Plus_InputController.selectFXPage.__name__ + ": fx page id - " + str(preset_fx_page_id))
         self.__selected_fx_preset_page = preset_fx_page_id;
         self.__fx_preset_pages[self.__selected_fx_preset_page].select(not self.isSaveMode())
-        
+
         self.setFXLevel(self.__fx_level, True)
 
     def setShiftPressedState(self, shift_pressed):
@@ -153,9 +164,9 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
 
     def randomizeTurnado(self):
         print(self.__context.device_name + ': ' + self.randomizeTurnado.__name__)
-        plugins.setParamValue(0.0, constants.TURNADO_RANDOMIZE_PARAM_INDEX, self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX)
-        plugins.setParamValue(1.0, constants.TURNADO_RANDOMIZE_PARAM_INDEX, self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX)
-        plugins.setParamValue(0.0, constants.TURNADO_RANDOMIZE_PARAM_INDEX, self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX)
+        plugins.setParamValue(0.0, constants.TURNADO_RANDOMIZE_PARAM_INDEX, self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(1.0, constants.TURNADO_RANDOMIZE_PARAM_INDEX, self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(0.0, constants.TURNADO_RANDOMIZE_PARAM_INDEX, self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX, midi.PIM_None, True)
         self.__restoreParams()
 
     def getShiftPressedState(self):
@@ -170,6 +181,11 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
 
     def updateFXPreset(self, fx_preset_id):
         print(self.__context.device_name + ': ' + KorgKaossPad3Plus_InputController.updateFXPreset.__name__)
+
+        if self.isSaveMode() and self.__save_from_preset_page_id and self.__save_from_preset_id:
+            self.__fx_preset_pages[self.__selected_fx_preset_page]\
+            .setMidiMappings(fx_preset_id, self.__fx_preset_pages[self.__save_from_preset_page_id].getMidiMappings(self.__save_from_preset_id))
+
         self.__fx_preset_pages[self.__selected_fx_preset_page].updateFXPreset(fx_preset_id)
 
     def resetFXPreset(self, fx_preset_id):
@@ -194,7 +210,7 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
 
     def setTurnadoDryWetLevel(self, turnado_dry_wet_level):
         self.__turnado_dry_wet_level = turnado_dry_wet_level
-        plugins.setParamValue(self.__turnado_dry_wet_level, constants.TURNADO_DRY_WET_PARAM_INDEX, self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX)
+        plugins.setParamValue(self.__turnado_dry_wet_level, constants.TURNADO_DRY_WET_PARAM_INDEX, self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX, midi.PIM_None, True)
 
         if turnado_dry_wet_level == 0.0:
             self.__turnado_is_off = True
@@ -206,20 +222,20 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
 
     def setTurnadoDictatorLevel(self, turnado_dictator_level):
         self.__turnado_dictator_level = turnado_dictator_level
-        plugins.setParamValue(self.__turnado_dictator_level, constants.TURNADO_DICTATOR_PARAM_INDEX, self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX)
+        plugins.setParamValue(self.__turnado_dictator_level, constants.TURNADO_DICTATOR_PARAM_INDEX, self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX, midi.PIM_None, True)
 
         self.__view.setTurnadoDictatorLevel(turnado_dictator_level)
 
     def switchToNextTurnadoPreset(self):
         print(self.__context.device_name + ': ' + KorgKaossPad3Plus_InputController.switchToNextTurnadoPreset.__name__)
-        plugins.nextPreset(self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX)
+        plugins.nextPreset(self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX, True)
         self.__restoreParams()
 
         self.__view.switchToNextTurnadoPreset()
 
     def switchToPrevTurnadoPreset(self):
         print(self.__context.device_name + ': ' + KorgKaossPad3Plus_InputController.switchToPrevTurnadoPreset.__name__)
-        plugins.prevPreset(self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX)
+        plugins.prevPreset(self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX, True)
         self.__restoreParams()
 
         self.__view.switchToPrevTurnadoPreset()
@@ -237,14 +253,14 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
 
         print(self.__context.device_name + ': ' + KorgKaossPad3Plus_InputController.turnadoOnOff.__name__ + ": turnado fx level - " + str(val))
 
-        plugins.setParamValue(val, constants.TURNADO_DRY_WET_PARAM_INDEX, self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX)
+        plugins.setParamValue(val, constants.TURNADO_DRY_WET_PARAM_INDEX, self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX, midi.PIM_None, True)
 
         self.__view.turnadoOff(val == 0.0)
         self.__view.setTurnadoDryWetLevel(val)
 
     def __restoreParams(self):
-        plugins.setParamValue(self.__turnado_dictator_level, constants.TURNADO_DICTATOR_PARAM_INDEX, self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX)
-        plugins.setParamValue(self.__turnado_dry_wet_level, constants.TURNADO_DRY_WET_PARAM_INDEX, self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX)
+        plugins.setParamValue(self.__turnado_dictator_level, constants.TURNADO_DICTATOR_PARAM_INDEX, self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(self.__turnado_dry_wet_level, constants.TURNADO_DRY_WET_PARAM_INDEX, self.__context.fx2_channel, constants.TURNADO_SLOT_INDEX, midi.PIM_None, True)
 
     def __selectFXPreset(self, preset_fx_page_id, preset_fx_id):
         print(self.__context.device_name + ': ' + KorgKaossPad3Plus_InputController.__selectFXPreset.__name__ + ": selected page - " + \
@@ -264,9 +280,9 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
         active_fx_unit = self.__fx_preset_pages[self.__selected_fx_preset_page].getActiveFXUnit()
 
         if active_fx_unit == FXUnit.FX_UNIT_MANIPULATOR:
-            plugins.prevPreset(self.__context.fx1_channel, constants.MANIPULATOR_SLOT_INDEX)
+            plugins.prevPreset(self.__context.fx1_channel, constants.MANIPULATOR_SLOT_INDEX, True)
         elif active_fx_unit == FXUnit.FX_UNIT_FINISHER_VOODOO:
-            currentProgram = fl_helper.externalParamMapping(plugins.getParamValue(constants.FINISHER_VOODOO_MODE_PARAM_INDEX, self.__context.fx1_channel, constants.FINISHER_VOODOO_SLOT_INDEX)) * constants.FINISHER_VOODOO_MODE_NUMBER
+            currentProgram = plugins.getParamValue(constants.FINISHER_VOODOO_MODE_PARAM_INDEX, self.__context.fx1_channel, constants.FINISHER_VOODOO_SLOT_INDEX, True) * constants.FINISHER_VOODOO_MODE_NUMBER
 
             targetProgram = currentProgram - 1
 
@@ -275,7 +291,7 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
 
             print("targetProgram - " + str(targetProgram))
 
-            plugins.setParamValue(targetProgram / constants.FINISHER_VOODOO_MODE_NUMBER, constants.FINISHER_VOODOO_MODE_PARAM_INDEX, self.__context.fx1_channel, constants.FINISHER_VOODOO_SLOT_INDEX)
+            plugins.setParamValue(targetProgram / constants.FINISHER_VOODOO_MODE_NUMBER, constants.FINISHER_VOODOO_MODE_PARAM_INDEX, self.__context.fx1_channel, constants.FINISHER_VOODOO_SLOT_INDEX, midi.PIM_None, True)
 
         self.__view.switchActiveFXUnitToPrevPreset()
 
@@ -287,9 +303,9 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
         active_fx_unit = self.__fx_preset_pages[self.__selected_fx_preset_page].getActiveFXUnit()
 
         if active_fx_unit == FXUnit.FX_UNIT_MANIPULATOR:
-            plugins.nextPreset(self.__context.fx1_channel, constants.MANIPULATOR_SLOT_INDEX)
+            plugins.nextPreset(self.__context.fx1_channel, constants.MANIPULATOR_SLOT_INDEX, True)
         elif active_fx_unit == FXUnit.FX_UNIT_FINISHER_VOODOO:
-            currentProgram = fl_helper.externalParamMapping(plugins.getParamValue(constants.FINISHER_VOODOO_MODE_PARAM_INDEX, self.__context.fx1_channel, constants.FINISHER_VOODOO_SLOT_INDEX)) * constants.FINISHER_VOODOO_MODE_NUMBER
+            currentProgram = plugins.getParamValue(constants.FINISHER_VOODOO_MODE_PARAM_INDEX, self.__context.fx1_channel, constants.FINISHER_VOODOO_SLOT_INDEX, True) * constants.FINISHER_VOODOO_MODE_NUMBER
 
             targetProgram = currentProgram + 1
 
@@ -298,7 +314,7 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
 
             print("targetProgram - " + str(targetProgram))
 
-            plugins.setParamValue(targetProgram / constants.FINISHER_VOODOO_MODE_NUMBER, constants.FINISHER_VOODOO_MODE_PARAM_INDEX, self.__context.fx1_channel, constants.FINISHER_VOODOO_SLOT_INDEX)
+            plugins.setParamValue(targetProgram / constants.FINISHER_VOODOO_MODE_NUMBER, constants.FINISHER_VOODOO_MODE_PARAM_INDEX, self.__context.fx1_channel, constants.FINISHER_VOODOO_SLOT_INDEX, midi.PIM_None, True)
 
         self.__view.switchActiveFXUnitToNextPreset()
 
@@ -313,7 +329,7 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
 
         self.__is_save_mode = False
         self.__view.setSaveMode(self.__is_save_mode)
-        
+
         self.__is_delete_mode = False
         self.__view.setDeleteMode(self.__is_delete_mode)
 
@@ -330,7 +346,7 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
     def MidiMappingInputDone(self, fx_parameter_number, midi_mapping):
         self.__fx_preset_pages[self.__selected_fx_preset_page].setMidiMapping(fx_parameter_number, midi_mapping)
         self.setMidiMappingSaveMode(False)
-    
+
     def MidiMappingInputCancelled(self):
         self.setMidiMappingSaveMode(False)
 
@@ -341,7 +357,7 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
         event.handled = False
 
         self.onInitScript(event)
-        
+
         if True == self.__midi_loop_started and constants.MIDI_CC_INTERNAL_LOOP == event.data1:
             self.midi_loop()
         else:
@@ -440,7 +456,7 @@ class KorgKaossPad3Plus_InputController(IMidiMappingInputClient):
                     self.setSaveMode(False)
                     self.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_7)
                 elif event.data1 == constants.MIDI_CC_EFFECT_8 and self.isSaveMode():
-                    self.updateFXPreset(FXPreset.FXPreset_8)
+                    self.updateFXPreset(FXPreset.FXPreset_8, self.__fx_preset_pages[self.__selected_fx_preset_page])
                     self.setSaveMode(False)
                     self.selectFXPresetOnTheVisiblePage(FXPreset.FXPreset_8)
                 elif event.data1 == constants.MIDI_CC_EFFECT_1 and not self.getShiftPressedState():

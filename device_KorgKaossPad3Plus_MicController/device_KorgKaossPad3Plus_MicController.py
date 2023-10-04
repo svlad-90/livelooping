@@ -17,6 +17,6 @@ context = Context(device_name,
                   PARAMS_FIRST_STORAGE_TRACK_ID)
 
 mic_controller = KorgKaossPad3Plus_InputController(context)
-    
+
 def OnMidiMsg(event):
     mic_controller.OnMidiMsg(event)

@@ -6,6 +6,7 @@ Created on Jan 24, 2022
 
 import math
 
+import midi
 import plugins
 
 from input_controller import constants
@@ -39,14 +40,14 @@ class FX:
 
         if math.fabs(self.__fx_level - fx_level) >= 0.01 or fx_level == 1.0 or True == force:
 
-            fx_activation_status = fl_helper.externalParamMapping( plugins.getParamValue(self.__activation_param_id, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX) )
+            fx_activation_status = plugins.getParamValue(self.__activation_param_id, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, True)
 
             if self.__level_param_id == -1:
                 self.__level_param_id = fl_helper.findParameterByName(self.__context.main_channel, "FX_L" + str(self.__fx_number + 1), constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
             if fx_activation_status == 0.0:
-                plugins.setParamValue(0.0, self.__level_param_id, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+                plugins.setParamValue(0.0, self.__level_param_id, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
             else:
-                plugins.setParamValue(fx_level, self.__level_param_id, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+                plugins.setParamValue(fx_level, self.__level_param_id, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
             self.__fx_level = fx_level

@@ -10,7 +10,7 @@ class FXUnit:
     FX_UNIT_CUSTOM          = 0
     FX_UNIT_MANIPULATOR     = 1
     FX_UNIT_FINISHER_VOODOO = 2
-    
+
     @staticmethod
     def activeFXUnitToAdjustablePluginSlotIndex(active_fx_unit):
         if active_fx_unit == FXUnit.FX_UNIT_FINISHER_VOODOO:

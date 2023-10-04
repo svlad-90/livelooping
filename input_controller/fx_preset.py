@@ -4,6 +4,7 @@ Created on Jan 24, 2022
 @author: Dream Machines
 '''
 
+import midi
 import plugins
 
 from common import fl_helper
@@ -44,18 +45,18 @@ class FXPreset(IFXPresetDataProvider):
         self.__initialized = False
 
     def onInitScript(self):
-        
+
         if False == self.__initialized:
-        
+
             self.__persistency_item.init()
-            
+
             self.setActiveFXUnit(self.__persistency_item.getActiveFxUnit())
             self.__loadMidiMappingsFromPersistency()
             self.view_updateActiveFXUnit()
 
             for fx_parameter_id in self.__fx_parameters:
                 self.__fx_parameters[fx_parameter_id].onInitScript()
-    
+
             self.__initialized = True
 
     def update(self):
@@ -69,12 +70,32 @@ class FXPreset(IFXPresetDataProvider):
     def reset(self):
         self.__resetData()
 
+    def setMidiMappings(self, midi_mappings):
+        fx_parameter_number = 0
+        for midi_mapping in midi_mappings:
+            self.setMidiMapping(fx_parameter_number, midi_mapping)
+            fx_parameter_number += 1
+
+    def getMidiMappings(self):
+        midi_mappings = []
+        for fx_parameter in self.__fx_parameters:
+            midi_mapping = self.__fx_parameters[fx_parameter].getMidiMapping()
+            midi_mappings.append(midi_mapping)
+        return midi_mappings
+
+    def getMidiMappingsAsLists(self):
+        midi_mappings = {}
+        for fx_parameter in self.__fx_parameters:
+            midi_mapping = self.__fx_parameters[fx_parameter].getMidiMapping()
+            midi_mappings[self.__fx_parameters[fx_parameter].getFXParamId()] = midi_mapping.convertToList()
+        return midi_mappings
+
     def setMidiMapping(self, fx_parameter_number, midi_mapping):
         self.__fx_parameters[fx_parameter_number].setMidiMapping(midi_mapping)
         self.view_updateFXParamsFromPlugins()
 
     def select(self):
-        plugins.setParamValue(0.0, constants.PANOMATIC_VOLUME_PARAM_INDEX, self.__context.main_channel, constants.PRESET_CHANGE_PROTECTOR_PANOMATIC_SLOT_INDEX)
+        plugins.setParamValue(0.0, constants.PANOMATIC_VOLUME_PARAM_INDEX, self.__context.main_channel, constants.PRESET_CHANGE_PROTECTOR_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
 
         if not self.__areParametersLoaded():
             self.__loadData()
@@ -85,7 +106,7 @@ class FXPreset(IFXPresetDataProvider):
         self.__view.selectFXPreset(self.__fx_number)
         self.view_updateActiveFXUnit()
 
-        plugins.setParamValue(fl_helper.MAX_VOLUME_LEVEL_VALUE, constants.PANOMATIC_VOLUME_PARAM_INDEX, self.__context.main_channel, constants.PRESET_CHANGE_PROTECTOR_PANOMATIC_SLOT_INDEX)
+        plugins.setParamValue(fl_helper.MAX_VOLUME_LEVEL_VALUE, constants.PANOMATIC_VOLUME_PARAM_INDEX, self.__context.main_channel, constants.PRESET_CHANGE_PROTECTOR_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
 
     def view_updateFXPresetAvailability(self):
         self.__view.setFXPresetAvailability(self.__fx_number, len(self.__persistency_item.getPluginParameters()) > 0)
@@ -122,7 +143,7 @@ class FXPreset(IFXPresetDataProvider):
 
             parameters[mixer_slot] = []
 
-            param_count = plugins.getParamCount(self.__context.fx1_channel, mixer_slot)
+            param_count = plugins.getParamCount(self.__context.fx1_channel, mixer_slot, True)
 
             for param_id in range(param_count):
 
@@ -135,17 +156,11 @@ class FXPreset(IFXPresetDataProvider):
                 if mixer_slot == constants.FABFILTER_PRO_Q3_SLOT_INDEX and param_id > constants.FABFILTER_PRO_Q3_PARAMS_LIMIT:
                     break;
 
-                param_value = plugins.getParamValue(param_id, self.__context.fx1_channel, mixer_slot)
-
-                if mixer_slot == constants.MANIPULATOR_SLOT_INDEX or \
-                   mixer_slot == constants.FABFILTER_PRO_Q3_SLOT_INDEX or \
-                   mixer_slot == constants.FINISHER_VOODOO_SLOT_INDEX:
-                    param_value = fl_helper.externalParamMapping(param_value)
-
+                param_value = plugins.getParamValue(param_id, self.__context.fx1_channel, mixer_slot, True)
                 param_value_str = str(param_value)
 
-                # param_name = plugins.getParamName(param_id, self.__context.fx1_channel, mixer_slot)
-                # plugin_name = plugins.getPluginName(self.__context.fx1_channel, mixer_slot)
+                # param_name = plugins.getParamName(param_id, self.__context.fx1_channel, mixer_slot, True)
+                # plugin_name = plugins.getPluginName(self.__context.fx1_channel, mixer_slot, True)
                 # print("Get parameter: plugin name - " + plugin_name + ", param - " + param_name + \
                 #       ", param_value - " + param_value_str + ", param_id - " + str(param_id) + \
                 #       ", channel - " + str(self.__context.fx1_channel) + ", mixer_slot - " + str(mixer_slot))
@@ -154,8 +169,8 @@ class FXPreset(IFXPresetDataProvider):
 
 
             parameter_id = fl_helper.findParameterByName(self.__context.main_channel, "E" + str(mixer_slot+1) + "_TO", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-            fx_activation_state = plugins.getParamValue(parameter_id, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-            parameters[constants.FX_ACTIVATION_STATE_SLOT_INDEX].append(str( fl_helper.externalParamMapping(fx_activation_state) ))
+            fx_activation_state = plugins.getParamValue(parameter_id, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, True)
+            parameters[constants.FX_ACTIVATION_STATE_SLOT_INDEX].append(str( fx_activation_state ))
 
             self.__persistency_item.setPluginParameters(parameters)
 
@@ -172,21 +187,23 @@ class FXPreset(IFXPresetDataProvider):
                 if mixer_slot == constants.FX_ACTIVATION_STATE_SLOT_INDEX:
                     #print("__applyParametersToPlugins: constants.FX_ACTIVATION_STATE_SLOT_INDEX mixer channel -" + str(self.__context.main_channel) + \
                     #", param_id - " + str(param_id) + ", param_value - " + str(param_value))
-                    plugins.setParamValue(param_value, param_id, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+                    plugins.setParamValue(param_value, param_id, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
                 else:
 
-                    # plugin_name = plugins.getPluginName(self.__context.fx1_channel, mixer_slot)
-                    # param_name = plugins.getParamName(param_id, self.__context.fx1_channel, mixer_slot)
+                    # plugin_name = plugins.getPluginName(self.__context.fx1_channel, mixer_slot, True)
+                    # param_name = plugins.getParamName(param_id, self.__context.fx1_channel, mixer_slot, True)
                     #
                     # print("Apply parameter: plugin name - " + plugin_name + ", param - " + param_name + \
                     #       ", param_value - " + str(param_value) + ", param_id - " + str(param_id) + \
                     #       ", channel - " + str(self.__context.fx1_channel) + ", mixer_slot - " + str(mixer_slot))
 
-                    plugins.setParamValue(param_value, param_id, self.__context.fx1_channel, mixer_slot)
+                    plugins.setParamValue(param_value, param_id, self.__context.fx1_channel, mixer_slot, midi.PIM_None, True)
 
     def __loadMidiMappingsFromPersistency(self):
-        midi_mappings = self.__persistency_item.getMidiMapping()      
-        
+        midi_mappings = self.__persistency_item.getMidiMapping()
+
+        print(f"loading {str(len(midi_mappings))} midi mappings from persistency - {midi_mappings}")
+
         if len(midi_mappings) == 0:
             for fx_parameter in self.__fx_parameters:
                 self.__fx_parameters[fx_parameter].setMidiMapping(MidiMapping())
@@ -195,10 +212,8 @@ class FXPreset(IFXPresetDataProvider):
                 self.__fx_parameters[fx_parameter_id].setMidiMapping(MidiMapping.createFromList(midi_mappings[fx_parameter_id]))
 
     def __storeMidiMappingsToPersistency(self):
-        midi_mappings = {}
-        for fx_parameter in self.__fx_parameters:
-            midi_mapping = self.__fx_parameters[fx_parameter].getMidiMapping()            
-            midi_mappings[self.__fx_parameters[fx_parameter].getFXParamId()] = midi_mapping.convertToList()
+        midi_mappings = self.getMidiMappingsAsLists()
+        print(f"storing {str(len(midi_mappings))} midi mappings from persistency - {midi_mappings}")
         self.__persistency_item.setMidiMapping(midi_mappings)
 
     def __loadData(self):

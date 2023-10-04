@@ -37,13 +37,22 @@ class FXPresetPage:
         return self.__selected_fx_preset_id
 
     def onInitScript(self):
-        
+
         if False == self.__initialized:
-            
+
             for fx_preset_id in self.__fx_presets:
                 self.__fx_presets[fx_preset_id].onInitScript()
-            
+
             self.__initialized = True
+
+    def setMidiMappings(self, fx_preset_id, midi_mappings):
+        print(f"setMidiMappings: page - {str(self.__fx_page_number)}; fx_preset_id - {str(fx_preset_id)}; midi_mappings - {str(midi_mappings)}")
+        self.__fx_presets[fx_preset_id].setMidiMappings(midi_mappings)
+
+    def getMidiMappings(self, fx_preset_id):
+        midi_mappings = self.__fx_presets[fx_preset_id].getMidiMappings()
+        print(f"getMidiMappings: page - {str(self.__fx_page_number)}; fx_preset_id - {str(fx_preset_id)}; midi_mappings - {str(midi_mappings)}")
+        return midi_mappings
 
     def updateFXPreset(self, fx_preset_id):
         self.__fx_presets[fx_preset_id].update()
@@ -60,7 +69,7 @@ class FXPresetPage:
     def selectFXPreset(self, fx_preset_id, select_preset = True):
         print(self.__context.device_name + '_FXPresetPage' + ': ' + FXPresetPage.selectFXPreset.__name__ + " page - " + str(self.__fx_page_number) + ", preset - " + str(fx_preset_id))
         self.__selected_fx_preset_id = fx_preset_id
-        
+
         if True == select_preset:
             self.__fx_presets[fx_preset_id].select()
             self.__fx_presets[fx_preset_id].view_updateFXPresetAvailability()

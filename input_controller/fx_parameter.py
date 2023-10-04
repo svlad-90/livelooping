@@ -4,6 +4,7 @@ Created on Jan 24, 2022
 @author: Dream Machines
 '''
 
+import midi
 import plugins
 
 from common import fl_helper
@@ -95,14 +96,14 @@ class FXParameter:
                 fl_param_id = self.__midi_mapping.getParameterId()
 
         if fl_param_id != constants.INVALID_PARAM:
-            plugins.setParamValue(fx_param_level, fl_param_id, self.__context.fx1_channel, adjustable_plugin_slot_index)
+            plugins.setParamValue(fx_param_level, fl_param_id, self.__context.fx1_channel, adjustable_plugin_slot_index, midi.PIM_None, True)
             self.__fx_param_level = fx_param_level
             self.__view.setFXParameterLevel(self.__fx_param_id, fx_param_level)
 
     def onInitScript(self):
-        
+
         if False == self.__initialized:
-            
+
             self.setLevel(self.__fx_param_level)
             self.__initialized = True
 
@@ -120,14 +121,7 @@ class FXParameter:
                 fl_param_id = self.__midi_mapping.getParameterId()
 
         if fl_param_id != constants.INVALID_PARAM:
-
-            param_value = plugins.getParamValue(fl_param_id, self.__context.fx1_channel, adjustable_plugin_slot_index)
-
-            if adjustable_plugin_slot_index == constants.MANIPULATOR_SLOT_INDEX or \
-               adjustable_plugin_slot_index == constants.FABFILTER_PRO_Q3_SLOT_INDEX or \
-               adjustable_plugin_slot_index == constants.FINISHER_VOODOO_SLOT_INDEX:
-                    param_value = fl_helper.externalParamMapping(param_value)
-
+            param_value = plugins.getParamValue(fl_param_id, self.__context.fx1_channel, adjustable_plugin_slot_index, True)
             self.__fx_param_level = param_value
             self.__view.setFXParameterActivationStatus(self.__fx_param_id, 1)
         else:

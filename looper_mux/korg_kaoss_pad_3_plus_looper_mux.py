@@ -6,6 +6,8 @@ Created on Feb 7, 2022
 
 import math
 import time
+
+import midi
 import transport
 import mixer
 import plugins
@@ -67,7 +69,7 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
     # ContextInterface Implementation
     def getSampleLength(self) -> int:
         return self.__selectedSampleLength
-    
+
     def getDeviceName(self) -> str:
         return self.__context.device_name
     # ContextInterface implementation end
@@ -127,17 +129,17 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
     def removePressedSamplerButton(self, released_sampler_button):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.addPressedSamplerButton.__name__ + ": removed sampler button - " + str(released_sampler_button))
         self.__pressed_sampler_buttons.remove(released_sampler_button)
-        
+
         if self.__last_pressed_sampler_button == released_sampler_button:
             self.__last_pressed_sampler_button = PressedSamplerButton.NONE
 
     def selectLooper(self, selected_looper):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.selectLooper.__name__ + ": selected looper - " + str(selected_looper))
-        
+
         if selected_looper != self.__selected_looper:
-            
+
             self.__loopers[self.__selected_looper].stopAllRecordings()
-            
+
             self.__selected_looper = selected_looper
             self.__loopers[self.__selected_looper].updateTracksStats()
             self.__loopers[self.__selected_looper].updateLooperStats()
@@ -176,9 +178,9 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
 
     def setMasterRoutingLevel(self, routing_level):
         parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "MasterFX1M", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(routing_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(routing_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
         parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "MasterFX1S", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(routing_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(routing_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
     def changeRecordingState(self, selected_track_id):
             print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.changeRecordingState.__name__ + ": track - " + str(selected_track_id))
@@ -186,10 +188,10 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
 
     def actionOnDoubleClick(self, pressed_button, action):
         pressed_time = time.time()
-        
+
         if not pressed_button in self.__buttons_last_press_time.keys():
             self.__buttons_last_press_time[pressed_button] = 0
-        
+
         if (pressed_time - self.__buttons_last_press_time[pressed_button]) < 0.5:
             # double click
             self.__buttons_last_press_time.clear()
@@ -207,22 +209,22 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.__loopers[self.__selected_looper].setLooperSideChainLevel(track_id, sidechain_level)
 
     def setDropIntencity(self, drop_intencity):
-        plugins.setParamValue(drop_intencity, constants.ENDLESS_SMILE_PLUGIN_INTENSITY_PARAM_INDEX, constants.LOOPER_ALL_CHANNEL, constants.LOOPER_ALL_ENDLESS_SMILE_SLOT_INDEX)
+        plugins.setParamValue(drop_intencity, constants.ENDLESS_SMILE_PLUGIN_INTENSITY_PARAM_INDEX, constants.LOOPER_ALL_CHANNEL, constants.LOOPER_ALL_ENDLESS_SMILE_SLOT_INDEX, midi.PIM_None, True)
         self.__view.setDropIntencity(drop_intencity)
 
     def setResampleMode(self, resample_mode):
-        
+
         if resample_mode == self.getResampleMode():
             resample_mode = ResampleMode.NONE
-        
+
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.setResampleMode.__name__ + ": to - " + str(resample_mode))
         self.__resample_mode = resample_mode
-        
+
         self.__view.setResampleMode(resample_mode)
-    
+
     def getResampleMode(self):
         return self.__resample_mode
-    
+
     def setTurnadoDictatorLevel(self, turnado_dictator_level):
         self.__loopers[self.__selected_looper].setTurnadoDictatorLevel(turnado_dictator_level)
 
@@ -239,32 +241,32 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         self.__loopers[constants.Looper_1].setLooperVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
         self.__loopers[constants.Looper_1].setTurnadoDictatorLevel(0.0)
         self.__loopers[constants.Looper_1].setTurnadoDryWetLevel(constants.DEFAULT_TURNADO_DRY_WET_LEVEL)
-    
+
     def turnTrackOnOff(self, track_id):
         if 0 != self.__loopers[self.__selected_looper].getTrackVolume(track_id):
             self.__loopers[self.__selected_looper].setTrackVolume(track_id, 0.0)
         else:
             self.__loopers[self.__selected_looper].setTrackVolume(track_id, fl_helper.MAX_VOLUME_LEVEL_VALUE)
-    
+
     def turnLooperOnOff(self, looper_id):
-        
+
         update_view = looper_id == self.__selected_looper
-        
+
         if 0 != self.__loopers[looper_id].getLooperVolume():
             self.__loopers[looper_id].setLooperVolume(0.0, not update_view)
         else:
             self.__loopers[looper_id].setLooperVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE, not update_view)
-            
+
     def __changeRecordingStateTo(self, selected_track_id, recording_state):
         if recording_state:
             self.__startRecordingTrack(selected_track_id)
-            
+
             for track_id in self.__loopers[self.__selected_looper].getTracks():
                 if track_id != selected_track_id:
                     self.__stopRecordingTrack(track_id)
-            
+
             self.setMasterRoutingLevel(0)
-            
+
         else:
             self.__stopRecordingTrack(selected_track_id)
             self.setMasterRoutingLevel(fl_helper.MAX_VOLUME_LEVEL_VALUE)
@@ -298,9 +300,9 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         self.__loopers[self.__selected_looper].stopRecordingTrack(track_id)
         self.__loopers[self.__selected_looper].getTrack(track_id).setRoutingLevel(0.0)
         self.setResampleMode(ResampleMode.NONE)
-    
+
     def onMidiMsgProcessing(self, event):
-        
+
         if event.data1 == constants.MIDI_CC_TRACK_1_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
             self.addPressedSamplerButton(PressedSamplerButton.A_PRESSED)
         elif event.data1 == constants.MIDI_CC_TRACK_1_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_RELEASED:
@@ -317,17 +319,17 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.addPressedSamplerButton(PressedSamplerButton.D_PRESSED)
         elif event.data1 == constants.MIDI_CC_TRACK_4_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_RELEASED:
             self.removePressedSamplerButton(PressedSamplerButton.D_PRESSED)
-    
-    
+
+
         if event.data1 == constants.MIDI_CC_LOOPER_VOLUME and self.getShiftPressedState():
             self.setDropIntencity( (fl_helper.MIDI_MAX_VALUE - event.data2) / fl_helper.MIDI_MAX_VALUE )
         elif event.data1 == constants.MIDI_CC_RESAMPLE_MODE_FROM_LOOPER_TO_TRACK and self.getShiftPressedState():
             self.setResampleMode(ResampleMode.FROM_LOOPER_TO_TRACK)
-            
+
             action = lambda self = self: ( self.setResampleMode(ResampleMode.NONE), \
                                            self.switchToPrevTurnadoPreset())
             self.actionOnDoubleClick(constants.MIDI_CC_RESAMPLE_MODE_FROM_LOOPER_TO_TRACK + constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT, action)
-            
+
         elif event.data1 == constants.MIDI_CC_RESAMPLE_MODE_FROM_ALL_LOOPERS_TO_TRACK and self.getShiftPressedState():
             self.setResampleMode(ResampleMode.FROM_ALL_LOOPERS_TO_TRACK)
 
@@ -412,7 +414,7 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         elif event.data1 == constants.MIDI_CC_TRACK_4_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
             self.changeRecordingState(constants.Track_4)
         elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_1 and self.getShiftPressedState():
-            self.setLooperSideChainLevel(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE) 
+            self.setLooperSideChainLevel(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_2 and self.getShiftPressedState():
             self.setLooperSideChainLevel(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_3 and self.getShiftPressedState():
@@ -429,25 +431,25 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.setInputSideChainLevel(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_TURNADO_DICTATOR and self.isPlaying():
             self.setTurnadoDictatorLevel(event.data2 / fl_helper.MIDI_MAX_VALUE)
-    
+
     def OnMidiMsg(self, event):
-    
+
         self.onInitScript()
-    
+
         #fl_helper.printAllPluginParameters(LOOPER_1_CHANNEL, LOOPER_TURNADO_SLOT_INDEX)
-    
+
         event.handled = False
-    
+
         if not self.isPlaying():
             if event.data1 == constants.MIDI_CC_TEMPO and not self.isPlaying():
                 self.setTempo(800 + int((event.data2 / fl_helper.MIDI_MAX_VALUE) * 1000.0)) # from 80 to 180
-            else:            
+            else:
                 if ( not ( event.data1 == constants.MIDI_CC_SHIFT and event.data2 == 0 ) \
                 and ( not ( event.data1 == constants.MIDI_CC_PLAY_STOP and self.getShiftPressedState() ) ) ):
                     self.playStop()
-                
+
                 self.onMidiMsgProcessing(event)
         else:
             self.onMidiMsgProcessing(event)
-    
+
         event.handled = True

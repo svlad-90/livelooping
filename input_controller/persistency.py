@@ -13,11 +13,11 @@ class PersistencyItem:
     def __init__(self, track_id):
         self.__track_id = track_id
         self.__data = {} # key - data_key, data - any storable data type
-        
-        
+
+
 
     def init(self):
-        self.readFromStorage() 
+        self.readFromStorage()
 
     # plugin parameters
     def setPluginParameters(self, plugin_parameters):

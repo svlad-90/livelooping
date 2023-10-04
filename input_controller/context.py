@@ -12,4 +12,3 @@ class Context:
         self.fx1_channel = fx1_channel
         self.fx2_channel = fx2_channel
         self.params_first_storage_track_id = params_first_storage_track_id
-        
