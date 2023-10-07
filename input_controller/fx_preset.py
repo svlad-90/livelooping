@@ -8,23 +8,22 @@ import midi
 import plugins
 
 from common import fl_helper
-from input_controller.fx_parameter import FXParameter
-from input_controller.fx_unit import FXUnit
+from input_controller.fx_parameter import FxParameter
+from input_controller.fx_unit import FxUnit
 from input_controller import constants
 from input_controller.persistency import PersistencyItem
-from input_controller.i_fx_preset_data_provider import IFXPresetDataProvider
-from input_controller import common
+from input_controller.i_fx_preset_data_provider import IFxPresetDataProvider
 from input_controller.midi_mapping import MidiMapping
 
-class FXPreset(IFXPresetDataProvider):
-    FXPreset_1    = 0
-    FXPreset_2    = 1
-    FXPreset_3    = 2
-    FXPreset_4    = 3
-    FXPreset_5    = 4
-    FXPreset_6    = 5
-    FXPreset_7    = 6
-    FXPreset_8    = 7
+class FxPreset(IFxPresetDataProvider):
+    fx_preset_1    = 0
+    fx_preset_2    = 1
+    fx_preset_3    = 2
+    fx_preset_4    = 3
+    fx_preset_5    = 4
+    fx_preset_6    = 5
+    fx_preset_7    = 6
+    fx_preset_8    = 7
 
     def __init__(self, context, fx_page_number, fx_number, view):
         self.__context = context
@@ -32,108 +31,108 @@ class FXPreset(IFXPresetDataProvider):
         self.__fx_page_number = fx_page_number
         self.__fx_number = fx_number
         self.__persistency_item = PersistencyItem(self.__context.params_first_storage_track_id + ( self.__fx_page_number * constants.NUMBER_OF_FX_IN_PAGE ) + self.__fx_number)
-        self.__fx_parameters = { FXParameter.FXParameter_1: FXParameter(self.__context, FXParameter.FXParameter_1, view, self),
-                                 FXParameter.FXParameter_2: FXParameter(self.__context, FXParameter.FXParameter_2, view, self),
-                                 FXParameter.FXParameter_3: FXParameter(self.__context, FXParameter.FXParameter_3, view, self),
-                                 FXParameter.FXParameter_4: FXParameter(self.__context, FXParameter.FXParameter_4, view, self),
-                                 FXParameter.FXParameter_5: FXParameter(self.__context, FXParameter.FXParameter_5, view, self),
-                                 FXParameter.FXParameter_6: FXParameter(self.__context, FXParameter.FXParameter_6, view, self),
-                                 FXParameter.FXParameter_7: FXParameter(self.__context, FXParameter.FXParameter_7, view, self),
-                                 FXParameter.FXParameter_8: FXParameter(self.__context, FXParameter.FXParameter_8, view, self) }
+        self.__fx_parameters = { FxParameter.FXParameter_1: FxParameter(self.__context, FxParameter.FXParameter_1, view, self),
+                                 FxParameter.FXParameter_2: FxParameter(self.__context, FxParameter.FXParameter_2, view, self),
+                                 FxParameter.FXParameter_3: FxParameter(self.__context, FxParameter.FXParameter_3, view, self),
+                                 FxParameter.FXParameter_4: FxParameter(self.__context, FxParameter.FXParameter_4, view, self),
+                                 FxParameter.FXParameter_5: FxParameter(self.__context, FxParameter.FXParameter_5, view, self),
+                                 FxParameter.FXParameter_6: FxParameter(self.__context, FxParameter.FXParameter_6, view, self),
+                                 FxParameter.FXParameter_7: FxParameter(self.__context, FxParameter.FXParameter_7, view, self),
+                                 FxParameter.FXParameter_8: FxParameter(self.__context, FxParameter.FXParameter_8, view, self) }
 
-        self.__active_fx_unit = FXUnit.FX_UNIT_CUSTOM
+        self.__active_fx_unit = FxUnit.FX_UNIT_CUSTOM
         self.__initialized = False
 
-    def onInitScript(self):
+    def on_init_script(self):
 
         if False == self.__initialized:
 
             self.__persistency_item.init()
 
-            self.setActiveFXUnit(self.__persistency_item.getActiveFxUnit())
-            self.__loadMidiMappingsFromPersistency()
-            self.view_updateActiveFXUnit()
+            self.set_active_fx_unit(self.__persistency_item.get_active_fx_unit())
+            self.__load_midi_mappings_from_persistency()
+            self.view_update_active_fx_unit()
 
             for fx_parameter_id in self.__fx_parameters:
-                self.__fx_parameters[fx_parameter_id].onInitScript()
+                self.__fx_parameters[fx_parameter_id].on_init_script()
 
             self.__initialized = True
 
     def update(self):
-        self.__getParamsFromPlugins()
-        self.__persistency_item.setActiveFxUnit(self.__active_fx_unit)
-        self.__storeMidiMappingsToPersistency()
-        self.__saveData()
-        self.__applyParametersToPlugins()
-        self.view_updateActiveFXUnit()
+        self.__get_params_from_plugins()
+        self.__persistency_item.set_active_fx_unit(self.__active_fx_unit)
+        self.__store_midi_mappings_to_persistency()
+        self.__save_data()
+        self.__apply_parameters_to_plugins()
+        self.view_update_active_fx_unit()
 
     def reset(self):
-        self.__resetData()
+        self.__reset_data()
 
-    def setMidiMappings(self, midi_mappings):
+    def set_midi_mappings(self, midi_mappings):
         fx_parameter_number = 0
         for midi_mapping in midi_mappings:
-            self.setMidiMapping(fx_parameter_number, midi_mapping)
+            self.set_midi_mapping(fx_parameter_number, midi_mapping)
             fx_parameter_number += 1
 
-    def getMidiMappings(self):
+    def get_midi_mappings(self):
         midi_mappings = []
         for fx_parameter in self.__fx_parameters:
-            midi_mapping = self.__fx_parameters[fx_parameter].getMidiMapping()
+            midi_mapping = self.__fx_parameters[fx_parameter].get_midi_mapping()
             midi_mappings.append(midi_mapping)
         return midi_mappings
 
-    def getMidiMappingsAsLists(self):
+    def get_midi_mappings_as_lists(self):
         midi_mappings = {}
         for fx_parameter in self.__fx_parameters:
-            midi_mapping = self.__fx_parameters[fx_parameter].getMidiMapping()
-            midi_mappings[self.__fx_parameters[fx_parameter].getFXParamId()] = midi_mapping.convertToList()
+            midi_mapping = self.__fx_parameters[fx_parameter].get_midi_mapping()
+            midi_mappings[self.__fx_parameters[fx_parameter].get_fx_param_id()] = midi_mapping.convert_to_list()
         return midi_mappings
 
-    def setMidiMapping(self, fx_parameter_number, midi_mapping):
-        self.__fx_parameters[fx_parameter_number].setMidiMapping(midi_mapping)
-        self.view_updateFXParamsFromPlugins()
+    def set_midi_mapping(self, fx_parameter_number, midi_mapping):
+        self.__fx_parameters[fx_parameter_number].set_midi_mapping(midi_mapping)
+        self.view_update_fx_params_from_plugins()
 
     def select(self):
         plugins.setParamValue(0.0, constants.PANOMATIC_VOLUME_PARAM_INDEX, self.__context.main_channel, constants.PRESET_CHANGE_PROTECTOR_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
 
-        if not self.__areParametersLoaded():
-            self.__loadData()
+        if not self.__are_parameters_loaded():
+            self.__load_data()
 
-        self.__applyParametersToPlugins()
-        self.__active_fx_unit = self.__persistency_item.getActiveFxUnit()
-        self.__loadMidiMappingsFromPersistency()
-        self.__view.selectFXPreset(self.__fx_number)
-        self.view_updateActiveFXUnit()
+        self.__apply_parameters_to_plugins()
+        self.__active_fx_unit = self.__persistency_item.get_active_fx_unit()
+        self.__load_midi_mappings_from_persistency()
+        self.__view.select_fx_preset(self.__fx_number)
+        self.view_update_active_fx_unit()
 
         plugins.setParamValue(fl_helper.MAX_VOLUME_LEVEL_VALUE, constants.PANOMATIC_VOLUME_PARAM_INDEX, self.__context.main_channel, constants.PRESET_CHANGE_PROTECTOR_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
 
-    def view_updateFXPresetAvailability(self):
-        self.__view.setFXPresetAvailability(self.__fx_number, len(self.__persistency_item.getPluginParameters()) > 0)
+    def view_update_fx_preset_availability(self):
+        self.__view.set_fx_preset_availability(self.__fx_number, len(self.__persistency_item.get_plugin_parameters()) > 0)
 
-    def view_updateFXParamsFromPlugins(self):
+    def view_update_fx_params_from_plugins(self):
         for fx_param_id in self.__fx_parameters:
-            self.__fx_parameters[fx_param_id].updateParamsFromPlugin()
+            self.__fx_parameters[fx_param_id].update_params_from_plugin()
 
-    def view_updateActiveFXUnit(self):
-        #print("view_updateActiveFXUnit: active_fx_unit - " + str(self.__active_fx_unit) + "; active_fx_unit - " + str(self.__fx_page_number) + "; fx_number - " + str(self.__fx_number))
-        self.__view.setActiveFXUnit(self.__active_fx_unit)
-        self.view_updateFXParamsFromPlugins()
+    def view_update_active_fx_unit(self):
+        #print("view_update_active_fx_unit: active_fx_unit - " + str(self.__active_fx_unit) + "; active_fx_unit - " + str(self.__fx_page_number) + "; fx_number - " + str(self.__fx_number))
+        self.__view.set_active_fx_unit(self.__active_fx_unit)
+        self.view_update_fx_params_from_plugins()
 
-    def setFXParameterLevel(self, fx_param_id, fx_param_level):
-        self.__fx_parameters[fx_param_id].setLevel(fx_param_level)
+    def set_fx_parameter_level(self, fx_param_id, fx_param_level):
+        self.__fx_parameters[fx_param_id].set_level(fx_param_level)
 
-    def getActiveFXUnit(self):
+    def get_active_fx_unit(self):
         return self.__active_fx_unit
 
-    def setActiveFXUnit(self, active_fx_unit):
+    def set_active_fx_unit(self, active_fx_unit):
         self.__active_fx_unit = active_fx_unit
 
-    def __areParametersLoaded(self):
-        return len(self.__persistency_item.getPluginParameters()) != 0
+    def __are_parameters_loaded(self):
+        return len(self.__persistency_item.get_plugin_parameters()) != 0
 
-    def __getParamsFromPlugins(self):
-        self.__persistency_item.resetPluginParameters()
+    def __get_params_from_plugins(self):
+        self.__persistency_item.reset_plugin_parameters()
 
         parameters = {}
 
@@ -168,15 +167,15 @@ class FXPreset(IFXPresetDataProvider):
                 parameters[mixer_slot].append( param_value_str )
 
 
-            parameter_id = fl_helper.findParameterByName(self.__context.main_channel, "E" + str(mixer_slot+1) + "_TO", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+            parameter_id = fl_helper.find_parameter_by_name(self.__context.main_channel, "E" + str(mixer_slot+1) + "_TO", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
             fx_activation_state = plugins.getParamValue(parameter_id, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, True)
             parameters[constants.FX_ACTIVATION_STATE_SLOT_INDEX].append(str( fx_activation_state ))
 
-            self.__persistency_item.setPluginParameters(parameters)
+            self.__persistency_item.set_plugin_parameters(parameters)
 
-    def __applyParametersToPlugins(self):
+    def __apply_parameters_to_plugins(self):
 
-        parameters = self.__persistency_item.getPluginParameters()
+        parameters = self.__persistency_item.get_plugin_parameters()
 
         for mixer_slot in parameters:
 
@@ -185,7 +184,7 @@ class FXPreset(IFXPresetDataProvider):
                 param_value = float(param_value_str)
 
                 if mixer_slot == constants.FX_ACTIVATION_STATE_SLOT_INDEX:
-                    #print("__applyParametersToPlugins: constants.FX_ACTIVATION_STATE_SLOT_INDEX mixer channel -" + str(self.__context.main_channel) + \
+                    #print("__apply_parameters_to_plugins: constants.FX_ACTIVATION_STATE_SLOT_INDEX mixer channel -" + str(self.__context.main_channel) + \
                     #", param_id - " + str(param_id) + ", param_value - " + str(param_value))
                     plugins.setParamValue(param_value, param_id, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
                 else:
@@ -199,28 +198,28 @@ class FXPreset(IFXPresetDataProvider):
 
                     plugins.setParamValue(param_value, param_id, self.__context.fx1_channel, mixer_slot, midi.PIM_None, True)
 
-    def __loadMidiMappingsFromPersistency(self):
-        midi_mappings = self.__persistency_item.getMidiMapping()
+    def __load_midi_mappings_from_persistency(self):
+        midi_mappings = self.__persistency_item.get_midi_mapping()
 
         print(f"loading {str(len(midi_mappings))} midi mappings from persistency - {midi_mappings}")
 
         if len(midi_mappings) == 0:
             for fx_parameter in self.__fx_parameters:
-                self.__fx_parameters[fx_parameter].setMidiMapping(MidiMapping())
+                self.__fx_parameters[fx_parameter].set_midi_mapping(MidiMapping())
         else:
             for fx_parameter_id in midi_mappings:
-                self.__fx_parameters[fx_parameter_id].setMidiMapping(MidiMapping.createFromList(midi_mappings[fx_parameter_id]))
+                self.__fx_parameters[fx_parameter_id].set_midi_mapping(MidiMapping.create_from_list(midi_mappings[fx_parameter_id]))
 
-    def __storeMidiMappingsToPersistency(self):
-        midi_mappings = self.getMidiMappingsAsLists()
+    def __store_midi_mappings_to_persistency(self):
+        midi_mappings = self.get_midi_mappings_as_lists()
         print(f"storing {str(len(midi_mappings))} midi mappings from persistency - {midi_mappings}")
-        self.__persistency_item.setMidiMapping(midi_mappings)
+        self.__persistency_item.set_midi_mapping(midi_mappings)
 
-    def __loadData(self):
-        self.__persistency_item.readFromStorage()
+    def __load_data(self):
+        self.__persistency_item.read_from_storage()
 
-    def __saveData(self):
-        self.__persistency_item.writeToStorage()
+    def __save_data(self):
+        self.__persistency_item.write_to_storage()
 
-    def __resetData(self):
-        self.__persistency_item.resetStorage()
+    def __reset_data(self):
+        self.__persistency_item.reset_storage()

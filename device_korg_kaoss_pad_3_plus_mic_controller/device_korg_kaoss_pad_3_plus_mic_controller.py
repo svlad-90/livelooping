@@ -1,9 +1,9 @@
-# name=device_KorgKaossPad3Plus_MicController
-device_name="device_KorgKaossPad3Plus_MicController"
+# name=device_korg_kaoss_pad_3_plus_mic_controller
+device_name="device_korg_kaoss_pad_3_plus_mic_controller"
 print(device_name + ': started')
 
 from input_controller.context import Context
-from input_controller.korg_kaoss_pad_3_plus_input_controller import KorgKaossPad3Plus_InputController
+from input_controller.korg_kaoss_pad_3_plus_input_controller import KorgKaossPad3PlusInputController
 
 SYNTH_MAIN_CHANNEL            = 6
 SYNTH_FX_CHANNEL              = 5
@@ -16,7 +16,7 @@ context = Context(device_name,
                   SYNTH_FX2_CHANNEL,
                   PARAMS_FIRST_STORAGE_TRACK_ID)
 
-mic_controller = KorgKaossPad3Plus_InputController(context)
+mic_controller = KorgKaossPad3PlusInputController(context)
 
 def OnMidiMsg(event):
-    mic_controller.OnMidiMsg(event)
+    mic_controller.on_midi_msg(event)

@@ -5,11 +5,11 @@ Created on Jan 27, 2022
 '''
 
 class IMidiMappingInputClient:
-    def MidiMappingInputDone(self, fx_parameter_number, midi_mapping):
+    def midi_mapping_input_done(self, fx_parameter_number, midi_mapping):
         pass
 
-    def MidiMappingInputCancelled(self):
+    def midi_mapping_input_cancelled(self):
         pass
 
-    def getShiftPressedState(self):
+    def get_shift_pressed_state(self):
         pass

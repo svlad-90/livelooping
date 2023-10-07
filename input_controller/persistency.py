@@ -7,7 +7,7 @@ Created on Jan 24, 2022
 import playlist
 
 from input_controller import constants
-from input_controller.fx_unit import FXUnit
+from input_controller.fx_unit import FxUnit
 
 class PersistencyItem:
     def __init__(self, track_id):
@@ -17,57 +17,57 @@ class PersistencyItem:
 
 
     def init(self):
-        self.readFromStorage()
+        self.read_from_storage()
 
     # plugin parameters
-    def setPluginParameters(self, plugin_parameters):
+    def set_plugin_parameters(self, plugin_parameters):
         self.__data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY] = plugin_parameters
-    def getPluginParameters(self):
+    def get_plugin_parameters(self):
         return self.__data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY]
-    def resetPluginParameters(self):
+    def reset_plugin_parameters(self):
         self.__data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY] = {}
-    def deletePluginParameters(self):
+    def delete_plugin_parameters(self):
         if self.__data.get(constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY) != None:
             del self.__data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY]
-    def isPluginParametersAvailable(self):
+    def is_plugin_parameters_available(self):
         return self.__data.get(constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY) != None
 
     # midi mapping
-    def setMidiMapping(self, midi_mapping):
+    def set_midi_mapping(self, midi_mapping):
         self.__data[constants.PERSISTENCY_MIDI_MAPPING_KEY] = midi_mapping
-    def getMidiMapping(self):
+    def get_midi_mapping(self):
         return self.__data[constants.PERSISTENCY_MIDI_MAPPING_KEY]
-    def resetMidiMapping(self):
+    def reset_midi_mapping(self):
         self.__data[constants.PERSISTENCY_MIDI_MAPPING_KEY] = {}
-    def deleteMidiMapping(self):
+    def deletemidi_mapping(self):
         if self.__data.get(constants.PERSISTENCY_MIDI_MAPPING_KEY) != None:
             del self.__data[constants.PERSISTENCY_MIDI_MAPPING_KEY]
-    def isMidiMappingAvailable(self):
+    def is_midi_mapping_available(self):
         return self.__data.get(constants.PERSISTENCY_MIDI_MAPPING_KEY) != None
 
     # active fx unit
-    def setActiveFxUnit(self, active_fx_unit):
+    def set_active_fx_unit(self, active_fx_unit):
         self.__data[constants.PERSISTENCY_ACTIVE_FX_UNIT_KEY] = active_fx_unit
-    def getActiveFxUnit(self):
+    def get_active_fx_unit(self):
         return self.__data[constants.PERSISTENCY_ACTIVE_FX_UNIT_KEY]
-    def resetActiveFxUnit(self):
-        self.__data[constants.PERSISTENCY_ACTIVE_FX_UNIT_KEY] = FXUnit.FX_UNIT_CUSTOM
-    def deleteActiveFxUnit(self):
+    def reset_active_fx_unit(self):
+        self.__data[constants.PERSISTENCY_ACTIVE_FX_UNIT_KEY] = FxUnit.FX_UNIT_CUSTOM
+    def delete_active_fx_unit(self):
         if self.__data.get(constants.PERSISTENCY_ACTIVE_FX_UNIT_KEY) != None:
             del self.__data[constants.PERSISTENCY_ACTIVE_FX_UNIT_KEY]
-    def isActiveFxUnitAvailable(self):
+    def is_active_fx_unit_available(self):
         return self.__data.get(constants.PERSISTENCY_MIDI_MAPPING_KEY) != None
 
     # general operations
-    def resetStorage(self):
-        self.resetData()
+    def reset_storage(self):
+        self.reset_data()
         playlist.setTrackName(self.__track_id,  "")
 
-    def writeToStorage(self):
+    def write_to_storage(self):
         self.__data[constants.PERSISTENCY_VERSION_KEY] = constants.PERSISTENCY_CURRENT_VERSION
         playlist.setTrackName(self.__track_id,  str(self.__data))
 
-    def readFromStorage(self):
+    def read_from_storage(self):
         data_str = playlist.getTrackName(self.__track_id)
 
         if data_str:
@@ -79,24 +79,24 @@ class PersistencyItem:
                 if found_version != None:
                     # new era
                     if found_version != constants.PERSISTENCY_CURRENT_VERSION:
-                        self.handleVersionMismatch(found_version, constants.PERSISTENCY_CURRENT_VERSION, self.__data)
+                        self.handle_version_mismatch(found_version, constants.PERSISTENCY_CURRENT_VERSION, self.__data)
                     self.__data = data
                     pass
                 else:
                     # reset all fields, so that they exist as empty ones
-                    self.resetData()
+                    self.reset_data()
                     # old era. Read data as related to plugins
                     self.__data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY] = data
                     # we need to save data in new format
-                    self.writeToStorage()
+                    self.write_to_storage()
             except Exception as e:
-                self.resetData()
+                self.reset_data()
 
-    def resetData(self):
-        self.resetPluginParameters()
-        self.resetMidiMapping()
-        self.resetActiveFxUnit()
+    def reset_data(self):
+        self.reset_plugin_parameters()
+        self.reset_midi_mapping()
+        self.reset_active_fx_unit()
         self.__data[constants.PERSISTENCY_VERSION_KEY] = constants.PERSISTENCY_CURRENT_VERSION
 
-    def handleVersionMismatch(self, old_version, new_version, data):
+    def handle_version_mismatch(self, old_version, new_version, data):
         pass

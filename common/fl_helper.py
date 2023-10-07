@@ -3,7 +3,7 @@ import plugins
 MIDI_MAX_VALUE = 127
 MAX_VOLUME_LEVEL_VALUE   = 0.8
 
-def printAllPluginParameters(mixer_track, slot):
+def print_all_plugin_parameters(mixer_track, slot):
 
     number_of_params = plugins.getParamCount(mixer_track, slot, True)
     plugin_name = plugins.getPluginName(mixer_track, slot, True)
@@ -19,17 +19,17 @@ class PluginParametersCache:
     __cache = {}
 
     @staticmethod
-    def findParameterByName(mixer_channel, parameter_name, slot_index):
+    def find_parameter_by_name(mixer_channel, parameter_name, slot_index):
         plugin_key = PluginParametersCache.CachePluginKey(mixer_channel, slot_index)
 
         found_item = PluginParametersCache.__cache.get(plugin_key)
 
         if found_item != None:
-            return found_item.getPluginParameterId(parameter_name)
+            return found_item.get_plugin_parameter_id(parameter_name)
         else:
-            cached_plugin_data_item = PluginParametersCache.CachedPluginDataItem(mixer_channel, slot_index)
-            PluginParametersCache.__cache[plugin_key] = cached_plugin_data_item
-            return cached_plugin_data_item.getPluginParameterId(parameter_name)
+            CachedPluginDataItem = PluginParametersCache.CachedPluginDataItem(mixer_channel, slot_index)
+            PluginParametersCache.__cache[plugin_key] = CachedPluginDataItem
+            return CachedPluginDataItem.get_plugin_parameter_id(parameter_name)
 
     class CachePluginKey:
         def __init__(self, mixer_track, slot):
@@ -49,7 +49,7 @@ class PluginParametersCache:
             self.__fetched_up_to = 0
             self.__fetched_parameter_ids = {}
 
-        def __cacheAndGetPluginParmaters(self, parameter_name):
+        def __cache_and_get_plugin_parmaters(self, parameter_name):
             number_of_parameters = plugins.getParamCount(self.__mixer_channel, self.__slot_index, True)
 
             for parameter_id in range(self.__fetched_up_to, number_of_parameters):
@@ -60,7 +60,7 @@ class PluginParametersCache:
                     return parameter_id
             raise Exception("Parameter id for '" + parameter_name + "' was not found")
 
-        def getPluginParameterId(self, parameter_name):
+        def get_plugin_parameter_id(self, parameter_name):
             found_plugin_id = self.__fetched_parameter_ids.get(parameter_name)
 
             result = None
@@ -68,9 +68,9 @@ class PluginParametersCache:
             if found_plugin_id != None:
                 result = found_plugin_id
             else:
-                result = self.__cacheAndGetPluginParmaters(parameter_name)
+                result = self.__cache_and_get_plugin_parmaters(parameter_name)
 
             return result
 
-def findParameterByName(mixer_channel, parameter_name, slot_index):
-    return PluginParametersCache.findParameterByName(mixer_channel, parameter_name, slot_index)
+def find_parameter_by_name(mixer_channel, parameter_name, slot_index):
+    return PluginParametersCache.find_parameter_by_name(mixer_channel, parameter_name, slot_index)

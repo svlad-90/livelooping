@@ -1,5 +1,5 @@
-# name=device_KorgKaossPad3Plus_LooperMux
-device_name="device_KorgKaossPad3Plus_LooperMux"
+# name=device_korg_kaoss_pad_3_plus_looper_mux
+device_name="device_korg_kaoss_pad_3_plus_looper_mux"
 print(device_name + ': started')
 
 # internal imports
@@ -11,4 +11,4 @@ context = Context(device_name)
 looper_mux = KorgKaossPad3PlusLooperMux(context)
 
 def OnMidiMsg(event):
-    looper_mux.OnMidiMsg(event)
+    looper_mux.on_midi_msg(event)

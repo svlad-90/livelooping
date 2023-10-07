@@ -10,75 +10,74 @@ import plugins
 
 from looper_mux.resample_mode import ResampleMode
 from looper_mux import constants
-from looper_mux.track import Track
 from common import fl_helper
 
 class View:
-    def setShiftPressedState(self, shift_pressed):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "Shift", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def set_shift_pressed_state(self, shift_pressed):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Shift", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(shift_pressed, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        self.resetToggleFlags()
+        self.reset_toggle_flags()
 
-    def setLooperVolume(self, looper_volume):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "Volume", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def set_looper_volume(self, looper_volume):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Volume", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(looper_volume, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        self.resetToggleFlags()
+        self.reset_toggle_flags()
 
-    def setLooperActivationStatus(self, looper_id, looper_volume):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "Looper_" + str(looper_id + 1) + "_AS", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def set_looper_activation_status(self, looper_id, looper_volume):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Looper_" + str(looper_id + 1) + "_AS", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(0.0 if looper_volume == 0.0 else 1.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-    def setDropIntencity(self, drop_intencity):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "Drop FX", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def set_drop_intencity(self, drop_intencity):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Drop FX", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(drop_intencity, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        self.resetToggleFlags()
+        self.reset_toggle_flags()
 
-    def selectLooper(self, selected_looper):
+    def select_looper(self, selected_looper):
 
         for i in range(4):
             value = 0.0
             if i == selected_looper:
                 value = 1.0
 
-            parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "Looper " + str(i + 1), constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+            parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Looper " + str(i + 1), constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
             plugins.setParamValue(value, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-        self.resetToggleFlags()
+        self.reset_toggle_flags()
 
     def clear(self):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "Clear all", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Clear all", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(1.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-    def __clearOff(self):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "Clear all", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def __clear_off(self):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Clear all", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(0.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-    def __clearTracksOff(self):
+    def __clear_tracks_off(self):
         for i in range(constants.Track_4 + 1):
-            parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T" + str(i + 1) + "_Clear", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+            parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(i + 1) + "_Clear", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
             plugins.setParamValue(0.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-    def setTrackVolume(self, track_index, track_volume):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T" + str(track_index + 1) + "_Volume", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def set_track_volume(self, track_index, track_volume):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_index + 1) + "_Volume", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(track_volume, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        self.resetToggleFlags()
+        self.reset_toggle_flags()
 
-    def setPlay(self, value):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "Play", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def _p(self, value):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Play", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(value, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        self.resetToggleFlags()
+        self.reset_toggle_flags()
 
-    def setInputSideChainLevel(self, track_id, sidechain_level):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "_Sidechain", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def set_input_side_chain_level(self, track_id, sidechain_level):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "_Sidechain", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sidechain_level, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        self.resetToggleFlags()
+        self.reset_toggle_flags()
 
-    def setLooperSideChainLevel(self, track_id, sidechain_level):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "_L_S_CH", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def set_looper_side_chain_level(self, track_id, sidechain_level):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "_L_S_CH", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sidechain_level, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        self.resetToggleFlags()
+        self.reset_toggle_flags()
 
-    def setResampleMode(self, resample_mode):
+    def set_resample_mode(self, resample_mode):
 
         resample_looper = 0.0
         resample_all_loopers = 0.0
@@ -93,44 +92,44 @@ class View:
             resample_looper = 0.0
             resample_all_loopers = 1.0
 
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "Resample selected looper", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Resample selected looper", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(resample_looper, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "Resample all loopers", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Resample all loopers", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(resample_all_loopers, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-        self.resetToggleFlags()
+        self.reset_toggle_flags()
 
-    def setTrackRecordingState(self, track_id, recording_state):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "_Recording", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def set_track_recording_state(self, track_id, recording_state):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "_Recording", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(recording_state, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-        self.resetToggleFlags()
+        self.reset_toggle_flags()
 
-    def setTrackResamplingState(self, track_id, recording_state):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "_Resampling", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def set_track_resampling_state(self, track_id, recording_state):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "_Resampling", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(recording_state, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-        self.resetToggleFlags()
+        self.reset_toggle_flags()
 
-    def setTrackClearState(self, track_id, recording_state):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "_Clear", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def set_track_clear_state(self, track_id, recording_state):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "_Clear", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(recording_state, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-    def setTrackPlaybackState(self, track_id, recording_state):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "_Playback", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def set_track_playback_state(self, track_id, recording_state):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "_Playback", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(recording_state, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-        self.resetToggleFlags()
+        self.reset_toggle_flags()
 
-    def resetToggleFlags(self):
-        self.__clearOff()
-        self.__clearTracksOff()
+    def reset_toggle_flags(self):
+        self.__clear_off()
+        self.__clear_tracks_off()
 
-    def updateSampleLength(self, sample_length):
+    def update_sample_length(self, sample_length):
 
         for i in range(8):
             i_sample_length = int(math.pow(2, i))
-            parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "Length_" + str(i_sample_length), constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+            parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Length_" + str(i_sample_length), constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
             value = 0
 
@@ -139,44 +138,44 @@ class View:
 
             plugins.setParamValue(value, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-    def setTempo(self, tempo):
+    def set_tempo(self, tempo):
         tempo_hundred = int(tempo) // 100
         tempo_dozens = (tempo % 100) // 10
         tempo_units = (tempo % 10)
 
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "TH", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "TH", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(tempo_hundred / 10, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "TD", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "TD", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(tempo_dozens / 10, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "TU", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "TU", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(tempo_units / 10, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-    def setTrackSampleLength(self, track_id, sample_length):
+    def set_track_sample_length(self, track_id, sample_length):
         sample_length_hundred = int(sample_length) // 100
         sample_length_dozens = (sample_length % 100) // 10
         sample_length_units = (sample_length % 10)
 
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "H", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "H", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sample_length_hundred / 10, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "D", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "D", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sample_length_dozens / 10, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "U", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "U", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sample_length_units / 10, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-    def setTurnadoDictatorLevel(self, turnado_dictator_level):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T_D", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def set_turnado_dictator_level(self, turnado_dictator_level):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T_D", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(turnado_dictator_level, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-    def setTurnadoDryWetLevel(self, turnado_dry_wet_level):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T_DW", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def set_turnado_dry_wet_level(self, turnado_dry_wet_level):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T_DW", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(turnado_dry_wet_level, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-    def switchToNextTurnadoPreset(self):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T_Next_Preset", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def switch_to_next_turnado_preset(self):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T_Next_Preset", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(1.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
         plugins.setParamValue(0.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-    def switchToPrevTurnadoPreset(self):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "T_Previous_Preset", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def switch_to_prev_turnado_preset(self):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T_Previous_Preset", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(1.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
         plugins.setParamValue(0.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)

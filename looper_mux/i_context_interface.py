@@ -5,8 +5,8 @@ Created on Feb 7, 2022
 '''
 
 class IContextInterface:
-    def getSampleLength(self) -> int:
+    def get_sample_length(self) -> int:
         pass
 
-    def getDeviceName(self) -> str:
+    def get_device_name(self) -> str:
         pass

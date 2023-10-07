@@ -45,7 +45,7 @@ class MidiMappingInputDialog:
             self.__state = MidiMappingInputDialog.STATE_SELECT_FX_PARAMETER_NUMBER
             print(MSG_PREFIX + " >>> Please, enter fx parameter number.")
 
-    def OnMidiMsg(self, event):
+    def on_midi_msg(self, event):
 
         if self.__state == MidiMappingInputDialog.STATE_SELECT_FX_PARAMETER_NUMBER:
             if event.data1 == MIDI_CC_1 or\
@@ -66,7 +66,7 @@ class MidiMappingInputDialog:
                 print(MSG_PREFIX + " >>> Current cursor position is - #" + str(self.__selected_plugin_number) + f" '{plugin_name}'")
             elif event.data1 == MIDI_CC_EXIT:
                 print(MSG_PREFIX + " >>> Operation was cancelled.")
-                self.__midi_mapping_input_client.MidiMappingInputCancelled()
+                self.__midi_mapping_input_client.midi_mapping_input_cancelled()
                 self.__state = MidiMappingInputDialog.STATE_FINAL
         elif self.__state == MidiMappingInputDialog.STATE_SELECT_PLUGIN_NUMBER:
             if event.data1 == MIDI_CC_NEXT_ITEM and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
@@ -99,10 +99,10 @@ class MidiMappingInputDialog:
             elif event.data1 == MIDI_CC_EXIT and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
                 print(MSG_PREFIX + " >>> Operation was cancelled.")
                 self.__state = MidiMappingInputDialog.STATE_FINAL
-                self.__midi_mapping_input_client.MidiMappingInputCancelled()
-            elif event.data1 == MIDI_CC_6 and self.__midi_mapping_input_client.getShiftPressedState():
+                self.__midi_mapping_input_client.midi_mapping_input_cancelled()
+            elif event.data1 == MIDI_CC_6 and self.__midi_mapping_input_client.get_shift_pressed_state():
                 print(MSG_PREFIX + " >>> Mapping was deleted.")
-                self.__midi_mapping_input_client.MidiMappingInputDone(self.__selected_fx_parameter_number, MidiMapping())
+                self.__midi_mapping_input_client.midi_mapping_input_done(self.__selected_fx_parameter_number, midi_mapping())
         elif self.__state == MidiMappingInputDialog.STATE_SELECT_PLUGIN_PARAMETER_ID:
             if event.data1 == MIDI_CC_NEXT_ITEM and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
                 param_count = plugins.getParamCount(self.__plugins_mixer_channel, self.__selected_plugin_number, True)
@@ -125,14 +125,14 @@ class MidiMappingInputDialog:
             elif event.data1 == MIDI_CC_SELECT and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
                 parameter_name = plugins.getParamName(self.__selected_parameter_id, self.__plugins_mixer_channel, self.__selected_plugin_number, True)
                 print(MSG_PREFIX + " >>> Parameter #" + str(self.__selected_parameter_id) + f" '{parameter_name}' was selected")
-                midi_mapping = MidiMapping(self.__selected_plugin_number,
+                midi_mapping = midi_mapping(self.__selected_plugin_number,
                                            self.__selected_parameter_id)
-                self.__midi_mapping_input_client.MidiMappingInputDone(self.__selected_fx_parameter_number, midi_mapping)
+                self.__midi_mapping_input_client.midi_mapping_input_done(self.__selected_fx_parameter_number, midi_mapping)
                 self.__state = MidiMappingInputDialog.STATE_FINAL
             elif event.data1 == MIDI_CC_EXIT and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
                 print(MSG_PREFIX + " >>> Operation was cancelled.")
-                self.__midi_mapping_input_client.MidiMappingInputCancelled()
+                self.__midi_mapping_input_client.midi_mapping_input_cancelled()
                 self.__state = MidiMappingInputDialog.STATE_FINAL
-            elif event.data1 == MIDI_CC_6 and self.__midi_mapping_input_client.getShiftPressedState():
+            elif event.data1 == MIDI_CC_6 and self.__midi_mapping_input_client.get_shift_pressed_state():
                 print(MSG_PREFIX + " >>> Mapping was deleted.")
-                self.__midi_mapping_input_client.MidiMappingInputDone(self.__selected_fx_parameter_number, MidiMapping())
+                self.__midi_mapping_input_client.midi_mapping_input_done(self.__selected_fx_parameter_number, midi_mapping())

@@ -4,6 +4,6 @@ Created on Jan 24, 2022
 @author: Dream Machines
 '''
 
-class IFXPresetDataProvider:
-    def getActiveFXUnit(self):
+class IFxPresetDataProvider:
+    def get_active_fx_unit(self):
         pass

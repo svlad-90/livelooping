@@ -18,7 +18,6 @@ from looper_mux.looper import Looper
 from looper_mux import constants
 from looper_mux.resample_mode import ResampleMode
 from looper_mux.sample_length import SampleLength
-from looper_mux.track import Track
 from looper_mux.view import View
 from common import fl_helper
 
@@ -47,146 +46,146 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         self.__resample_mode = ResampleMode.NONE
         self.__buttons_last_press_time = {}
 
-    def onInitScript(self):
+    def on_init_script(self):
 
         if False == self.__initialized:
-            print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.onInitScript.__name__)
+            print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.on_init_script.__name__)
 
             try:
                 for looper_id in self.__loopers:
-                    self.__loopers[looper_id].onInitScript()
+                    self.__loopers[looper_id].on_init_script()
                 mixer.setRouteTo(constants.MIC_ROUTE_CHANNEL, constants.MASTER_FX_1_CHANNEL, 1)
                 mixer.setRouteTo(constants.SYNTH_ROUTE_CHANNEL, constants.MASTER_FX_1_CHANNEL, 1)
                 self.__initialized = True
                 self.clear()
-                self.__view.setTempo(mixer.getCurrentTempo() / 1000.0)
-                self.setSampleLength(SampleLength.LENGTH_1)
-                self.setResampleMode(ResampleMode.NONE)
+                self.__view.set_tempo(mixer.getCurrentTempo() / 1000.0)
+                self.set_sample_length(SampleLength.LENGTH_1)
+                self.set_resample_mode(ResampleMode.NONE)
             except Exception as e:
-                print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.onInitScript.__name__ + ": failed to initialize the script.")
+                print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.on_init_script.__name__ + ": failed to initialize the script.")
                 print(e)
 
-    # ContextInterface Implementation
-    def getSampleLength(self) -> int:
-        return self.__selectedSampleLength
+    # context_interface Implementation
+    def get_sample_length(self) -> int:
+        return self.__selected_sample_length
 
-    def getDeviceName(self) -> str:
+    def get_device_name(self) -> str:
         return self.__context.device_name
-    # ContextInterface implementation end
+    # context_interface implementation end
 
-    def isPlaying(self):
+    def is_playing(self):
         return transport.isPlaying()
 
-    def playStop(self):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.playStop.__name__)
+    def play_stop(self):
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.play_stop.__name__)
 
         self.clear()
 
         if transport.isPlaying():
             transport.stop()
-            self.__view.setPlay(False)
+            self.__view._p(False)
         else:
             transport.start()
-            self.__view.setPlay(True)
+            self.__view._p(True)
 
-    def setTempo(self, tempo):
-        targetTempo = tempo - tempo % 50
-        currentTempo = mixer.getCurrentTempo() / 100.0
-        if math.fabs( int(currentTempo/10) - int(targetTempo/10) ) >= constants.TEMPO_JOG_ROTATION_THRESHOLD:
-            jogRotation = int( targetTempo - currentTempo )
-            print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.setTempo.__name__ + ": target tempo: " + str(targetTempo) + ", current tempo: " + str(currentTempo) + ", jog rotation: " + str(jogRotation))
-            transport.globalTransport( 105, jogRotation )
-            self.__view.setTempo(targetTempo / 10.0)
+    def set_tempo(self, tempo):
+        target_tempo = tempo - tempo % 50
+        current_tempo = mixer.getCurrentTempo() / 100.0
+        if math.fabs( int(current_tempo/10) - int(target_tempo/10) ) >= constants.TEMPO_JOG_ROTATION_THRESHOLD:
+            jog_rotation = int( target_tempo - current_tempo )
+            print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.set_tempo.__name__ + ": target tempo: " + str(target_tempo) + ", current tempo: " + str(current_tempo) + ", jog rotation: " + str(jog_rotation))
+            transport.globalTransport( 105, jog_rotation )
+            self.__view.set_tempo(target_tempo / 10.0)
 
-    def setShiftPressedState(self, shift_pressed):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.setShiftPressedState.__name__ + ": shift pressed - " + str(shift_pressed))
+    def set_shift_pressed_state(self, shift_pressed):
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.set_shift_pressed_state.__name__ + ": shift pressed - " + str(shift_pressed))
 
-        self.__view.setShiftPressedState(shift_pressed)
+        self.__view.set_shift_pressed_state(shift_pressed)
 
         self.__shift_pressed = shift_pressed
 
         if(True == shift_pressed):
-            self.actionOnDoubleClick(constants.MIDI_CC_SHIFT, self.__loopers[self.__selected_looper].randomizeTurnado)
+            self.action_on_double_click(constants.MIDI_CC_SHIFT, self.__loopers[self.__selected_looper].randomize_turnado)
 
-    def switchToNextTurnadoPreset(self):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.switchToNextTurnadoPreset.__name__)
-        self.__loopers[self.__selected_looper].switchToNextTurnadoPreset()
+    def switch_to_next_turnado_preset(self):
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.switch_to_next_turnado_preset.__name__)
+        self.__loopers[self.__selected_looper].switch_to_next_turnado_preset()
 
-        self.__view.switchToNextTurnadoPreset()
+        self.__view.switch_to_next_turnado_preset()
 
-    def switchToPrevTurnadoPreset(self):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.switchToPrevTurnadoPreset.__name__)
-        self.__loopers[self.__selected_looper].switchToPrevTurnadoPreset()
+    def switch_to_prev_turnado_preset(self):
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.switch_to_prev_turnado_preset.__name__)
+        self.__loopers[self.__selected_looper].switch_to_prev_turnado_preset()
 
-    def getShiftPressedState(self):
+    def get_shift_pressed_state(self):
         return self.__shift_pressed
 
-    def addPressedSamplerButton(self, pressed_sampler_button):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.addPressedSamplerButton.__name__ + ": added sampler button - " + str(pressed_sampler_button))
+    def add_pressed_sampler_button(self, pressed_sampler_button):
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.add_pressed_sampler_button.__name__ + ": added sampler button - " + str(pressed_sampler_button))
         self.__pressed_sampler_buttons.add(pressed_sampler_button)
         self.__last_pressed_sampler_button = pressed_sampler_button
 
-    def removePressedSamplerButton(self, released_sampler_button):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.addPressedSamplerButton.__name__ + ": removed sampler button - " + str(released_sampler_button))
+    def removepressed_sampler_button(self, released_sampler_button):
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.add_pressed_sampler_button.__name__ + ": removed sampler button - " + str(released_sampler_button))
         self.__pressed_sampler_buttons.remove(released_sampler_button)
 
         if self.__last_pressed_sampler_button == released_sampler_button:
             self.__last_pressed_sampler_button = PressedSamplerButton.NONE
 
-    def selectLooper(self, selected_looper):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.selectLooper.__name__ + ": selected looper - " + str(selected_looper))
+    def select_looper(self, selected_looper):
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.select_looper.__name__ + ": selected looper - " + str(selected_looper))
 
         if selected_looper != self.__selected_looper:
 
-            self.__loopers[self.__selected_looper].stopAllRecordings()
+            self.__loopers[self.__selected_looper].stop_all_recordings()
 
             self.__selected_looper = selected_looper
-            self.__loopers[self.__selected_looper].updateTracksStats()
-            self.__loopers[self.__selected_looper].updateLooperStats()
-            self.__view.selectLooper(selected_looper)
+            self.__loopers[self.__selected_looper].update_tracks_stats()
+            self.__loopers[self.__selected_looper].update_looper_stats()
+            self.__view.select_looper(selected_looper)
 
-    def setLooperVolume(self, looper_volume):
-        self.__loopers.get(self.__selected_looper).setLooperVolume(looper_volume)
+    def set_looper_volume(self, looper_volume):
+        self.__loopers.get(self.__selected_looper).set_looper_volume(looper_volume)
 
-    def setTrackVolume(self, track_index, track_volume):
-        self.__loopers.get(self.__selected_looper).setTrackVolume(track_index, track_volume)
+    def set_track_volume(self, track_index, track_volume):
+        self.__loopers.get(self.__selected_looper).set_track_volume(track_index, track_volume)
 
-    def setSampleLength(self, sample_length):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.setSampleLength.__name__ + ": selected sample length - " + str(sample_length))
-        self.__selectedSampleLength = sample_length
-        self.__view.updateSampleLength(sample_length)
+    def set_sample_length(self, sample_length):
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.set_sample_length.__name__ + ": selected sample length - " + str(sample_length))
+        self.__selected_sample_length = sample_length
+        self.__view.update_sample_length(sample_length)
 
-        #printAllPluginParameters(17, 9)
+        #print_all_plugin_parameters(17, 9)
 
     def clear(self):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.clear.__name__)
         for looper_id in self.__loopers:
-            self.__loopers[looper_id].clearLooper()
-        self.selectLooper(constants.Looper_1)
-        self.setLooperVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
-        self.setDropIntencity(0.0)
-        self.setSampleLength(SampleLength.LENGTH_1)
-        self.setResampleMode(ResampleMode.NONE)
+            self.__loopers[looper_id].clear_looper()
+        self.select_looper(constants.Looper_1)
+        self.set_looper_volume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
+        self.set_drop_intencity(0.0)
+        self.set_sample_length(SampleLength.LENGTH_1)
+        self.set_resample_mode(ResampleMode.NONE)
         self.__view.clear()
 
-    def clearCurrentLooper(self):
-        self.__loopers[self.__selected_looper].clearLooper()
+    def clear_current_looper(self):
+        self.__loopers[self.__selected_looper].clear_looper()
 
-    def clearTrack(self, track_id):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.clearTrack.__name__ + ": track - " + str(track_id))
-        self.__loopers[self.__selected_looper].clearTrack(track_id)
+    def clear_track(self, track_id):
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.clear_track.__name__ + ": track - " + str(track_id))
+        self.__loopers[self.__selected_looper].clear_track(track_id)
 
-    def setMasterRoutingLevel(self, routing_level):
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "MasterFX1M", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+    def set_master_routing_level(self, routing_level):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "MasterFX1M", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(routing_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        parameter_id = fl_helper.findParameterByName(constants.MASTER_CHANNEL, "MasterFX1S", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "MasterFX1S", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(routing_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-    def changeRecordingState(self, selected_track_id):
-            print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.changeRecordingState.__name__ + ": track - " + str(selected_track_id))
-            self.__changeRecordingStateTo(selected_track_id, not self.__loopers[self.__selected_looper].isTrackRecordingInProgress(selected_track_id))
+    def change_recording_state(self, selected_track_id):
+            print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.change_recording_state.__name__ + ": track - " + str(selected_track_id))
+            self.__change_recording_state_to(selected_track_id, not self.__loopers[self.__selected_looper].is_track_recording_in_progress(selected_track_id))
 
-    def actionOnDoubleClick(self, pressed_button, action):
+    def action_on_double_click(self, pressed_button, action):
         pressed_time = time.time()
 
         if not pressed_button in self.__buttons_last_press_time.keys():
@@ -201,255 +200,255 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.__buttons_last_press_time.clear()
             self.__buttons_last_press_time[pressed_button] = pressed_time
 
-    def setInputSideChainLevel(self, track_id, sidechain_level):
-        self.__loopers[constants.Looper_1].setInputSideChainLevel(track_id, sidechain_level)
+    def set_input_side_chain_level(self, track_id, sidechain_level):
+        self.__loopers[constants.Looper_1].set_input_side_chain_level(track_id, sidechain_level)
 
-    def setLooperSideChainLevel(self, track_id, sidechain_level):
+    def set_looper_side_chain_level(self, track_id, sidechain_level):
         if self.__selected_looper != constants.Looper_1:
-            self.__loopers[self.__selected_looper].setLooperSideChainLevel(track_id, sidechain_level)
+            self.__loopers[self.__selected_looper].set_looper_side_chain_level(track_id, sidechain_level)
 
-    def setDropIntencity(self, drop_intencity):
+    def set_drop_intencity(self, drop_intencity):
         plugins.setParamValue(drop_intencity, constants.ENDLESS_SMILE_PLUGIN_INTENSITY_PARAM_INDEX, constants.LOOPER_ALL_CHANNEL, constants.LOOPER_ALL_ENDLESS_SMILE_SLOT_INDEX, midi.PIM_None, True)
-        self.__view.setDropIntencity(drop_intencity)
+        self.__view.set_drop_intencity(drop_intencity)
 
-    def setResampleMode(self, resample_mode):
+    def set_resample_mode(self, resample_mode):
 
-        if resample_mode == self.getResampleMode():
+        if resample_mode == self.get_resample_mode():
             resample_mode = ResampleMode.NONE
 
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.setResampleMode.__name__ + ": to - " + str(resample_mode))
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.set_resample_mode.__name__ + ": to - " + str(resample_mode))
         self.__resample_mode = resample_mode
 
-        self.__view.setResampleMode(resample_mode)
+        self.__view.set_resample_mode(resample_mode)
 
-    def getResampleMode(self):
+    def get_resample_mode(self):
         return self.__resample_mode
 
-    def setTurnadoDictatorLevel(self, turnado_dictator_level):
-        self.__loopers[self.__selected_looper].setTurnadoDictatorLevel(turnado_dictator_level)
+    def set_turnado_dictator_level(self, turnado_dictator_level):
+        self.__loopers[self.__selected_looper].set_turnado_dictator_level(turnado_dictator_level)
 
-    def setTurnadoDryWetLevel(self, turnado_dry_wet_level):
-        self.__loopers[self.__selected_looper].setTurnadoDryWetLevel(turnado_dry_wet_level)
+    def set_turnado_dry_wet_level(self, turnado_dry_wet_level):
+        self.__loopers[self.__selected_looper].set_turnado_dry_wet_level(turnado_dry_wet_level)
 
     def drop(self):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.drop.__name__)
-        self.setDropIntencity(0)
-        self.__loopers[constants.Looper_1].setTrackVolume(constants.Track_1, fl_helper.MAX_VOLUME_LEVEL_VALUE)
-        self.__loopers[constants.Looper_1].setTrackVolume(constants.Track_2, fl_helper.MAX_VOLUME_LEVEL_VALUE)
-        self.__loopers[constants.Looper_1].setTrackVolume(constants.Track_3, fl_helper.MAX_VOLUME_LEVEL_VALUE)
-        self.__loopers[constants.Looper_1].setTrackVolume(constants.Track_4, fl_helper.MAX_VOLUME_LEVEL_VALUE)
-        self.__loopers[constants.Looper_1].setLooperVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
-        self.__loopers[constants.Looper_1].setTurnadoDictatorLevel(0.0)
-        self.__loopers[constants.Looper_1].setTurnadoDryWetLevel(constants.DEFAULT_TURNADO_DRY_WET_LEVEL)
+        self.set_drop_intencity(0)
+        self.__loopers[constants.Looper_1].set_track_volume(constants.Track_1, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+        self.__loopers[constants.Looper_1].set_track_volume(constants.Track_2, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+        self.__loopers[constants.Looper_1].set_track_volume(constants.Track_3, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+        self.__loopers[constants.Looper_1].set_track_volume(constants.Track_4, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+        self.__loopers[constants.Looper_1].set_looper_volume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
+        self.__loopers[constants.Looper_1].set_turnado_dictator_level(0.0)
+        self.__loopers[constants.Looper_1].set_turnado_dry_wet_level(constants.DEFAULT_TURNADO_DRY_WET_LEVEL)
 
-    def turnTrackOnOff(self, track_id):
-        if 0 != self.__loopers[self.__selected_looper].getTrackVolume(track_id):
-            self.__loopers[self.__selected_looper].setTrackVolume(track_id, 0.0)
+    def turn_track_on_off(self, track_id):
+        if 0 != self.__loopers[self.__selected_looper].get_track_volume(track_id):
+            self.__loopers[self.__selected_looper].set_track_volume(track_id, 0.0)
         else:
-            self.__loopers[self.__selected_looper].setTrackVolume(track_id, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+            self.__loopers[self.__selected_looper].set_track_volume(track_id, fl_helper.MAX_VOLUME_LEVEL_VALUE)
 
-    def turnLooperOnOff(self, looper_id):
+    def turn_looper_on_off(self, looper_id):
 
         update_view = looper_id == self.__selected_looper
 
-        if 0 != self.__loopers[looper_id].getLooperVolume():
-            self.__loopers[looper_id].setLooperVolume(0.0, not update_view)
+        if 0 != self.__loopers[looper_id].get_looper_volume():
+            self.__loopers[looper_id].set_looper_volume(0.0, not update_view)
         else:
-            self.__loopers[looper_id].setLooperVolume(fl_helper.MAX_VOLUME_LEVEL_VALUE, not update_view)
+            self.__loopers[looper_id].set_looper_volume(fl_helper.MAX_VOLUME_LEVEL_VALUE, not update_view)
 
-    def __changeRecordingStateTo(self, selected_track_id, recording_state):
+    def __change_recording_state_to(self, selected_track_id, recording_state):
         if recording_state:
-            self.__startRecordingTrack(selected_track_id)
+            self.__start_recording_track(selected_track_id)
 
-            for track_id in self.__loopers[self.__selected_looper].getTracks():
+            for track_id in self.__loopers[self.__selected_looper].get_tracks():
                 if track_id != selected_track_id:
-                    self.__stopRecordingTrack(track_id)
+                    self.__stop_recording_track(track_id)
 
-            self.setMasterRoutingLevel(0)
+            self.set_master_routing_level(0)
 
         else:
-            self.__stopRecordingTrack(selected_track_id)
-            self.setMasterRoutingLevel(fl_helper.MAX_VOLUME_LEVEL_VALUE)
+            self.__stop_recording_track(selected_track_id)
+            self.set_master_routing_level(fl_helper.MAX_VOLUME_LEVEL_VALUE)
 
-    def __startRecordingTrack(self, selected_track_id):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.__startRecordingTrack.__name__ + ": track - " + str(selected_track_id) + ", resample mode - " + str(self.getResampleMode()))
-        self.__loopers[self.__selected_looper].startRecordingTrack(selected_track_id, self.__selectedSampleLength, self.getResampleMode())
+    def __start_recording_track(self, selected_track_id):
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.__start_recording_track.__name__ + ": track - " + str(selected_track_id) + ", resample mode - " + str(self.get_resample_mode()))
+        self.__loopers[self.__selected_looper].start_recording_track(selected_track_id, self.__selected_sample_length, self.get_resample_mode())
 
         for looper_id in self.__loopers:
-            for track_id in self.__loopers[looper_id].getTracks():
+            for track_id in self.__loopers[looper_id].get_tracks():
                 if looper_id == self.__selected_looper:
                     if track_id == selected_track_id:
-                        self.__loopers[looper_id].getTrack(track_id).setRoutingLevel(fl_helper.MAX_VOLUME_LEVEL_VALUE)
+                        self.__loopers[looper_id].get_track(track_id).set_routing_level(fl_helper.MAX_VOLUME_LEVEL_VALUE)
                     else:
-                        self.__loopers[looper_id].getTrack(track_id).setRoutingLevel(0.0)
+                        self.__loopers[looper_id].get_track(track_id).set_routing_level(0.0)
                 else:
-                    self.__loopers[looper_id].getTrack(track_id).setRoutingLevel(0.0)
+                    self.__loopers[looper_id].get_track(track_id).set_routing_level(0.0)
 
-    def __stopRecordingTrack(self, track_id):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.__stopRecordingTrack.__name__ + ": track - " + str(track_id))
+    def __stop_recording_track(self, track_id):
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.__stop_recording_track.__name__ + ": track - " + str(track_id))
 
-        if self.__loopers[self.__selected_looper].getResampleMode(track_id) == ResampleMode.FROM_ALL_LOOPERS_TO_TRACK:
+        if self.__loopers[self.__selected_looper].get_resample_mode(track_id) == ResampleMode.FROM_ALL_LOOPERS_TO_TRACK:
             # clear all tracks of all loopers, except the one for which recording is over
             for looper_id in self.__loopers:
-                for track_id_it in self.__loopers[looper_id].getTracks():
+                for track_id_it in self.__loopers[looper_id].get_tracks():
                     if ( looper_id != self.__selected_looper or track_id_it != track_id ):
-                        self.__loopers[looper_id].clearTrack(track_id_it)
+                        self.__loopers[looper_id].clear_track(track_id_it)
                     else:
-                        self.__loopers[looper_id].setTrackVolume(track_id_it, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+                        self.__loopers[looper_id].set_track_volume(track_id_it, fl_helper.MAX_VOLUME_LEVEL_VALUE)
 
-        self.__loopers[self.__selected_looper].stopRecordingTrack(track_id)
-        self.__loopers[self.__selected_looper].getTrack(track_id).setRoutingLevel(0.0)
-        self.setResampleMode(ResampleMode.NONE)
+        self.__loopers[self.__selected_looper].stop_recording_track(track_id)
+        self.__loopers[self.__selected_looper].get_track(track_id).set_routing_level(0.0)
+        self.set_resample_mode(ResampleMode.NONE)
 
-    def onMidiMsgProcessing(self, event):
+    def __on_midi_msg_processing(self, event):
 
         if event.data1 == constants.MIDI_CC_TRACK_1_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
-            self.addPressedSamplerButton(PressedSamplerButton.A_PRESSED)
+            self.add_pressed_sampler_button(PressedSamplerButton.A_PRESSED)
         elif event.data1 == constants.MIDI_CC_TRACK_1_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_RELEASED:
-            self.removePressedSamplerButton(PressedSamplerButton.A_PRESSED)
+            self.removepressed_sampler_button(PressedSamplerButton.A_PRESSED)
         elif event.data1 == constants.MIDI_CC_TRACK_2_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
-            self.addPressedSamplerButton(PressedSamplerButton.B_PRESSED)
+            self.add_pressed_sampler_button(PressedSamplerButton.B_PRESSED)
         elif event.data1 == constants.MIDI_CC_TRACK_2_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_RELEASED:
-            self.removePressedSamplerButton(PressedSamplerButton.B_PRESSED)
+            self.removepressed_sampler_button(PressedSamplerButton.B_PRESSED)
         elif event.data1 == constants.MIDI_CC_TRACK_3_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
-            self.addPressedSamplerButton(PressedSamplerButton.C_PRESSED)
+            self.add_pressed_sampler_button(PressedSamplerButton.C_PRESSED)
         elif event.data1 == constants.MIDI_CC_TRACK_3_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_RELEASED:
-            self.removePressedSamplerButton(PressedSamplerButton.C_PRESSED)
+            self.removepressed_sampler_button(PressedSamplerButton.C_PRESSED)
         elif event.data1 == constants.MIDI_CC_TRACK_4_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
-            self.addPressedSamplerButton(PressedSamplerButton.D_PRESSED)
+            self.add_pressed_sampler_button(PressedSamplerButton.D_PRESSED)
         elif event.data1 == constants.MIDI_CC_TRACK_4_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_RELEASED:
-            self.removePressedSamplerButton(PressedSamplerButton.D_PRESSED)
+            self.removepressed_sampler_button(PressedSamplerButton.D_PRESSED)
 
 
-        if event.data1 == constants.MIDI_CC_LOOPER_VOLUME and self.getShiftPressedState():
-            self.setDropIntencity( (fl_helper.MIDI_MAX_VALUE - event.data2) / fl_helper.MIDI_MAX_VALUE )
-        elif event.data1 == constants.MIDI_CC_RESAMPLE_MODE_FROM_LOOPER_TO_TRACK and self.getShiftPressedState():
-            self.setResampleMode(ResampleMode.FROM_LOOPER_TO_TRACK)
+        if event.data1 == constants.MIDI_CC_LOOPER_VOLUME and self.get_shift_pressed_state():
+            self.set_drop_intencity( (fl_helper.MIDI_MAX_VALUE - event.data2) / fl_helper.MIDI_MAX_VALUE )
+        elif event.data1 == constants.MIDI_CC_RESAMPLE_MODE_FROM_LOOPER_TO_TRACK and self.get_shift_pressed_state():
+            self.set_resample_mode(ResampleMode.FROM_LOOPER_TO_TRACK)
 
-            action = lambda self = self: ( self.setResampleMode(ResampleMode.NONE), \
-                                           self.switchToPrevTurnadoPreset())
-            self.actionOnDoubleClick(constants.MIDI_CC_RESAMPLE_MODE_FROM_LOOPER_TO_TRACK + constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT, action)
+            action = lambda self = self: ( self.set_resample_mode(ResampleMode.NONE), \
+                                           self.switch_to_prev_turnado_preset())
+            self.action_on_double_click(constants.MIDI_CC_RESAMPLE_MODE_FROM_LOOPER_TO_TRACK + constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT, action)
 
-        elif event.data1 == constants.MIDI_CC_RESAMPLE_MODE_FROM_ALL_LOOPERS_TO_TRACK and self.getShiftPressedState():
-            self.setResampleMode(ResampleMode.FROM_ALL_LOOPERS_TO_TRACK)
+        elif event.data1 == constants.MIDI_CC_RESAMPLE_MODE_FROM_ALL_LOOPERS_TO_TRACK and self.get_shift_pressed_state():
+            self.set_resample_mode(ResampleMode.FROM_ALL_LOOPERS_TO_TRACK)
 
-            action = lambda self = self: ( self.setResampleMode(ResampleMode.NONE), \
-                                           self.switchToNextTurnadoPreset())
-            self.actionOnDoubleClick(constants.MIDI_CC_RESAMPLE_MODE_FROM_ALL_LOOPERS_TO_TRACK + constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT, action)
-        elif event.data1 == constants.MIDI_CC_LOOPER_1 and self.getShiftPressedState():
-            self.selectLooper(constants.Looper_1)
-            self.actionOnDoubleClick(constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT + constants.MIDI_CC_SAMPLE_LENGTH_1, self.drop)
-        elif event.data1 == constants.MIDI_CC_LOOPER_2 and self.getShiftPressedState():
-            self.selectLooper(constants.Looper_2)
-        elif event.data1 == constants.MIDI_CC_LOOPER_3 and self.getShiftPressedState():
-            self.selectLooper(constants.Looper_3)
-        elif event.data1 == constants.MIDI_CC_LOOPER_4 and self.getShiftPressedState():
-            self.selectLooper(constants.Looper_4)
-        elif event.data1 == constants.MIDI_CC_CLEAR_LOOPER and self.getShiftPressedState():
-            action = lambda self = self: ( self.clearCurrentLooper() )
-            self.actionOnDoubleClick(constants.MIDI_CC_CLEAR_LOOPER, action)
-        elif event.data1 == constants.MIDI_CC_PLAY_STOP and self.getShiftPressedState():
-            action = lambda self = self: ( self.playStop() )
-            self.actionOnDoubleClick(constants.MIDI_CC_PLAY_STOP, action)
+            action = lambda self = self: ( self.set_resample_mode(ResampleMode.NONE), \
+                                           self.switch_to_next_turnado_preset())
+            self.action_on_double_click(constants.MIDI_CC_RESAMPLE_MODE_FROM_ALL_LOOPERS_TO_TRACK + constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT, action)
+        elif event.data1 == constants.MIDI_CC_LOOPER_1 and self.get_shift_pressed_state():
+            self.select_looper(constants.Looper_1)
+            self.action_on_double_click(constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT + constants.MIDI_CC_SAMPLE_LENGTH_1, self.drop)
+        elif event.data1 == constants.MIDI_CC_LOOPER_2 and self.get_shift_pressed_state():
+            self.select_looper(constants.Looper_2)
+        elif event.data1 == constants.MIDI_CC_LOOPER_3 and self.get_shift_pressed_state():
+            self.select_looper(constants.Looper_3)
+        elif event.data1 == constants.MIDI_CC_LOOPER_4 and self.get_shift_pressed_state():
+            self.select_looper(constants.Looper_4)
+        elif event.data1 == constants.MIDI_CC_CLEAR_LOOPER and self.get_shift_pressed_state():
+            action = lambda self = self: ( self.clear_current_looper() )
+            self.action_on_double_click(constants.MIDI_CC_CLEAR_LOOPER, action)
+        elif event.data1 == constants.MIDI_CC_PLAY_STOP and self.get_shift_pressed_state():
+            action = lambda self = self: ( self.play_stop() )
+            self.action_on_double_click(constants.MIDI_CC_PLAY_STOP, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_1:
-            self.setSampleLength(SampleLength.LENGTH_1)
-            action = lambda self = self: self.turnLooperOnOff(constants.Looper_1)
-            self.actionOnDoubleClick(constants.MIDI_CC_SAMPLE_LENGTH_1, action)
+            self.set_sample_length(SampleLength.LENGTH_1)
+            action = lambda self = self: self.turn_looper_on_off(constants.Looper_1)
+            self.action_on_double_click(constants.MIDI_CC_SAMPLE_LENGTH_1, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_2:
-            self.setSampleLength(SampleLength.LENGTH_2)
-            action = lambda self = self: self.turnLooperOnOff(constants.Looper_2)
-            self.actionOnDoubleClick(constants.MIDI_CC_SAMPLE_LENGTH_2, action)
+            self.set_sample_length(SampleLength.LENGTH_2)
+            action = lambda self = self: self.turn_looper_on_off(constants.Looper_2)
+            self.action_on_double_click(constants.MIDI_CC_SAMPLE_LENGTH_2, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_4:
-            self.setSampleLength(SampleLength.LENGTH_4)
-            action = lambda self = self: self.turnLooperOnOff(constants.Looper_3)
-            self.actionOnDoubleClick(constants.MIDI_CC_SAMPLE_LENGTH_4, action)
+            self.set_sample_length(SampleLength.LENGTH_4)
+            action = lambda self = self: self.turn_looper_on_off(constants.Looper_3)
+            self.action_on_double_click(constants.MIDI_CC_SAMPLE_LENGTH_4, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_8:
-            self.setSampleLength(SampleLength.LENGTH_8)
-            action = lambda self = self: self.turnLooperOnOff(constants.Looper_4)
-            self.actionOnDoubleClick(constants.MIDI_CC_SAMPLE_LENGTH_8, action)
+            self.set_sample_length(SampleLength.LENGTH_8)
+            action = lambda self = self: self.turn_looper_on_off(constants.Looper_4)
+            self.action_on_double_click(constants.MIDI_CC_SAMPLE_LENGTH_8, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_16:
-            self.setSampleLength(SampleLength.LENGTH_16)
-            action = lambda self = self: self.turnTrackOnOff(constants.Track_1)
-            self.actionOnDoubleClick(constants.MIDI_CC_SAMPLE_LENGTH_16, action)
+            self.set_sample_length(SampleLength.LENGTH_16)
+            action = lambda self = self: self.turn_track_on_off(constants.Track_1)
+            self.action_on_double_click(constants.MIDI_CC_SAMPLE_LENGTH_16, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_32:
-            self.setSampleLength(SampleLength.LENGTH_32)
-            action = lambda self = self: self.turnTrackOnOff(constants.Track_2)
-            self.actionOnDoubleClick(constants.MIDI_CC_SAMPLE_LENGTH_32, action)
+            self.set_sample_length(SampleLength.LENGTH_32)
+            action = lambda self = self: self.turn_track_on_off(constants.Track_2)
+            self.action_on_double_click(constants.MIDI_CC_SAMPLE_LENGTH_32, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_64:
-            self.setSampleLength(SampleLength.LENGTH_64)
-            action = lambda self = self: self.turnTrackOnOff(constants.Track_3)
-            self.actionOnDoubleClick(constants.MIDI_CC_SAMPLE_LENGTH_64, action)
+            self.set_sample_length(SampleLength.LENGTH_64)
+            action = lambda self = self: self.turn_track_on_off(constants.Track_3)
+            self.action_on_double_click(constants.MIDI_CC_SAMPLE_LENGTH_64, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_128:
-            self.setSampleLength(SampleLength.LENGTH_128)
-            action = lambda self = self: self.turnTrackOnOff(constants.Track_4)
-            self.actionOnDoubleClick(constants.MIDI_CC_SAMPLE_LENGTH_128, action)
-        elif event.data1 == constants.MIDI_CC_TRACK_1_CLEAR and event.data2 == constants.KP3_PLUS_ABCD_PRESSED and self.getShiftPressedState():
-            self.clearTrack(constants.Track_1)
-        elif event.data1 == constants.MIDI_CC_TRACK_2_CLEAR and event.data2 == constants.KP3_PLUS_ABCD_PRESSED and self.getShiftPressedState():
-            self.clearTrack(constants.Track_2)
-        elif event.data1 == constants.MIDI_CC_TRACK_3_CLEAR and event.data2 == constants.KP3_PLUS_ABCD_PRESSED and self.getShiftPressedState():
-            self.clearTrack(constants.Track_3)
-        elif event.data1 == constants.MIDI_CC_TRACK_4_CLEAR and event.data2 == constants.KP3_PLUS_ABCD_PRESSED and self.getShiftPressedState():
-            self.clearTrack(constants.Track_4)
+            self.set_sample_length(SampleLength.LENGTH_128)
+            action = lambda self = self: self.turn_track_on_off(constants.Track_4)
+            self.action_on_double_click(constants.MIDI_CC_SAMPLE_LENGTH_128, action)
+        elif event.data1 == constants.MIDI_CC_TRACK_1_CLEAR and event.data2 == constants.KP3_PLUS_ABCD_PRESSED and self.get_shift_pressed_state():
+            self.clear_track(constants.Track_1)
+        elif event.data1 == constants.MIDI_CC_TRACK_2_CLEAR and event.data2 == constants.KP3_PLUS_ABCD_PRESSED and self.get_shift_pressed_state():
+            self.clear_track(constants.Track_2)
+        elif event.data1 == constants.MIDI_CC_TRACK_3_CLEAR and event.data2 == constants.KP3_PLUS_ABCD_PRESSED and self.get_shift_pressed_state():
+            self.clear_track(constants.Track_3)
+        elif event.data1 == constants.MIDI_CC_TRACK_4_CLEAR and event.data2 == constants.KP3_PLUS_ABCD_PRESSED and self.get_shift_pressed_state():
+            self.clear_track(constants.Track_4)
         elif event.data1 == constants.MIDI_CC_SHIFT:
-            self.setShiftPressedState(event.data2 == fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TURNADO_DRY_WET and self.getShiftPressedState():
-            self.setTurnadoDryWetLevel(event.data2 / fl_helper.MIDI_MAX_VALUE)
+            self.set_shift_pressed_state(event.data2 == fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_TURNADO_DRY_WET and self.get_shift_pressed_state():
+            self.set_turnado_dry_wet_level(event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_LOOPER_VOLUME:
-            self.setLooperVolume((event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
+            self.set_looper_volume((event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_1:
-            self.setTrackVolume(0, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
+            self.set_track_volume(0, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_2:
-            self.setTrackVolume(1, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
+            self.set_track_volume(1, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_3:
-            self.setTrackVolume(2, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
+            self.set_track_volume(2, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_4:
-            self.setTrackVolume(3, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
+            self.set_track_volume(3, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_1_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
-            self.changeRecordingState(constants.Track_1)
+            self.change_recording_state(constants.Track_1)
         elif event.data1 == constants.MIDI_CC_TRACK_2_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
-            self.changeRecordingState(constants.Track_2)
+            self.change_recording_state(constants.Track_2)
         elif event.data1 == constants.MIDI_CC_TRACK_3_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
-            self.changeRecordingState(constants.Track_3)
+            self.change_recording_state(constants.Track_3)
         elif event.data1 == constants.MIDI_CC_TRACK_4_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
-            self.changeRecordingState(constants.Track_4)
-        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_1 and self.getShiftPressedState():
-            self.setLooperSideChainLevel(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_2 and self.getShiftPressedState():
-            self.setLooperSideChainLevel(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_3 and self.getShiftPressedState():
-            self.setLooperSideChainLevel(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_4 and self.getShiftPressedState():
-            self.setLooperSideChainLevel(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
+            self.change_recording_state(constants.Track_4)
+        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_1 and self.get_shift_pressed_state():
+            self.set_looper_side_chain_level(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_2 and self.get_shift_pressed_state():
+            self.set_looper_side_chain_level(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_3 and self.get_shift_pressed_state():
+            self.set_looper_side_chain_level(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_4 and self.get_shift_pressed_state():
+            self.set_looper_side_chain_level(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_1:
-            self.setInputSideChainLevel(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
+            self.set_input_side_chain_level(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_2:
-            self.setInputSideChainLevel(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
+            self.set_input_side_chain_level(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_3:
-            self.setInputSideChainLevel(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
+            self.set_input_side_chain_level(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_4:
-            self.setInputSideChainLevel(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TURNADO_DICTATOR and self.isPlaying():
-            self.setTurnadoDictatorLevel(event.data2 / fl_helper.MIDI_MAX_VALUE)
+            self.set_input_side_chain_level(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_TURNADO_DICTATOR and self.is_playing():
+            self.set_turnado_dictator_level(event.data2 / fl_helper.MIDI_MAX_VALUE)
 
-    def OnMidiMsg(self, event):
+    def on_midi_msg(self, event):
 
-        self.onInitScript()
+        self.on_init_script()
 
-        #fl_helper.printAllPluginParameters(LOOPER_1_CHANNEL, LOOPER_TURNADO_SLOT_INDEX)
+        #fl_helper.print_all_plugin_parameters(LOOPER_1_CHANNEL, LOOPER_TURNADO_SLOT_INDEX)
 
         event.handled = False
 
-        if not self.isPlaying():
-            if event.data1 == constants.MIDI_CC_TEMPO and not self.isPlaying():
-                self.setTempo(800 + int((event.data2 / fl_helper.MIDI_MAX_VALUE) * 1000.0)) # from 80 to 180
+        if not self.is_playing():
+            if event.data1 == constants.MIDI_CC_TEMPO and not self.is_playing():
+                self.set_tempo(800 + int((event.data2 / fl_helper.MIDI_MAX_VALUE) * 1000.0)) # from 80 to 180
             else:
                 if ( not ( event.data1 == constants.MIDI_CC_SHIFT and event.data2 == 0 ) \
-                and ( not ( event.data1 == constants.MIDI_CC_PLAY_STOP and self.getShiftPressedState() ) ) ):
-                    self.playStop()
+                and ( not ( event.data1 == constants.MIDI_CC_PLAY_STOP and self.get_shift_pressed_state() ) ) ):
+                    self.play_stop()
 
-                self.onMidiMsgProcessing(event)
+                self.__on_midi_msg_processing(event)
         else:
-            self.onMidiMsgProcessing(event)
+            self.__on_midi_msg_processing(event)
 
         event.handled = True

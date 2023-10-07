@@ -1,6 +1,6 @@
-xcopy "D:\Development\Projects\Live-looping\Livelooping\device_KorgKaossPad3Plus_LooperMux\" "C:\Users\Dream Machines\Documents\Image-Line\FL Studio\Settings\Hardware\device_KorgKaossPad3Plus_LooperMux\" /E /Y
-xcopy "D:\Development\Projects\Live-looping\Livelooping\device_KorgKaossPad3Plus_SynthController\" "C:\Users\Dream Machines\Documents\Image-Line\FL Studio\Settings\Hardware\device_KorgKaossPad3Plus_SynthController\" /E /Y
-xcopy "D:\Development\Projects\Live-looping\Livelooping\device_KorgKaossPad3Plus_MicController\" "C:\Users\Dream Machines\Documents\Image-Line\FL Studio\Settings\Hardware\device_KorgKaossPad3Plus_MicController\" /E /Y
+xcopy "D:\Development\Projects\Live-looping\Livelooping\device_korg_kaoss_pad_3_plus_looper_mux\" "C:\Users\Dream Machines\Documents\Image-Line\FL Studio\Settings\Hardware\device_korg_kaoss_pad_3_plus_looper_mux\" /E /Y
+xcopy "D:\Development\Projects\Live-looping\Livelooping\device_korg_kaoss_pad_3_plus_synth_controller\" "C:\Users\Dream Machines\Documents\Image-Line\FL Studio\Settings\Hardware\device_korg_kaoss_pad_3_plus_synth_controller\" /E /Y
+xcopy "D:\Development\Projects\Live-looping\Livelooping\device_korg_kaoss_pad_3_plus_mic_controller\" "C:\Users\Dream Machines\Documents\Image-Line\FL Studio\Settings\Hardware\device_korg_kaoss_pad_3_plus_mic_controller\" /E /Y
 xcopy "D:\Development\Projects\Live-looping\Livelooping\common\" "D:\Music development\FL Studio 21\Shared\Python\Lib\common\" /E /Y
 xcopy "D:\Development\Projects\Live-looping\Livelooping\input_controller\" "D:\Music development\FL Studio 21\Shared\Python\Lib\input_controller\" /E /Y
 xcopy "D:\Development\Projects\Live-looping\Livelooping\looper_mux\" "D:\Music development\FL Studio 21\Shared\Python\Lib\looper_mux\" /E /Y
