@@ -45,8 +45,11 @@ The project is building the logical devices on the top of the FL Studio DAW and 
 ![Manipulator VST plugin](./vst-plugins/manipulator.jpg)
 - **Augustus Loop by Expert Sleepers** - https://www.expert-sleepers.co.uk/augustusloop.html
 ![Augustus loop VST plugin](./vst-plugins/augustus_loop.jpg)
+- **Crossfade Loop Synth by Expert Sleepers** - https://www.expert-sleepers.co.uk/xfadelooper.html
+![Augustus loop VST plugin](./vst-plugins/crossfade_loop_synth.jpg)
+- **VFX Midi Strip** - [This one is free. Can be downloaded here.](../../VFX%20Midi%20Strip_x64.dll)
 
-Buy, and install the above set of VST plugins.
+Buy, download and install the above set of VST plugins.
 
 Besides the external VST plugins, a bunch of the internal FL Studio's VST plugins is also used:
 
@@ -72,7 +75,7 @@ But all the above ones are part of the FL Studio delivery. So no additional worr
   
   The project consists of the 3 logical devices:
   - 1 instance of the "looper mux" device. This device is in charge of the recording the tracks.
-  - 2 instances of the "input controller" devices. Each instance can be used to process one audio input channel. E.g. I'm using one of such devices for the mic, and the other for the synthesizer.
+  - 2 instances of the "input controller" devices. Each instance can be used to process one audio input channel. E.g. I'm using one of such devices for the mic, and the other for the crossfade synth loop synthesizer.
 
   Each device is controlled by a separate instance of the **Korg Kaoss Pad 3+** - https://www.korg.com/us/products/dj/kaoss_pad_kp3_plus/
 
@@ -105,6 +108,14 @@ But all the above ones are part of the FL Studio delivery. So no additional worr
   For sure you are free to use the speakers, but my experience shows, that you might want to practice not producing too much noise. So, usage of the headphones would be necessary. The headphones which I'm using are:
   - Beyerdynamic DT 770 PRO - https://europe.beyerdynamic.com/dt-770-pro.html
   ![Beyerdynamic DT 770 PRO](./hardware/beyerdynamic-dt-770-pro.jpg)
+
+- **Novation Bass Station 2**
+
+![Novation Bass Station 2](./hardware/novation-bass-station-2.jpg)
+
+You will need one, if you want to use the crossfade loop synth VST. It allows you to grab input from the microphone and instantly loop it. Then you can play your own voice on keyboard.
+
+I'm using Novation Bass Station 2 just as a MIDI keyboard to control an instance of the crossfade loop synth VST plugin. So, once again, feel free to replace it wit any suitable MIDI keyboard. But keep in mind, that you'll need to adjust the MIDI mappings and logic in the 'device_novation_bass_station_2_voice_synth' FL MIDI scripting device.
 
 ----
 

@@ -23,9 +23,10 @@ In order to install the project one would need to:
 
   ![Switch KP3+ to external controller mode](./resources/switch-kp3-plus-to-ext-ctrl-mode.jpg)
 
-- Copy the **"${project_root}\device_KorgKaossPad3Plus_LooperMux"** folder to the **"C:\Users\<your_user>\Documents\Image-Line\FL Studio\Settings\Hardware"**
-- Copy the **"${project_root}\device_KorgKaossPad3Plus_SynthController"** folder to the **"C:\Users\<your_user>\Documents\Image-Line\FL Studio\Settings\Hardware"**
-- Copy the **"${project_root}\device_KorgKaossPad3Plus_MicController"** folder to the **"C:\Users\<your_user>\Documents\Image-Line\FL Studio\Settings\Hardware"**
+- Copy the **"${project_root}\device_korg_kaoss_pad_3_plus_looper_mux"** folder to the **"C:\Users\<your_user>\Documents\Image-Line\FL Studio\Settings\Hardware"**
+- Copy the **"${project_root}\device_korg_kaoss_pad_3_plus_synth_controller"** folder to the **"C:\Users\<your_user>\Documents\Image-Line\FL Studio\Settings\Hardware"**
+- Copy the **"${project_root}\device_korg_kaoss_pad_3_plus_mic_controller"** folder to the **"C:\Users\<your_user>\Documents\Image-Line\FL Studio\Settings\Hardware"**
+- Copy the **"${project_root}\device_novation_bass_station_2_voice_synth"** folder to the **"C:\Users\<your_user>\Documents\Image-Line\FL Studio\Settings\Hardware"**
 - Copy the **"${project_root}\commmon"** folder to the **"{fl_studio_root}\Shared\Python\Lib"**
 - Copy the **"${project_root}\input_controller"** folder to the **"{fl_studio_root}\Shared\Python\Lib"**
 - Open the **"live_looping.flp"** project inside the DAW
@@ -39,11 +40,10 @@ In order to install the project one would need to:
 
   **Note!** In my case, one of the KP3+ is sending MIDI data through the ZOOM UAC-8 MIDI. That's why you see **"KP3+ 1 PAD"**, **"KP3+ 2 PAD"** and **"ZOOM UAC-8 MIDI"**. Anyway, the roles are properly assigned:
   
-  * **"KP3+ 1 PAD"** - device_KorgKaossPad3Plus_SynthController
-  * **"KP3+ 2 PAD"** - device_KorgKaossPad3Plus_LooperMux
-  * **"ZOOM UAC-8 MIDI** - device_KorgKaossPad3Plus_MicController
-  
-  In your case, the **"ZOOM UAC-8 MIDI** might be replaced with **"KP3+ 3 PAD"**. That's it
+  * **"KP3+ 1 PAD"** - device_korg_kaoss_pad_3_plus_synth_controller
+  * **"KP3+ 2 PAD"** - device_korg_kaoss_pad_3_plus_looper_mux
+  * **"KP3+ 3 PAD"** - device_korg_kaoss_pad_3_plus_mic_controller
+  * **"Bass Station II"** - device_novation_bass_station_2_voice_synth
 
 - Move the knobs and see whether the logical device's views react to the input
 - Enter the mixer view:
@@ -54,13 +54,16 @@ In order to install the project one would need to:
 
   ![Mic source setting](./resources/mic-source-setting.png)
 
-- Visit channel 10 and assign the input source in a way that your synth's ( or any second instrument's ) signal goes there:
+  **Note!** In the above step the "Input X", which you'll select will depend on computation of your hardware. Do not blindly follow this instruction :)
 
-  ![Synth source setting](./resources/synth-source-setting.png)
+- Press "Function + MIDI Chan" buttons on the Novation Bass Station 2 and select channel 5
 
-  **Note!** In the above 2 steps the "Input X", which you'll select will depend on computation of your hardware. Do not blindly follow this instruction :)
+- Check:
+  - whether the mic works and you can hear your voice in the headphones
+  - whether GUI views are reacting on the actions on the KP3+ instances
+  - whether Novation Bass Station 2 sends MIDI signals to the crossfade loop synth
 
-- Check, whether you hear your instruments in the headphones. If yes - **then my congratulations**!
+  If answers to all the above points are "yes" - **then my congratulations**!
 
 **You are ready to go!**
 

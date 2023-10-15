@@ -180,7 +180,7 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
         self.set_fx_level(self.__fx_level, True)
 
     def update_fx_preset(self, fx_preset_id):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusInputController.update_FxPreset__name__)
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusInputController.update_fx_preset.__name__)
 
         if self.is_save_mode() and self.__save_from_preset_page_id and self.__save_from_preset_id:
             self.__fx_preset_pages[self.__selected_fx_preset_page]\

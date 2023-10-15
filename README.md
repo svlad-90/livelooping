@@ -72,6 +72,7 @@ The idea behind each knob and button and details regarding how all that works wi
 ### [Installation](./md/installation/installation.md) - how to install this project?
 ### [Looper mux](./md/looper-mux/looper-mux.md) - details regarding usage of the "looper mux" logical device
 ### [Input controller](./md/input-controller/input-controller.md) - details regarding usage of the "input controller" logical device
+### [Voice synth](./md/voice-synth/voice-synth.md) - details regarding usage of the "voice synth" logical device
 
 ----
 
