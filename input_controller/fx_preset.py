@@ -212,7 +212,7 @@ class FxPreset(IFxPresetDataProvider):
 
     def __store_midi_mappings_to_persistency(self):
         midi_mappings = self.get_midi_mappings_as_lists()
-        print(f"storing {str(len(midi_mappings))} midi mappings from persistency - {midi_mappings}")
+        print(f"storing {str(len(midi_mappings))} midi mappings to persistency - {midi_mappings}")
         self.__persistency_item.set_midi_mapping(midi_mappings)
 
     def __load_data(self):

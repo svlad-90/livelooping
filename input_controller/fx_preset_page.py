@@ -117,3 +117,10 @@ class FxPresetPage:
 
     def get_active_fx_unit(self):
         return self.__fx_presets[self.__selected_fx_preset_id].get_active_fx_unit()
+
+    def get_active_fx_unit_custom(self, fx_preset_id):
+        return self.__fx_presets[fx_preset_id].get_active_fx_unit()
+
+    def set_active_fx_unit_custom(self, fx_preset_id, active_fx_unit):
+        self.__fx_presets[fx_preset_id].set_active_fx_unit(active_fx_unit)
+        self.__fx_presets[fx_preset_id].view_update_active_fx_unit()

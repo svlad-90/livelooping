@@ -48,6 +48,8 @@ The project is building the logical devices on the top of the FL Studio DAW and 
 - **Crossfade Loop Synth by Expert Sleepers** - https://www.expert-sleepers.co.uk/xfadelooper.html
 ![Augustus loop VST plugin](./vst-plugins/crossfade_loop_synth.jpg)
 - **VFX Midi Strip** - [This one is free. Can be downloaded here.](../../VFX%20Midi%20Strip_x64.dll)
+![InstantSampler](./vst-plugins/instant_sampler.jpg)
+- **InstantSampler** - [This one is free. Can be downloaded here.](https://plugins4free.com/plugin/915/)
 
 Buy, download and install the above set of VST plugins.
 
@@ -113,9 +115,9 @@ But all the above ones are part of the FL Studio delivery. So no additional worr
 
 ![Novation Bass Station 2](./hardware/novation-bass-station-2.jpg)
 
-You will need one, if you want to use the crossfade loop synth VST. It allows you to grab input from the microphone and instantly loop it. Then you can play your own voice on keyboard.
+You will need one, if you want to use the crossfade loop synth VST. It allows you to grab input from the microphone and instantly loop it. Then, you can play your voice on the keyboard.
 
-I'm using Novation Bass Station 2 just as a MIDI keyboard to control an instance of the crossfade loop synth VST plugin. So, once again, feel free to replace it wit any suitable MIDI keyboard. But keep in mind, that you'll need to adjust the MIDI mappings and logic in the 'device_novation_bass_station_2_voice_synth' FL MIDI scripting device.
+I'm using Novation Bass Station 2 just as a MIDI keyboard to control an instance of the crossfade loop synth VST plugin. So, once again, feel free to replace it with any suitable MIDI keyboard. But keep in mind, that you'll need to adjust the MIDI mappings and logic in the 'device_novation_bass_station_2_voice_synth' FL MIDI scripting device.
 
 ----
 

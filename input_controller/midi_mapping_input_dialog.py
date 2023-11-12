@@ -102,7 +102,7 @@ class MidiMappingInputDialog:
                 self.__midi_mapping_input_client.midi_mapping_input_cancelled()
             elif event.data1 == MIDI_CC_6 and self.__midi_mapping_input_client.get_shift_pressed_state():
                 print(MSG_PREFIX + " >>> Mapping was deleted.")
-                self.__midi_mapping_input_client.midi_mapping_input_done(self.__selected_fx_parameter_number, midi_mapping())
+                self.__midi_mapping_input_client.midi_mapping_input_done(self.__selected_fx_parameter_number, MidiMapping())
         elif self.__state == MidiMappingInputDialog.STATE_SELECT_PLUGIN_PARAMETER_ID:
             if event.data1 == MIDI_CC_NEXT_ITEM and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
                 param_count = plugins.getParamCount(self.__plugins_mixer_channel, self.__selected_plugin_number, True)
@@ -125,7 +125,7 @@ class MidiMappingInputDialog:
             elif event.data1 == MIDI_CC_SELECT and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
                 parameter_name = plugins.getParamName(self.__selected_parameter_id, self.__plugins_mixer_channel, self.__selected_plugin_number, True)
                 print(MSG_PREFIX + " >>> Parameter #" + str(self.__selected_parameter_id) + f" '{parameter_name}' was selected")
-                midi_mapping = midi_mapping(self.__selected_plugin_number,
+                midi_mapping = MidiMapping(self.__selected_plugin_number,
                                            self.__selected_parameter_id)
                 self.__midi_mapping_input_client.midi_mapping_input_done(self.__selected_fx_parameter_number, midi_mapping)
                 self.__state = MidiMappingInputDialog.STATE_FINAL

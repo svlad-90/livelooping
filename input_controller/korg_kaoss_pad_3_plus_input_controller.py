@@ -182,9 +182,13 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
     def update_fx_preset(self, fx_preset_id):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusInputController.update_fx_preset.__name__)
 
-        if self.is_save_mode() and self.__save_from_preset_page_id and self.__save_from_preset_id:
+        if self.is_save_mode() and self.__save_from_preset_page_id != None and self.__save_from_preset_id != None:
             self.__fx_preset_pages[self.__selected_fx_preset_page]\
-            .set_midi_mappings(fx_preset_id, self.__fx_preset_pages[self.__save_from_preset_page_id].get_midi_mappings(self.__save_from_preset_id))
+            .set_midi_mappings(fx_preset_id, self.__fx_preset_pages[self.__save_from_preset_page_id]\
+            .get_midi_mappings(self.__save_from_preset_id))
+            self.__fx_preset_pages[self.__selected_fx_preset_page]\
+            .set_active_fx_unit_custom(fx_preset_id, self.__fx_preset_pages[self.__save_from_preset_page_id]\
+            .get_active_fx_unit_custom(self.__save_from_preset_id))
 
         self.__fx_preset_pages[self.__selected_fx_preset_page].update_fx_preset(fx_preset_id)
 
@@ -371,7 +375,7 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
                     self.set_shift_pressed_state(event.data2 == fl_helper.MIDI_MAX_VALUE)
                 else:
                     if self.__midi_mapping_input_dialog:
-                        self.__midi_mapping.InputDialog.on_midi_msg(event)
+                        self.__midi_mapping_input_dialog.on_midi_msg(event)
             else:
                 if event.data1 == constants.MIDI_CC_EFFECTS_PAGE_1 and self.get_shift_pressed_state():
                     self.select_fx_page(FxPresetPage.fx_preset_page_1)
@@ -456,7 +460,7 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
                     self.set_save_mode(False)
                     self.select_fx_preset_on_the_visible_page(FxPreset.fx_preset_7)
                 elif event.data1 == constants.MIDI_CC_EFFECT_8 and self.is_save_mode():
-                    self.update_fx_preset(FxPreset.fx_preset_8, self.__fx_preset_pages[self.__selected_fx_preset_page])
+                    self.update_fx_preset(FxPreset.fx_preset_8)
                     self.set_save_mode(False)
                     self.select_fx_preset_on_the_visible_page(FxPreset.fx_preset_8)
                 elif event.data1 == constants.MIDI_CC_EFFECT_1 and not self.get_shift_pressed_state():
