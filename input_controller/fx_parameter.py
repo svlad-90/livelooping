@@ -36,7 +36,7 @@ class FxParameter:
 
     def get_fl_param_index(self, adjustable_plugin_slot_index, fx_param_id):
 
-        if adjustable_plugin_slot_index == constants.FINISHER_VOODOO_SLOT_INDEX:
+        if adjustable_plugin_slot_index == constants.FX2_FINISHER_VOODOO_SLOT_INDEX:
             if fx_param_id == FxParameter.FXParameter_1:
                 return constants.FINISHER_VOODOO_VARIATION_1_PARAM_INDEX
             elif fx_param_id == FxParameter.FXParameter_2:
@@ -53,7 +53,7 @@ class FxParameter:
                 return constants.INVALID_PARAM
             elif fx_param_id == FxParameter.FXParameter_8:
                 return constants.FINISHER_VOODOO_EFFECT_PARAM_INDEX
-        elif adjustable_plugin_slot_index == constants.MANIPULATOR_SLOT_INDEX:
+        elif adjustable_plugin_slot_index == constants.FX2_MANIPULATOR_SLOT_INDEX:
             if fx_param_id == FxParameter.FXParameter_1:
                 return constants.MANIPULATOR_FORMANT_PARAM_INDEX
             elif fx_param_id == FxParameter.FXParameter_2:
@@ -75,6 +75,7 @@ class FxParameter:
             return self.__midi_mapping.get_parameter_id()
 
     def set_midi_mapping(self, midi_mapping):
+        # print("set_midi_mapping - " + str(midi_mapping))
         self.__midi_mapping = midi_mapping
 
     def get_midi_mapping(self):
@@ -85,6 +86,7 @@ class FxParameter:
         adjustable_plugin_slot_index = FxUnit.active_fx_unit_to_adjustable_plugin_slot_index(self.__fx_preset_data_provider.get_active_fx_unit())
 
         fl_param_id = constants.INVALID_PARAM
+        channel_id = constants.INVALID_PARAM
 
         if adjustable_plugin_slot_index != constants.NO_ADJUSTABLE_EFFECT_AVAILABLE:
             fl_param_id = self.get_fl_param_index(adjustable_plugin_slot_index, self.__fx_param_id)
@@ -92,9 +94,15 @@ class FxParameter:
             if self.__midi_mapping.is_valid():
                 adjustable_plugin_slot_index = self.__midi_mapping.get_plugin_number()
                 fl_param_id = self.__midi_mapping.get_parameter_id()
+                channel_id = self.__midi_mapping.get_channel_id()
 
         if fl_param_id != constants.INVALID_PARAM:
-            plugins.setParamValue(fx_param_level, fl_param_id, self.__context.fx1_channel, adjustable_plugin_slot_index, midi.PIM_None, True)
+
+            # Fallback for the case if MIDI mapping has no channel id data
+            if channel_id == constants.INVALID_PARAM:
+                channel_id = self.__context.fx2_channel
+
+            plugins.setParamValue(fx_param_level, fl_param_id, channel_id, adjustable_plugin_slot_index, midi.PIM_None, True)
             self.__fx_param_level = fx_param_level
             self.__view.set_fx_parameter_level(self.__fx_param_id, fx_param_level)
 
@@ -110,6 +118,7 @@ class FxParameter:
         adjustable_plugin_slot_index = FxUnit.active_fx_unit_to_adjustable_plugin_slot_index(self.__fx_preset_data_provider.get_active_fx_unit())
 
         fl_param_id = constants.INVALID_PARAM
+        channel_id = constants.INVALID_PARAM
 
         if adjustable_plugin_slot_index != constants.NO_ADJUSTABLE_EFFECT_AVAILABLE:
             fl_param_id = self.get_fl_param_index(adjustable_plugin_slot_index, self.__fx_param_id)
@@ -117,9 +126,15 @@ class FxParameter:
             if self.__midi_mapping.is_valid():
                 adjustable_plugin_slot_index = self.__midi_mapping.get_plugin_number()
                 fl_param_id = self.__midi_mapping.get_parameter_id()
+                channel_id = self.__midi_mapping.get_channel_id()
 
         if fl_param_id != constants.INVALID_PARAM:
-            param_value = plugins.getParamValue(fl_param_id, self.__context.fx1_channel, adjustable_plugin_slot_index, True)
+
+            # Fallback for the case if MIDI mapping has no channel id data
+            if channel_id == constants.INVALID_PARAM:
+                channel_id = self.__context.fx2_channel
+
+            param_value = plugins.getParamValue(fl_param_id, channel_id, adjustable_plugin_slot_index, True)
             self.__fx_param_level = param_value
             self.__view.set_fx_parameter_activation_status(self.__fx_param_id, 1)
         else:

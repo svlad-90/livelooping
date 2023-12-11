@@ -24,8 +24,8 @@
 	* [Switching between the Turnado VST presets](#switching-between-the-turnado-vst-presets)
   * [Drop FX](#drop-fx)
   * [Sidechain](#sidechain)
-    * [Input sources sidechain](#input-sources-sidechain)
-	* [Loopers sidechain](#loopers-sidechain)
+	* [Loopers sidechain levels](#loopers-sidechain-levels)
+	* [Sidechain source parameters](#sidechain-source-parameters)
   
 ----
 
@@ -441,28 +441,22 @@ So, the best practice regarding this feature is to:
 ## Sidechain
 
 In terms of this project the sidechain means, that any of the tracks, recorded to the looper #1 can independently:
-- impact the volume of the input sources ( mic, synth, etc. )
-- impact the volume of the other loopers
+1. impact the volume of the input sources ( mic, synth, etc. ) - handled by the [input controller](../input-controller/input-controller.md#sidechain-source-levels)
+2. impact the volume of the other loopers - handled by the looper mux
 
-The most obvious use-case:
-- Record the square kick to the looper #1
-- Enable sidechain of the input sources
-- Record bass, using your mic or synth, which will duck to the kick, resolving the kick bass conflict
-
-Another possible use-case:
-- You want to switch from track #1 to track #2
-- Turn on the sidechain of the loopers #2, #3, #4 to the kick drums. It will totally change the meaning of those sidechained instruments
-- Start to record new material and then fade out and reset the loopers #2, #3, and #4
+The most obvious use-case for point #2:
+- Record material without the sidechain
+- Apply/remove it later on
 
 ----
 
-### Input sources sidechain
+### Loopers sidechain levels
 
-**Note!!** The sidechain would be applied to the signal of both "input controller" logical devices.
+**Note!** It does not make logical sense to allow looper #1 to side-chain to its own tracks. Thus, it is not possible to adjust these levels for looper #1, but only for the other loopers.
 
-In order to change the sidechain settings of the input sources, use the **5-8** vertical faders on the KP3+ touch screen:
+In order to change the sidechain levels of the selected looper, use the **"5-8 vertical faders"** on the KP3+ touch screen:
 
-![Changing input sources sidechain settings](./resources/changing-input-sources-sidechain-settings.jpg)
+![Changing selected looper sidechain levels](./resources/changing-selected-looper-sidechain-levels.jpg)
 
 Fader **5** will change the side-chain level to the **track #1** of the **looper #1**.
 
@@ -474,29 +468,33 @@ Fader **8** - same, but to the **track #4**.
 
 The view will reflect that in the following way within the DAW:
 
-![Input sources sidechain settings changed](./resources/input-sources-sidechain-settings-changed.jpg)
+![Selected looper sidechain levels changed](./resources/selected-looper-sidechain-levels-changed.jpg)
 
 ----
 
-### Loopers sidechain
+### Sidechain source parameters
 
-**Note!** It does not make logical sense to allow looper #1 to side-chain to its own tracks. Thus, it is not possible to adjust these settings for looper #1, but only for the other loopers.
+There are 2 parameters you can adjust regarding the source of the sidechain. Those are tension and decay. A combination of these 2 parameters allows you to identify a sidechain shape that will fit your track the most.
 
-In order to change the sidechain settings of the selected looper, use the **"Hold + 5-8 vertical faders"** short-cut on the KP3+ touch screen:
+In order to change the sidechain levels of the selected looper, use the **old + 1-8 vertical faders"** shortcut on the KP3+:
 
-![Changing selected looper sidechain settings](./resources/changing-selected-looper-sidechain-settings.jpg)
+![Changing the looper #1 sidechain parameters](./resources/changing-looper-1-sidechain-parameters.jpg)
 
-Fader **5** will change the side-chain level to the **track #1** of the **looper #1**.
+Fader **1** will change the side-chain decay level of the **track #1** of the **looper #1**.
 
-Fader **6** - to the track **track #2** of the **looper #1**.
+Fader **2** - will change the side-chain tension level of the **track #1** of the **looper #1**.
 
-Fader **7** - same, but to the **track #3**.
+Faders **3**, **4** - same, but for the track **track #2** of the **looper #1**.
 
-Fader **8** - same, but to the **track #4**.
+Faders **5**, **6** - same, but for the track **track #3** of the **looper #1**.
+
+Faders **7**, **8** - same, but for the track **track #3** of the **looper #1**.
 
 The view will reflect that in the following way within the DAW:
 
-![Selected looper sidechain settings changed](./resources/selected-looper-sidechain-settings-changed.jpg)
+![Changing the looper #1 sidechain parameters](./resources/looper-1-sidechain-parameters-changed.jpg)
+
+**Note!** These parameters are reset to default values each time when the loopermux is [stopped](#resetting-the-looper-mux).
 
 ----
 

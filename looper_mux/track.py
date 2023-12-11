@@ -292,10 +292,3 @@ class Track():
         plugins.setParamValue(routing_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
         parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "S", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(routing_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-
-    def set_input_side_chain_level(self, sidechain_level):
-        self.__view.set_input_side_chain_level(self.__track_number, sidechain_level)
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "M2L1T" + str(self.__track_number + 1) + "S", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(sidechain_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "S2L1T" + str(self.__track_number + 1) + "S", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(sidechain_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)

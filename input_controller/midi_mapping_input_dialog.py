@@ -33,16 +33,18 @@ class MidiMappingInputDialog:
     STATE_SELECT_PLUGIN_PARAMETER_ID    = 3
     STATE_FINAL                         = 4
 
-    def __init__(self, plugins_mixer_channel, midi_mapping_input_client):
-        self.__plugins_mixer_channel = plugins_mixer_channel
+    def __init__(self, plugins_mixer_channels, midi_mapping_input_client):
+        self.__plugins_mixer_channels = plugins_mixer_channels
         self.__midi_mapping_input_client = midi_mapping_input_client
         self.__state = MidiMappingInputDialog.STATE_IDLE
         self.__selected_fx_parameter_number = constants.INVALID_PARAM
+        self.__selected_channel_idx = 0
         self.__selected_plugin_number = 0
         self.__selected_parameter_id = 0
 
         if self.__state == MidiMappingInputDialog.STATE_IDLE:
             self.__state = MidiMappingInputDialog.STATE_SELECT_FX_PARAMETER_NUMBER
+            print(MSG_PREFIX + " >>> Starting parameter mapping assignment.")
             print(MSG_PREFIX + " >>> Please, enter fx parameter number.")
 
     def on_midi_msg(self, event):
@@ -62,7 +64,7 @@ class MidiMappingInputDialog:
                 print(MSG_PREFIX + " >>> Please, select the target plugin")
 
                 self.__selected_plugin_number = constants.MIN_PLUGIN_NUMBER
-                plugin_name = plugins.getPluginName(self.__plugins_mixer_channel, self.__selected_plugin_number, True)
+                plugin_name = plugins.getPluginName(self.__plugins_mixer_channels[self.__selected_channel_idx], self.__selected_plugin_number, True)
                 print(MSG_PREFIX + " >>> Current cursor position is - #" + str(self.__selected_plugin_number) + f" '{plugin_name}'")
             elif event.data1 == MIDI_CC_EXIT:
                 print(MSG_PREFIX + " >>> Operation was cancelled.")
@@ -75,7 +77,11 @@ class MidiMappingInputDialog:
                 if self.__selected_plugin_number > constants.MAX_PLUGIN_NUMBER:
                     self.__selected_plugin_number = constants.MIN_PLUGIN_NUMBER
 
-                plugin_name = plugins.getPluginName(self.__plugins_mixer_channel, self.__selected_plugin_number, True)
+                    self.__selected_channel_idx += 1
+                    if self.__selected_channel_idx > len(self.__plugins_mixer_channels):
+                        self.__selected_channel_idx = 0
+
+                plugin_name = plugins.getPluginName(self.__plugins_mixer_channels[self.__selected_channel_idx], self.__selected_plugin_number, True)
                 print(MSG_PREFIX + " >>> Current cursor position is - #" + str(self.__selected_plugin_number) + f" '{plugin_name}'")
             elif event.data1 == MIDI_CC_PREVIOUS_ITEM and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
                 self.__selected_plugin_number = self.__selected_plugin_number - 1
@@ -83,17 +89,21 @@ class MidiMappingInputDialog:
                 if self.__selected_plugin_number < constants.MIN_PLUGIN_NUMBER:
                     self.__selected_plugin_number = constants.MAX_PLUGIN_NUMBER
 
-                plugin_name = plugins.getPluginName(self.__plugins_mixer_channel, self.__selected_plugin_number, True)
+                    self.__selected_channel_idx -= 1
+                    if self.__selected_channel_idx < 0:
+                        self.__selected_channel_idx = len(self.__plugins_mixer_channels) - 1
+
+                plugin_name = plugins.getPluginName(self.__plugins_mixer_channels[self.__selected_channel_idx], self.__selected_plugin_number, True)
                 print(MSG_PREFIX + " >>> Current cursor position is - #" + str(self.__selected_plugin_number) + f" '{plugin_name}'")
             elif event.data1 == MIDI_CC_SELECT and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
-                plugin_name = plugins.getPluginName(self.__plugins_mixer_channel, self.__selected_plugin_number, True)
+                plugin_name = plugins.getPluginName(self.__plugins_mixer_channels[self.__selected_channel_idx], self.__selected_plugin_number, True)
                 print(MSG_PREFIX + " >>> Plugin #" + str(self.__selected_plugin_number) + f" '{plugin_name}' was selected")
                 self.__state = MidiMappingInputDialog.STATE_SELECT_PLUGIN_PARAMETER_ID
 
                 print(MSG_PREFIX + " >>> Please, select the target parameter")
 
                 self.__selected_parameter_id = 0
-                parameter_name = plugins.getParamName(self.__selected_parameter_id, self.__plugins_mixer_channel, self.__selected_plugin_number, True)
+                parameter_name = plugins.getParamName(self.__selected_parameter_id, self.__plugins_mixer_channels[self.__selected_channel_idx], self.__selected_plugin_number, True)
                 print(MSG_PREFIX + " >>> Current cursor position is - #" + str(self.__selected_parameter_id) + f" '{parameter_name}'")
 
             elif event.data1 == MIDI_CC_EXIT and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
@@ -105,28 +115,29 @@ class MidiMappingInputDialog:
                 self.__midi_mapping_input_client.midi_mapping_input_done(self.__selected_fx_parameter_number, MidiMapping())
         elif self.__state == MidiMappingInputDialog.STATE_SELECT_PLUGIN_PARAMETER_ID:
             if event.data1 == MIDI_CC_NEXT_ITEM and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
-                param_count = plugins.getParamCount(self.__plugins_mixer_channel, self.__selected_plugin_number, True)
+                param_count = plugins.getParamCount(self.__plugins_mixer_channels[self.__selected_channel_idx], self.__selected_plugin_number, True)
                 self.__selected_parameter_id = self.__selected_parameter_id + 1
 
                 if self.__selected_parameter_id >= param_count:
                     self.__selected_parameter_id = 0
 
-                parameter_name = plugins.getParamName(self.__selected_parameter_id, self.__plugins_mixer_channel, self.__selected_plugin_number, True)
+                parameter_name = plugins.getParamName(self.__selected_parameter_id, self.__plugins_mixer_channels[self.__selected_channel_idx], self.__selected_plugin_number, True)
                 print(MSG_PREFIX + " >>> Current cursor position is - #" + str(self.__selected_parameter_id) + f" '{parameter_name}'")
             elif event.data1 == MIDI_CC_PREVIOUS_ITEM and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
-                param_count = plugins.getParamCount(self.__plugins_mixer_channel, self.__selected_plugin_number, True)
+                param_count = plugins.getParamCount(self.__plugins_mixer_channels[self.__selected_channel_idx], self.__selected_plugin_number, True)
                 self.__selected_parameter_id = self.__selected_parameter_id - 1
 
                 if self.__selected_parameter_id < 0:
                     self.__selected_parameter_id = param_count - 1
 
-                parameter_name = plugins.getParamName(self.__selected_parameter_id, self.__plugins_mixer_channel, self.__selected_plugin_number, True)
+                parameter_name = plugins.getParamName(self.__selected_parameter_id, self.__plugins_mixer_channels[self.__selected_channel_idx], self.__selected_plugin_number, True)
                 print(MSG_PREFIX + " >>> Current cursor position is - #" + str(self.__selected_parameter_id) + f" '{parameter_name}'")
             elif event.data1 == MIDI_CC_SELECT and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
-                parameter_name = plugins.getParamName(self.__selected_parameter_id, self.__plugins_mixer_channel, self.__selected_plugin_number, True)
+                parameter_name = plugins.getParamName(self.__selected_parameter_id, self.__plugins_mixer_channels[self.__selected_channel_idx], self.__selected_plugin_number, True)
                 print(MSG_PREFIX + " >>> Parameter #" + str(self.__selected_parameter_id) + f" '{parameter_name}' was selected")
                 midi_mapping = MidiMapping(self.__selected_plugin_number,
-                                           self.__selected_parameter_id)
+                                           self.__selected_parameter_id,
+                                           self.__plugins_mixer_channels[self.__selected_channel_idx])
                 self.__midi_mapping_input_client.midi_mapping_input_done(self.__selected_fx_parameter_number, midi_mapping)
                 self.__state = MidiMappingInputDialog.STATE_FINAL
             elif event.data1 == MIDI_CC_EXIT and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:

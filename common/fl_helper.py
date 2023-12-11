@@ -14,6 +14,31 @@ def print_all_plugin_parameters(mixer_track, slot):
         print( "#" + str(param_index) + ": param name - " + plugins.getParamName(param_index, mixer_track, slot, True) + \
                " param value - " + str( plugins.getParamValue(param_index, mixer_track, slot) ) , True)
 
+def print_midi_event(event):
+        print("handled - " + str(event.handled) + "; "
+              "timestamp - " + str(event.timestamp) + "; "
+              "data1 - " + str(event.data1) + "; "
+              "data2 - " + str(event.data2) + "; "
+              "port - " + str(event.port) + "; "
+              "note - " + str(event.note) + "; "
+              "velocity - " + str(event.velocity) + "; "
+              "pressure - " + str(event.pressure) + "; "
+              "progNum - " + str(event.progNum) + "; "
+              "controlNum - " + str(event.controlNum) + "; "
+              "controlVal - " + str(event.controlVal) + "; "
+              "pitchBend - " + str(event.pitchBend) + "; "
+              "sysex - " + str(event.sysex) + "; "
+              "isIncrement - " + str(event.isIncrement) + "; "
+              "res - " + str(event.res) + "; "
+              "inEv - " + str(event.inEv) + "; "
+              "outEv - " + str(event.outEv) + "; "
+              "midiId - " + str(event.midiId) + "; "
+              "midiChan - " + str(event.midiChan) + "; "
+              "midiChanEx - " + str(event.midiChanEx) + "; ")
+
+def is_kp3_program_change_event(event):
+    return event.midiId == 192
+
 class PluginParametersCache:
 
     __cache = {}
