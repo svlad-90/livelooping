@@ -7,8 +7,8 @@
 
 In order to install the project one would need to:
 
-- Install the [DAW](#daw)
-- Install the [External VST plugins](#vst-plugins), and make sure that the DAW sees them
+- Install the [DAW](../prerequisites/prerequisites.md#daw)
+- Install the [External VST plugins](../prerequisites/prerequisites.md#vst-plugins), and make sure that the DAW sees them
 - Clone this git repository
 - Connect and set up your audio interface
 - Connect your input devices ( mic, synth ) to your audio interface
@@ -29,28 +29,38 @@ In order to install the project one would need to:
 - Copy the **"${project_root}\device_novation_bass_station_2_voice_synth"** folder to the **"C:\Users\<your_user>\Documents\Image-Line\FL Studio\Settings\Hardware"**
 - Copy the **"${project_root}\commmon"** folder to the **"{fl_studio_root}\Shared\Python\Lib"**
 - Copy the **"${project_root}\input_controller"** folder to the **"{fl_studio_root}\Shared\Python\Lib"**
+- Replace the **"C:\Users\<YOUR_USERNAME>\Documents\Sugar Bytes\Turnado\Global Presets"** with te content of **"${project_root}\presets\Turnado\Global Presets"**
 - Open the **"live_looping.flp"** project inside the DAW
 - Enter the MIDI settings:
 
   ![Midi settings context menu](./resources/midi-settings-context-menu.png)
 
-- Assign the scripts to the KP3+ instances:
+- Assign the scripts to the KP3+ instances and to the Novation Bass Station 2. Also, select the input MIDI ports:
 
-  ![Midi settings](./resources/midi-settings.png)
-
-  **Note!** In my case, one of the KP3+ is sending MIDI data through the ZOOM UAC-8 MIDI. That's why you see **"KP3+ 1 PAD"**, **"KP3+ 2 PAD"** and **"ZOOM UAC-8 MIDI"**. Anyway, the roles are properly assigned:
+  ![Input midi settings](./resources/input-midi-settings.png)
   
-  * **"KP3+ 1 PAD"** - device_korg_kaoss_pad_3_plus_synth_controller
-  * **"KP3+ 2 PAD"** - device_korg_kaoss_pad_3_plus_looper_mux
-  * **"KP3+ 3 PAD"** - device_korg_kaoss_pad_3_plus_mic_controller
+  * **"KP3+ 1 PAD"** - device_korg_kaoss_pad_3_plus_synth_controller. Select the MIDI port **#1**
+  * **"KP3+ 2 PAD"** - device_korg_kaoss_pad_3_plus_looper_mux. Select port the MIDI port **#2**
+  * **"KP3+ 3 PAD"** - device_korg_kaoss_pad_3_plus_mic_controller. Select the MIDI  port **#3**
   * **"Bass Station II"** - device_novation_bass_station_2_voice_synth
+
+- Set "Send master sync option" and select the output MIDID ports:
+
+  ![Output midi settings](./resources/output-midi-settings.jpg)
+
+  * **"KP3+ 1 PAD"** - Select the MIDI port **#1**
+  * **"KP3+ 2 PAD"** - Select the MIDI port **#2**
+  * **"KP3+ 3 PAD"** - Select the MIDI port **#3**
+  * **"Bass Station II"** - Select the MIDI port **#5**
+
+The only mandatory thing here is port #5 for Novation Bass Station 2, so it could receive the BPM sync from the DAW. Still, for other devices the output ports are also set to ensure the separation of the MIDI signals handling.
 
 - Move the knobs and see whether the logical device's views react to the input
 - Enter the mixer view:
 
   ![Mixer view context menu](./resources/mixer-view-context-menu.png)
 
-- Visit channel 6 and assign the input source in a way that your mic's signal goes there:
+- Visit channel 7 and assign the input source in a way that your mic's signal goes there:
 
   ![Mic source setting](./resources/mic-source-setting.png)
 

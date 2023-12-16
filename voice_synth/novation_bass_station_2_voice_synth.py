@@ -67,30 +67,11 @@ class NovationBassStation2VoiceSynth():
 
     def on_midi_msg(self, event):
 
+        # fl_helper.print_midi_event(event)
+
         self.on_init_script()
 
         event.handled = False
-
-        # print("handled - " + str(event.handled) + "; "
-        #       "timestamp - " + str(event.timestamp) + "; "
-        #       "data1 - " + str(event.data1) + "; "
-        #       "data2 - " + str(event.data2) + "; "
-        #       "port - " + str(event.port) + "; "
-        #       "note - " + str(event.note) + "; "
-        #       "velocity - " + str(event.velocity) + "; "
-        #       "pressure - " + str(event.pressure) + "; "
-        #       "progNum - " + str(event.progNum) + "; "
-        #       "controlNum - " + str(event.controlNum) + "; "
-        #       "controlVal - " + str(event.controlVal) + "; "
-        #       "pitchBend - " + str(event.pitchBend) + "; "
-        #       "sysex - " + str(event.sysex) + "; "
-        #       "isIncrement - " + str(event.isIncrement) + "; "
-        #       "res - " + str(event.res) + "; "
-        #       "inEv - " + str(event.inEv) + "; "
-        #       "outEv - " + str(event.outEv) + "; "
-        #       "midiId - " + str(event.midiId) + "; "
-        #       "midiChan - " + str(event.midiChan) + "; "
-        #       "midiChanEx - " + str(event.midiChanEx) + "; ")
 
         if event.midiId == 208:
             # print("Skip aftertouch!")
@@ -102,11 +83,12 @@ class NovationBassStation2VoiceSynth():
             # print(f"Ignoring signal - {str(event.data1)}")
             event.handled = True
         elif event.data1 == constants.NOVATION_SUB_OSC_WAVE:
-            if event.data2 == 0:
-                self._set_mode(SynthMode.SYNTH_MODE_PLAY_NOTES)
-            elif event.data2 == 1:
-                self._set_mode(SynthMode.SYNTH_MODE_ONE_SHOT)
-            event.handled = True
+            if event.midiId != 128 and event.midiId != 144:
+                if event.data2 == 0:
+                    self._set_mode(SynthMode.SYNTH_MODE_PLAY_NOTES)
+                elif event.data2 == 1:
+                    self._set_mode(SynthMode.SYNTH_MODE_ONE_SHOT)
+                event.handled = True
         else:
             if self._get_mode() == SynthMode.SYNTH_MODE_PLAY_NOTES:
                 if event.data1 == constants.NOVATION_REC_PRESSED and event.midiId == 176:

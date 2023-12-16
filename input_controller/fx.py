@@ -24,6 +24,16 @@ class Fx:
     FX_8  = 7
     FX_9  = 8
     FX_10 = 9
+    FX_11 = 10
+    FX_12 = 11
+    FX_13 = 12
+    FX_14 = 13
+    FX_15 = 14
+    FX_16 = 15
+    FX_17 = 16
+    FX_18 = 17
+    FX_19 = 18
+    FX_20 = 19
 
     def __init__(self, context, fx_number, view):
         self.__context = context

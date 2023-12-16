@@ -120,6 +120,9 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
     def get_shift_pressed_state(self):
         return self.__shift_pressed
 
+    def get_sidechain_change_mode(self):
+        self.__sidechain_change_mode
+
     def add_pressed_sampler_button(self, pressed_sampler_button):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.add_pressed_sampler_button.__name__ + ": added sampler button - " + str(pressed_sampler_button))
         self.__pressed_sampler_buttons.add(pressed_sampler_button)
@@ -166,6 +169,14 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         self.set_drop_intencity(0.0)
         self.set_sample_length(SampleLength.LENGTH_1)
         self.set_resample_mode(ResampleMode.NONE)
+        self.set_decay_side_chain_level(constants.Track_1, constants.DEFAULT_DECAY_SIDECHAIN_LEVEL)
+        self.set_decay_side_chain_level(constants.Track_2, constants.DEFAULT_DECAY_SIDECHAIN_LEVEL)
+        self.set_decay_side_chain_level(constants.Track_3, constants.DEFAULT_DECAY_SIDECHAIN_LEVEL)
+        self.set_decay_side_chain_level(constants.Track_4, constants.DEFAULT_DECAY_SIDECHAIN_LEVEL)
+        self.set_tension_side_chain_level(constants.Track_1, constants.DEFAULT_TENSION_SIDECHAIN_LEVEL)
+        self.set_tension_side_chain_level(constants.Track_2, constants.DEFAULT_TENSION_SIDECHAIN_LEVEL)
+        self.set_tension_side_chain_level(constants.Track_3, constants.DEFAULT_TENSION_SIDECHAIN_LEVEL)
+        self.set_tension_side_chain_level(constants.Track_4, constants.DEFAULT_TENSION_SIDECHAIN_LEVEL)
         self.__view.clear()
 
     def clear_current_looper(self):
@@ -199,9 +210,6 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         else:
             self.__buttons_last_press_time.clear()
             self.__buttons_last_press_time[pressed_button] = pressed_time
-
-    def set_input_side_chain_level(self, track_id, sidechain_level):
-        self.__loopers[constants.Looper_1].set_input_side_chain_level(track_id, sidechain_level)
 
     def set_looper_side_chain_level(self, track_id, sidechain_level):
         if self.__selected_looper != constants.Looper_1:
@@ -300,7 +308,21 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         self.__loopers[self.__selected_looper].get_track(track_id).set_routing_level(0.0)
         self.set_resample_mode(ResampleMode.NONE)
 
+    def set_tension_side_chain_level(self, track_id, sidechain_level):
+        self.__view.set_tension_side_chain_level(track_id, sidechain_level)
+
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "ST", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(sidechain_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
+
+    def set_decay_side_chain_level(self, track_id, sidechain_level):
+        self.__view.set_decay_side_chain_level(track_id, sidechain_level)
+
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "SD", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(sidechain_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
+
     def __on_midi_msg_processing(self, event):
+
+        # fl_helper.print_midi_event(event)
 
         if event.data1 == constants.MIDI_CC_TRACK_1_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
             self.add_pressed_sampler_button(PressedSamplerButton.A_PRESSED)
@@ -396,6 +418,14 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.set_turnado_dry_wet_level(event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_LOOPER_VOLUME:
             self.set_looper_volume((event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
+        elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_1 and True == self.get_shift_pressed_state():
+            self.set_tension_side_chain_level(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_2 and True == self.get_shift_pressed_state():
+            self.set_decay_side_chain_level(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_3 and True == self.get_shift_pressed_state():
+            self.set_tension_side_chain_level(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_4 and True == self.get_shift_pressed_state():
+            self.set_decay_side_chain_level(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_1:
             self.set_track_volume(0, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_2:
@@ -412,22 +442,22 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.change_recording_state(constants.Track_3)
         elif event.data1 == constants.MIDI_CC_TRACK_4_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
             self.change_recording_state(constants.Track_4)
-        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_1 and self.get_shift_pressed_state():
-            self.set_looper_side_chain_level(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_2 and self.get_shift_pressed_state():
-            self.set_looper_side_chain_level(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_3 and self.get_shift_pressed_state():
-            self.set_looper_side_chain_level(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_4 and self.get_shift_pressed_state():
-            self.set_looper_side_chain_level(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_1 and True == self.get_shift_pressed_state():
+            self.set_tension_side_chain_level(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_2 and True == self.get_shift_pressed_state():
+            self.set_decay_side_chain_level(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_3 and True == self.get_shift_pressed_state():
+            self.set_tension_side_chain_level(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_4 and True == self.get_shift_pressed_state():
+            self.set_decay_side_chain_level(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_1:
-            self.set_input_side_chain_level(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
+            self.set_looper_side_chain_level(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_2:
-            self.set_input_side_chain_level(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
+            self.set_looper_side_chain_level(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_3:
-            self.set_input_side_chain_level(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
+            self.set_looper_side_chain_level(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_4:
-            self.set_input_side_chain_level(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
+            self.set_looper_side_chain_level(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_TURNADO_DICTATOR and self.is_playing():
             self.set_turnado_dictator_level(event.data2 / fl_helper.MIDI_MAX_VALUE)
 

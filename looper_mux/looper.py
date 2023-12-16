@@ -100,7 +100,6 @@ class Looper():
         for track_id in self.__tracks:
             self.__tracks[track_id].clear(True)
             self.__tracks[track_id].reset_track_params()
-            self.__tracks[track_id].set_input_side_chain_level(0.0)
 
         if self.__looper_number != constants.Looper_1:
             for track_id in self.__tracks:
@@ -125,9 +124,6 @@ class Looper():
             self.set_turnado_dry_wet_level(constants.DEFAULT_TURNADO_DRY_WET_LEVEL)
 
         self.__tracks[track_id].stop_recording()
-
-    def set_input_side_chain_level(self, track_id, sidechain_level):
-        self.__tracks[track_id].set_input_side_chain_level(sidechain_level)
 
     def set_looper_side_chain_level(self, track_id, sidechain_level):
         self.__sidechain_levels[track_id] = sidechain_level

@@ -6,6 +6,7 @@ Created on Jan 24, 2022
 
 import midi
 import plugins
+import math
 
 from common import fl_helper
 from input_controller.fx_parameter import FxParameter
@@ -51,6 +52,7 @@ class FxPreset(IFxPresetDataProvider):
 
             self.set_active_fx_unit(self.__persistency_item.get_active_fx_unit())
             self.__load_midi_mappings_from_persistency()
+            self.__load_turnado_patch_from_persistency()
             self.view_update_active_fx_unit()
 
             for fx_parameter_id in self.__fx_parameters:
@@ -62,6 +64,7 @@ class FxPreset(IFxPresetDataProvider):
         self.__get_params_from_plugins()
         self.__persistency_item.set_active_fx_unit(self.__active_fx_unit)
         self.__store_midi_mappings_to_persistency()
+        self.__store_turnado_patch_to_persistency()
         self.__save_data()
         self.__apply_parameters_to_plugins()
         self.view_update_active_fx_unit()
@@ -102,6 +105,7 @@ class FxPreset(IFxPresetDataProvider):
         self.__apply_parameters_to_plugins()
         self.__active_fx_unit = self.__persistency_item.get_active_fx_unit()
         self.__load_midi_mappings_from_persistency()
+        self.__load_turnado_patch_from_persistency()
         self.__view.select_fx_preset(self.__fx_number)
         self.view_update_active_fx_unit()
 
@@ -131,77 +135,143 @@ class FxPreset(IFxPresetDataProvider):
     def __are_parameters_loaded(self):
         return len(self.__persistency_item.get_plugin_parameters()) != 0
 
+    def __calculate_channel_id_from_channel_id_counter(self, channel_id_counter):
+        channel_id = None
+
+        if channel_id_counter == 0:
+            channel_id = self.__context.fx2_channel
+        elif channel_id_counter == 1:
+            channel_id = self.__context.fx1_channel
+
+        return channel_id
+
     def __get_params_from_plugins(self):
         self.__persistency_item.reset_plugin_parameters()
 
         parameters = {}
 
-        parameters[constants.FX_ACTIVATION_STATE_SLOT_INDEX] = []
+        parameters[constants.FX_ACTIVATION_STATE_CHANNEL_INDEX] = {}
 
-        for mixer_slot in range(10):
+        for channel_id_counter in range (constants.PERSISTENT_FX_CHANNELS_NUMBER):
 
-            parameters[mixer_slot] = []
+            channel_id = self.__calculate_channel_id_from_channel_id_counter(channel_id_counter)
 
-            param_count = plugins.getParamCount(self.__context.fx1_channel, mixer_slot, True)
+            parameters[constants.FX_ACTIVATION_STATE_CHANNEL_INDEX][channel_id_counter] = []
 
-            for param_id in range(param_count):
+            parameters[channel_id] = {}
 
-                if mixer_slot == constants.MANIPULATOR_SLOT_INDEX and param_id > constants.MANIPULATOR_PARAMS_LIMIT:
-                    break;
+            for mixer_slot in range(constants.MAX_MIXER_SLOT):
 
-                if mixer_slot == constants.FINISHER_VOODOO_SLOT_INDEX and param_id > constants.FINISHER_VOODOO_PARAMS_LIMIT:
-                    break;
+                parameters[channel_id][mixer_slot] = []
 
-                if mixer_slot == constants.FABFILTER_PRO_Q3_SLOT_INDEX and param_id > constants.FABFILTER_PRO_Q3_PARAMS_LIMIT:
-                    break;
+                param_count = plugins.getParamCount(channel_id, mixer_slot, True)
 
-                param_value = plugins.getParamValue(param_id, self.__context.fx1_channel, mixer_slot, True)
-                param_value_str = str(param_value)
+                for param_id in range(param_count):
 
-                # param_name = plugins.getParamName(param_id, self.__context.fx1_channel, mixer_slot, True)
-                # plugin_name = plugins.getPluginName(self.__context.fx1_channel, mixer_slot, True)
-                # print("Get parameter: plugin name - " + plugin_name + ", param - " + param_name + \
-                #       ", param_value - " + param_value_str + ", param_id - " + str(param_id) + \
-                #       ", channel - " + str(self.__context.fx1_channel) + ", mixer_slot - " + str(mixer_slot))
+                    if channel_id == self.__context.fx1_channel:
+                        if mixer_slot == constants.FX1_FABFILTER_PRO_Q3_SLOT_INDEX and param_id > constants.FABFILTER_PRO_Q3_PARAMS_LIMIT:
+                            break;
 
-                parameters[mixer_slot].append( param_value_str )
+                        if ( mixer_slot == constants.FX1_TURNADO_1_SLOT_INDEX or mixer_slot == constants.FX1_TURNADO_2_SLOT_INDEX \
+                        or mixer_slot == constants.FX1_TURNADO_3_SLOT_INDEX ) and param_id > constants.TURNADO_PARAMS_LIMIT:
+                            break;
 
+                        if mixer_slot == constants.FX1_ENDLESS_SMILE_SLOT_INDEX and param_id > constants.ENDLESS_SMILE_PARAMS_LIMIT:
+                            break;
 
-            parameter_id = fl_helper.find_parameter_by_name(self.__context.main_channel, "E" + str(mixer_slot+1) + "_TO", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-            fx_activation_state = plugins.getParamValue(parameter_id, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, True)
-            parameters[constants.FX_ACTIVATION_STATE_SLOT_INDEX].append(str( fx_activation_state ))
+                    elif channel_id == self.__context.fx2_channel:
+                        if mixer_slot == constants.FX2_MANIPULATOR_SLOT_INDEX and param_id > constants.MANIPULATOR_PARAMS_LIMIT:
+                            break;
 
-            self.__persistency_item.set_plugin_parameters(parameters)
+                        if mixer_slot == constants.FX2_FINISHER_VOODOO_SLOT_INDEX and param_id > constants.FINISHER_VOODOO_PARAMS_LIMIT:
+                            break;
+    
+                        if mixer_slot == constants.FX2_FABFILTER_PRO_Q3_SLOT_INDEX and param_id > constants.FABFILTER_PRO_Q3_PARAMS_LIMIT:
+                            break;
+
+                    param_value = plugins.getParamValue(param_id, channel_id, mixer_slot, True)
+                    param_value_str = str(param_value)
+
+                    # param_name = plugins.getParamName(param_id, channel_id, mixer_slot, True)
+                    # plugin_name = plugins.getPluginName(channel_id, mixer_slot, True)
+                    # print("Get parameter: plugin name - " + plugin_name + ", param - " + param_name + \
+                    #       ", param_value - " + param_value_str + ", param_id - " + str(param_id) + \
+                    #       ", channel - " + str(channel_id) + ", mixer_slot - " + str(mixer_slot))
+
+                    parameters[channel_id][mixer_slot].append( param_value_str )
+
+                parameter_id = fl_helper.find_parameter_by_name(self.__context.main_channel, "E" + str(channel_id_counter * constants.MAX_MIXER_SLOT + mixer_slot + 1) + "_TO", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+                fx_activation_state = plugins.getParamValue(parameter_id, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, True)
+                parameters[constants.FX_ACTIVATION_STATE_CHANNEL_INDEX][channel_id_counter].append(str( fx_activation_state ))
+
+                self.__persistency_item.set_plugin_parameters(parameters)
 
     def __apply_parameters_to_plugins(self):
 
         parameters = self.__persistency_item.get_plugin_parameters()
 
-        for mixer_slot in parameters:
+        # We should parse the activation state data first
+        activation_state_data = { self.__context.fx1_channel : {}, self.__context.fx2_channel : {} }
 
-            for param_id, param_value_str in reversed(list(enumerate(parameters[mixer_slot]))):
+        if constants.FX_ACTIVATION_STATE_CHANNEL_INDEX in parameters:
+            activation_state_config = parameters[constants.FX_ACTIVATION_STATE_CHANNEL_INDEX]
+            for channel_id_counter, channel_data in activation_state_config.items():
+                for param_id, param_value_str in reversed(list(enumerate(channel_data))):
+                    # Hack due to the fact that these parameters are not sequencial in the control surface.
+                    # They go from 0 to 9 and then from 10 to 19
+                    param_id_to_apply = param_id
+                    if channel_id_counter == 0:
+                        channel_id = self.__context.fx1_channel
+                    elif channel_id_counter == 1:
+                        channel_id = self.__context.fx2_channel
 
-                param_value = float(param_value_str)
+                    param_id_to_apply += 20 * channel_id_counter
 
-                if mixer_slot == constants.FX_ACTIVATION_STATE_SLOT_INDEX:
-                    #print("__apply_parameters_to_plugins: constants.FX_ACTIVATION_STATE_SLOT_INDEX mixer channel -" + str(self.__context.main_channel) + \
-                    #", param_id - " + str(param_id) + ", param_value - " + str(param_value))
-                    plugins.setParamValue(param_value, param_id, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                else:
+                    # print("~~~ channel_id - " + str(channel_id) + ", param_id_to_apply - " + str(param_id_to_apply))      
 
-                    # plugin_name = plugins.getPluginName(self.__context.fx1_channel, mixer_slot, True)
-                    # param_name = plugins.getParamName(param_id, self.__context.fx1_channel, mixer_slot, True)
-                    #
-                    # print("Apply parameter: plugin name - " + plugin_name + ", param - " + param_name + \
-                    #       ", param_value - " + str(param_value) + ", param_id - " + str(param_id) + \
-                    #       ", channel - " + str(self.__context.fx1_channel) + ", mixer_slot - " + str(mixer_slot))
+                    param_value = float(param_value_str)
 
-                    plugins.setParamValue(param_value, param_id, self.__context.fx1_channel, mixer_slot, midi.PIM_None, True)
+                    old_param_value = plugins.getParamValue(param_id_to_apply, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, True)
+                    
+                    if param_value != old_param_value:
+                        plugins.setParamValue(param_value, param_id_to_apply, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
+                    
+                    param_id_normalized = param_id % constants.MAX_MIXER_SLOT
+                    activation_state_data[channel_id][param_id_normalized] = param_value
+
+        for channel_id, channel_data in parameters.items():
+
+            # logic for application of the migrated data
+            if channel_id == constants.INVALID_PARAM:
+                channel_id = self.__context.fx2_channel
+
+            if channel_id == constants.FX_ACTIVATION_STATE_CHANNEL_INDEX:
+                # do nothing. It was already handled above
+                pass
+            else:
+                for mixer_slot_id, mixer_slot_data in channel_data.items():
+                    if activation_state_data[channel_id][mixer_slot_id] == 1.0:
+                        for param_id, param_value_str in reversed(list(enumerate(mixer_slot_data))):
+                            param_value = float(param_value_str)
+                            
+                            # print("channel_id - " + str(channel_id) + ", mixer_slot_id - " + str(mixer_slot_id) + ", param_id - " + str(param_id))
+                            
+                            # plugin_name = plugins.getPluginName(channel_id, mixer_slot_id, True)
+                            #
+                            # if param_id == 134 and plugin_name == "Turnado_2":
+                            #     param_name = plugins.getParamName(param_id, channel_id, mixer_slot_id, True)
+                            #
+                            #     print("Apply parameter: plugin name - " + plugin_name + ", param - " + param_name + \
+                            #           ", param_value - " + str(param_value) + ", param_id - " + str(param_id) + \
+                            #           ", channel - " + str(channel_id) + ", mixer_slot_id - " + str(mixer_slot_id))
+                            existing_param_value = plugins.getParamValue(param_id, channel_id, mixer_slot_id, True)
+                            if existing_param_value != param_value:
+                                plugins.setParamValue(param_value, param_id, channel_id, mixer_slot_id, midi.PIM_None, True)
 
     def __load_midi_mappings_from_persistency(self):
         midi_mappings = self.__persistency_item.get_midi_mapping()
 
-        print(f"loading {str(len(midi_mappings))} midi mappings from persistency - {midi_mappings}")
+        # print(f"loading {str(len(midi_mappings))} midi mappings from persistency - {midi_mappings}")
 
         if len(midi_mappings) == 0:
             for fx_parameter in self.__fx_parameters:
@@ -212,8 +282,17 @@ class FxPreset(IFxPresetDataProvider):
 
     def __store_midi_mappings_to_persistency(self):
         midi_mappings = self.get_midi_mappings_as_lists()
-        print(f"storing {str(len(midi_mappings))} midi mappings to persistency - {midi_mappings}")
+        # print(f"storing {str(len(midi_mappings))} midi mappings to persistency - {midi_mappings}")
         self.__persistency_item.set_midi_mapping(midi_mappings)
+
+    def __load_turnado_patch_from_persistency(self):
+        turnado_patch_id = self.__persistency_item.get_turnado_patch()
+
+        if turnado_patch_id:
+            self.__view.set_turnado_patch(turnado_patch_id)
+
+    def __store_turnado_patch_to_persistency(self):
+            self.__persistency_item.set_turnado_patch(self.__view.get_turnado_patch())
 
     def __load_data(self):
         self.__persistency_item.read_from_storage()
