@@ -185,7 +185,7 @@ class FxPreset(IFxPresetDataProvider):
 
                         if mixer_slot == constants.FX2_FINISHER_VOODOO_SLOT_INDEX and param_id > constants.FINISHER_VOODOO_PARAMS_LIMIT:
                             break;
-    
+
                         if mixer_slot == constants.FX2_FABFILTER_PRO_Q3_SLOT_INDEX and param_id > constants.FABFILTER_PRO_Q3_PARAMS_LIMIT:
                             break;
 
@@ -227,15 +227,15 @@ class FxPreset(IFxPresetDataProvider):
 
                     param_id_to_apply += 20 * channel_id_counter
 
-                    # print("~~~ channel_id - " + str(channel_id) + ", param_id_to_apply - " + str(param_id_to_apply))      
+                    # print("~~~ channel_id - " + str(channel_id) + ", param_id_to_apply - " + str(param_id_to_apply))
 
                     param_value = float(param_value_str)
 
                     old_param_value = plugins.getParamValue(param_id_to_apply, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, True)
-                    
+
                     if param_value != old_param_value:
                         plugins.setParamValue(param_value, param_id_to_apply, self.__context.main_channel, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                    
+
                     param_id_normalized = param_id % constants.MAX_MIXER_SLOT
                     activation_state_data[channel_id][param_id_normalized] = param_value
 
@@ -253,9 +253,9 @@ class FxPreset(IFxPresetDataProvider):
                     if activation_state_data[channel_id][mixer_slot_id] == 1.0:
                         for param_id, param_value_str in reversed(list(enumerate(mixer_slot_data))):
                             param_value = float(param_value_str)
-                            
+
                             # print("channel_id - " + str(channel_id) + ", mixer_slot_id - " + str(mixer_slot_id) + ", param_id - " + str(param_id))
-                            
+
                             # plugin_name = plugins.getPluginName(channel_id, mixer_slot_id, True)
                             #
                             # if param_id == 134 and plugin_name == "Turnado_2":

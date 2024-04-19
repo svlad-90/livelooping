@@ -50,7 +50,15 @@ class Track():
         parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "VA", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(track_volume_activation, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
+    def __set_resample_audio_routing_level(self, param_name, param_value):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, param_name, constants.RESAMPLING_AUDIO_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(param_value, parameter_id, constants.MASTER_CHANNEL, constants.RESAMPLING_AUDIO_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
+
     def clear(self, stop_recording = False):
+
+        if self.__is_recording_in_progress == True and stop_recording == True:
+            self.stop_recording()
+
         plugins.setParamValue(1, constants.AUGUSTUS_LOOP_PLUGIN_CLEAR_LOOP_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
         self.set_track_volume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
         self.__view.set_track_clear_state(self.__track_number, 1.0)
@@ -92,8 +100,6 @@ class Track():
             plugins.setParamValue(0.85, constants.PEAK_CONTROLLER_TENSION_PARAM_INDEX, self.__mixer_track, constants.LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX, midi.PIM_None, True)
             plugins.setParamValue(0.5, constants.PEAK_CONTROLLER_DECAY_PARAM_INDEX, self.__mixer_track, constants.LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX, midi.PIM_None, True)
 
-        self.__set_routing();
-
         self.set_sample_length(self.__sample_length, True)
 
     def set_sample_length(self, sample_length, unconditionally = False):
@@ -105,46 +111,16 @@ class Track():
 
             self.__view.set_track_sample_length(self.__track_number, sample_length)
 
-            if(sample_length == SampleLength.LENGTH_1):
-                plugins.setParamValue((1.0 - 1.0) / 3599.0 , constants.AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(1.0 / 3600.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+            if sample_length != SampleLength.LENGTH_0:
+                if(sample_length == SampleLength.LENGTH_128):
+                    plugins.setParamValue((64 - 1.0) / 3599.0 , constants.AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+                    plugins.setParamValue(64 / 3600.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+                else:
+                    plugins.setParamValue((sample_length - 1.0) / 3599.0 , constants.AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+                    plugins.setParamValue(sample_length / 3600.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+
                 plugins.setParamValue(0.33, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(1.0/128.0, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-            elif(sample_length == SampleLength.LENGTH_2):
-                plugins.setParamValue((2.0 - 1.0) / 3599.0 , constants.AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(2.0 / 3600.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(0.33, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(2.0/128.0, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-            elif(sample_length == SampleLength.LENGTH_4):
-                plugins.setParamValue((4.0 - 1.0) / 3599.0 , constants.AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(4.0 / 3600.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(0.33, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(4.0/128.0, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-            elif(sample_length == SampleLength.LENGTH_8):
-                plugins.setParamValue((8.0 - 1.0) / 3599.0 , constants.AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(8.0 / 3600.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(0.33, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(8.0/128.0, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-            elif(sample_length == SampleLength.LENGTH_16):
-                plugins.setParamValue((16.0 - 1.0) / 3599.0 , constants.AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(16.0 / 3600.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(0.33, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(16.0/128.0, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-            elif(sample_length == SampleLength.LENGTH_32):
-                plugins.setParamValue((32.0 - 1.0) / 3599.0 , constants.AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(32.0 / 3600.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(0.33, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(32.0/128.0, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-            elif(sample_length == SampleLength.LENGTH_64):
-                plugins.setParamValue((64.0 - 1.0) / 3599.0 , constants.AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(64.0 / 3600.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(0.33, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(64.0/128.0, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-            elif(sample_length == SampleLength.LENGTH_128):
-                plugins.setParamValue((64.0 - 1.0) / 3599.0 , constants.AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(64.0 / 3600.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(0.33, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(128.0/128.0, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+                plugins.setParamValue(sample_length/128.0, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
         self.__sample_length = sample_length
 
@@ -157,41 +133,60 @@ class Track():
 
         plugins.setParamValue(1.0, constants.AUGUSTUS_LOOP_PLUGIN_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-        if ResampleMode.FROM_LOOPER_TO_TRACK == self.get_resample_mode():
+        if ResampleMode.FROM_LOOPER_TO_TRACK != ResampleMode.NONE:
+            target_looper_channel = 0
+            target_looper_fx1_channel = 0
 
             if self.__looper_number == constants.Looper_1:
-                mixer.setRouteTo(constants.LOOPER_1_CHANNEL, constants.LOOPER_ALL_CHANNEL, 0)
-                mixer.setRouteTo(self.__mixer_track, constants.LOOPER_1_FX_1_CHANNEL, 0)
-                mixer.setRouteTo(constants.LOOPER_1_CHANNEL, self.__mixer_track, 1)
+                target_looper_channel = constants.LOOPER_1_CHANNEL
+                target_looper_fx1_channel = constants.LOOPER_1_FX_1_CHANNEL
             elif self.__looper_number == constants.Looper_2:
-                mixer.setRouteTo(constants.LOOPER_2_CHANNEL, constants.LOOPER_ALL_CHANNEL, 0)
-                mixer.setRouteTo(self.__mixer_track, constants.LOOPER_2_FX_1_CHANNEL, 0)
-                mixer.setRouteTo(constants.LOOPER_2_CHANNEL, self.__mixer_track, 1)
+                target_looper_channel = constants.LOOPER_2_CHANNEL
+                target_looper_fx1_channel = constants.LOOPER_2_FX_1_CHANNEL
             elif self.__looper_number == constants.Looper_3:
-                mixer.setRouteTo(constants.LOOPER_3_CHANNEL, constants.LOOPER_ALL_CHANNEL, 0)
-                mixer.setRouteTo(self.__mixer_track, constants.LOOPER_3_FX_1_CHANNEL, 0)
-                mixer.setRouteTo(constants.LOOPER_3_CHANNEL, self.__mixer_track, 1)
+                target_looper_channel = constants.LOOPER_3_CHANNEL
+                target_looper_fx1_channel = constants.LOOPER_3_FX_1_CHANNEL
             elif self.__looper_number == constants.Looper_4:
-                mixer.setRouteTo(constants.LOOPER_4_CHANNEL, constants.LOOPER_ALL_CHANNEL, 0)
-                mixer.setRouteTo(self.__mixer_track, constants.LOOPER_4_FX_1_CHANNEL, 0)
-                mixer.setRouteTo(constants.LOOPER_4_CHANNEL, self.__mixer_track, 1)
+                target_looper_channel = constants.LOOPER_4_CHANNEL
+                target_looper_fx1_channel = constants.LOOPER_4_FX_1_CHANNEL
 
-            mixer.setRouteTo(self.__mixer_track, constants.LOOPER_ALL_FX_1_CHANNEL, 1)
+            if ResampleMode.FROM_LOOPER_TO_TRACK == self.get_resample_mode():
 
-        elif ResampleMode.FROM_ALL_LOOPERS_TO_TRACK == self.get_resample_mode():
+                self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_LA", 0.0)
+                self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1) + "_FX1", 0.0)
+                self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1), 0.0)
+                self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1) + "_LA_FX1", 0.0)
 
-            if self.__looper_number == constants.Looper_1:
-                mixer.setRouteTo(self.__mixer_track, constants.LOOPER_1_FX_1_CHANNEL, 0)
-            elif self.__looper_number == constants.Looper_2:
-                mixer.setRouteTo(self.__mixer_track, constants.LOOPER_2_FX_1_CHANNEL, 0)
-            elif self.__looper_number == constants.Looper_3:
-                mixer.setRouteTo(self.__mixer_track, constants.LOOPER_3_FX_1_CHANNEL, 0)
-            elif self.__looper_number == constants.Looper_4:
-                mixer.setRouteTo(self.__mixer_track, constants.LOOPER_4_FX_1_CHANNEL, 0)
+                mixer.setRouteTo(target_looper_channel, constants.LOOPER_ALL_CHANNEL, 0)
+                mixer.setRouteTo(self.__mixer_track, target_looper_fx1_channel, 0)
+                mixer.setRouteTo(target_looper_channel, self.__mixer_track, 1)
+                mixer.setRouteTo(self.__mixer_track, constants.LOOPER_ALL_FX_1_CHANNEL, 1)
 
-            mixer.setRouteTo(constants.LOOPER_ALL_CHANNEL, constants.LOOPER_ALL_FX_1_CHANNEL, 0)
-            mixer.setRouteTo(constants.LOOPER_ALL_CHANNEL, self.__mixer_track, 1)
-            mixer.setRouteTo(self.__mixer_track, constants.LOOPER_ALL_FX_1_CHANNEL, 1)
+                self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_LA", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+                self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1) + "_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+                self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1), constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+                self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1) + "_LA_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+
+                mixer.afterRoutingChanged()
+
+            elif ResampleMode.FROM_ALL_LOOPERS_TO_TRACK == self.get_resample_mode():
+
+                self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1) + "_FX1", 0.0)
+                self.__set_resample_audio_routing_level("LA_FX1", 0.0)
+                self.__set_resample_audio_routing_level("LA_L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1), 0.0)
+                self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1) + "_LA_FX1", 0.0)
+
+                mixer.setRouteTo(self.__mixer_track, target_looper_fx1_channel, 0)
+                mixer.setRouteTo(constants.LOOPER_ALL_CHANNEL, constants.LOOPER_ALL_FX_1_CHANNEL, 0)
+                mixer.setRouteTo(constants.LOOPER_ALL_CHANNEL, self.__mixer_track, 1)
+                mixer.setRouteTo(self.__mixer_track, constants.LOOPER_ALL_FX_1_CHANNEL, 1)
+
+                self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1) + "_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+                self.__set_resample_audio_routing_level("LA_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+                self.__set_resample_audio_routing_level("LA_L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1), constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+                self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1) + "_LA_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+
+                mixer.afterRoutingChanged()
 
         # important to have this statement here
         self.__is_recording_in_progress = True
@@ -209,42 +204,60 @@ class Track():
 
             self.__set_track_volume_activation(1.0)
 
-            if ResampleMode.FROM_LOOPER_TO_TRACK == self.get_resample_mode():
-
-                mixer.setRouteTo(self.__mixer_track, constants.LOOPER_ALL_FX_1_CHANNEL, 0)
-
-                if self.__looper_number == constants.Looper_1:
-                    mixer.setRouteTo(constants.LOOPER_1_CHANNEL, self.__mixer_track, 0)
-                    mixer.setRouteTo(self.__mixer_track, constants.LOOPER_1_FX_1_CHANNEL, 1)
-                    mixer.setRouteTo(constants.LOOPER_1_CHANNEL, constants.LOOPER_ALL_CHANNEL, 1)
-                elif self.__looper_number == constants.Looper_2:
-                    mixer.setRouteTo(constants.LOOPER_2_CHANNEL, self.__mixer_track, 0)
-                    mixer.setRouteTo(self.__mixer_track, constants.LOOPER_2_FX_1_CHANNEL, 1)
-                    mixer.setRouteTo(constants.LOOPER_2_CHANNEL, constants.LOOPER_ALL_CHANNEL, 1)
-                elif self.__looper_number == constants.Looper_3:
-                    mixer.setRouteTo(constants.LOOPER_3_CHANNEL, self.__mixer_track, 0)
-                    mixer.setRouteTo(self.__mixer_track, constants.LOOPER_3_FX_1_CHANNEL, 1)
-                    mixer.setRouteTo(constants.LOOPER_3_CHANNEL, constants.LOOPER_ALL_CHANNEL, 1)
-                elif self.__looper_number == constants.Looper_4:
-                    mixer.setRouteTo(constants.LOOPER_4_CHANNEL, self.__mixer_track, 0)
-                    mixer.setRouteTo(self.__mixer_track, constants.LOOPER_4_FX_1_CHANNEL, 1)
-                    mixer.setRouteTo(constants.LOOPER_4_CHANNEL, constants.LOOPER_ALL_CHANNEL, 1)
-
-            elif ResampleMode.FROM_ALL_LOOPERS_TO_TRACK == self.get_resample_mode():
-
-                mixer.setRouteTo(self.__mixer_track, constants.LOOPER_ALL_FX_1_CHANNEL, 0)
-                mixer.setRouteTo(constants.LOOPER_ALL_CHANNEL, self.__mixer_track, 0)
+            if ResampleMode.FROM_LOOPER_TO_TRACK != ResampleMode.NONE:
+                target_looper_channel = 0
+                target_looper_fx1_channel = 0
 
                 if self.__looper_number == constants.Looper_1:
-                    mixer.setRouteTo(self.__mixer_track, constants.LOOPER_1_FX_1_CHANNEL, 1)
+                    target_looper_channel = constants.LOOPER_1_CHANNEL
+                    target_looper_fx1_channel = constants.LOOPER_1_FX_1_CHANNEL
                 elif self.__looper_number == constants.Looper_2:
-                    mixer.setRouteTo(self.__mixer_track, constants.LOOPER_2_FX_1_CHANNEL, 1)
+                    target_looper_channel = constants.LOOPER_2_CHANNEL
+                    target_looper_fx1_channel = constants.LOOPER_2_FX_1_CHANNEL
                 elif self.__looper_number == constants.Looper_3:
-                    mixer.setRouteTo(self.__mixer_track, constants.LOOPER_3_FX_1_CHANNEL, 1)
+                    target_looper_channel = constants.LOOPER_3_CHANNEL
+                    target_looper_fx1_channel = constants.LOOPER_3_FX_1_CHANNEL
                 elif self.__looper_number == constants.Looper_4:
-                    mixer.setRouteTo(self.__mixer_track, constants.LOOPER_4_FX_1_CHANNEL, 1)
+                    target_looper_channel = constants.LOOPER_4_CHANNEL
+                    target_looper_fx1_channel = constants.LOOPER_4_FX_1_CHANNEL
 
-                mixer.setRouteTo(constants.LOOPER_ALL_CHANNEL, constants.LOOPER_ALL_FX_1_CHANNEL, 1)
+                if ResampleMode.FROM_LOOPER_TO_TRACK == self.get_resample_mode():
+
+                    self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_LA", 0.0)
+                    self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1) + "_FX1", 0.0)
+                    self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1), 0.0)
+                    self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1) + "_LA_FX1", 0.0)
+
+                    mixer.setRouteTo(self.__mixer_track, constants.LOOPER_ALL_FX_1_CHANNEL, 0)
+                    mixer.setRouteTo(target_looper_channel, self.__mixer_track, 0)
+                    mixer.setRouteTo(self.__mixer_track, target_looper_fx1_channel, 1)
+                    mixer.setRouteTo(target_looper_channel, constants.LOOPER_ALL_CHANNEL, 1)
+
+                    self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_LA", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+                    self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1) + "_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+                    self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1), constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+                    self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1) + "_LA_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+
+                    mixer.afterRoutingChanged()
+
+                elif ResampleMode.FROM_ALL_LOOPERS_TO_TRACK == self.get_resample_mode():
+
+                    self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1) + "_FX1", 0.0)
+                    self.__set_resample_audio_routing_level("LA_FX1", 0.0)
+                    self.__set_resample_audio_routing_level("LA_L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1), 0.0)
+                    self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1) + "_LA_FX1", 0.0)
+
+                    mixer.setRouteTo(self.__mixer_track, constants.LOOPER_ALL_FX_1_CHANNEL, 0)
+                    mixer.setRouteTo(constants.LOOPER_ALL_CHANNEL, self.__mixer_track, 0)
+                    mixer.setRouteTo(self.__mixer_track, target_looper_fx1_channel, 1)
+                    mixer.setRouteTo(constants.LOOPER_ALL_CHANNEL, constants.LOOPER_ALL_FX_1_CHANNEL, 1)
+
+                    self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1) + "_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+                    self.__set_resample_audio_routing_level("LA_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+                    self.__set_resample_audio_routing_level("LA_L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1), constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+                    self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_MT" + str(self.__track_number + 1) + "_LA_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+
+                    mixer.afterRoutingChanged()
 
             if self.get_resample_mode() == ResampleMode.NONE:
                 self.__view.set_track_recording_state(self.__track_number, 0.0)
@@ -278,14 +291,6 @@ class Track():
 
     def __set_resample_mode(self, resample_mode):
         self.__resample_mode = resample_mode
-
-    def __set_routing(self):
-        mixer.setRouteTo(constants.MIC_ROUTE_CHANNEL, self.__mixer_track, 1)
-        mixer.setRouteTo(constants.SYNTH_ROUTE_CHANNEL, self.__mixer_track, 1)
-
-    def __remove_routing(self):
-        mixer.setRouteTo(constants.MIC_ROUTE_CHANNEL, self.__mixer_track, 0)
-        mixer.setRouteTo(constants.SYNTH_ROUTE_CHANNEL, self.__mixer_track, 0)
 
     def set_routing_level(self, routing_level):
         parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "M", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)

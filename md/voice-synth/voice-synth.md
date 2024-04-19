@@ -12,9 +12,12 @@
 	* [Loop start and end points](#loop-start-and-end-points)
 	* [Hard sync](#hard-sync)
 	* [Record feedback](#record-feedback)
-	* [Volume](#volume)
   * [One shot samples](#one-shot-samples)
     * [Recording one-shot samples](#recording-one-shot-samples)
+  * [Mode independent controllers](#mode-independent-controllers)
+    * [Volume](#volume)
+	* [Pan](#pan)
+  * [Mic pan](#mic-pan)
 
 ----
 
@@ -127,14 +130,6 @@ It might be helpful when you want to:
 
 ----
 
-### Volume
-
-When you're operating in the 'crossfade loop' mode, you can change the volume of the synth, using the 'Mixer -> Sub Osc' knob on the synth:
-
-![Volume](./resources/volume.jpg)
-
-----
-
 ## One-shot samples
 
 ### Recording one-shot samples
@@ -159,7 +154,41 @@ The following workflow expected:
 
 If you do not like what you've recorded and want to start from scratch - switch between modes - to 'crossfade loop' and then back to 'one-shot sample'. That will erase all previously recorded one-shot samples.
 
-**Note!** This is a more simplistic mode. It does not have any additional effects. There is no even the volume adjustment. There are just the recording and the playback. Use the velocity to play with the different volumes. Use 'input controller' mic effects to record post-processed sounds.
+----
+
+## Mode independent controllers
+
+### Volume
+
+You can change the volume of the synth, using the 'Mixer -> Sub Osc' knob on the synth:
+
+![Volume](./resources/volume.jpg)
+
+----
+
+### Pan
+
+You can change the pan of the synth, using the 'Filters -> Frequency' knob on the synth:
+
+![Pan](./resources/pan.jpg)
+
+To reset the pan to the center move the Pitch Wheel of the Novation Bass Station 2:
+
+![Reset mic pan](./resources/reset_pan.jpg)
+
+----
+
+## Mic pan
+
+As there are not enough buttons on the KP3+ an option to control the panorama of the microphone signal was moved to the voice-synth logical device.
+
+To adjust the pan use the Mod Wheel of the Novation Bass Station 2:
+
+![Adjust mic pan](./resources/adjust_mic_pan.jpg)
+
+To reset the pan to the center move the Pitch Wheel of the Novation Bass Station 2:
+
+![Reset mic pan](./resources/reset_pan.jpg)
 
 ----
 

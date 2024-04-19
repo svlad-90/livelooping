@@ -85,9 +85,9 @@ class PersistencyItem:
                 data = {}
                 if data_str.startswith("{") :
                     data = eval(data_str)
-    
+
                     found_version = data.get(constants.PERSISTENCY_VERSION_KEY)
-    
+
                     if found_version != None:
                         # new era
                         if found_version != constants.PERSISTENCY_CURRENT_VERSION:
@@ -188,7 +188,7 @@ class PersistencyItem:
                 channel_idx = 0
 
             new_slot_activation_statuses[channel_idx].append(activation_slot_status)
-            
+
         plugin_params[FX_ACTIVATION_STATE_CHANNEL_INDEX] = new_slot_activation_statuses
 
         print("Version update from 2.1 to 2.2 has finished ...")

@@ -66,6 +66,8 @@ The view will reflect the selection within the DAW in the following way:
 
 ![Preset page selected](./resources/preset-page-selected.jpg)
 
+**Note!** Selecting the preset page will reset the input audio pan to the center.
+
 ----
 
 ## Selecting the preset
@@ -81,6 +83,8 @@ The view will reflect the selection within the DAW in the following way:
 Selecting the preset applies the stored preset's parameters. As some of them are visible in the view, their values will be also updated:
 
 ![Updated parameter values](./resources/updated-parameter-values.jpg)
+
+**Note!** Selecting the preset will reset the input audio pan to the center.
 
 ----
 
@@ -705,7 +709,7 @@ Let's imagine, that you've set specific source sidechain levels on the input con
 
 ![Input source sidechain levels changed](./resources/input-source-sidechain-levels-changed.jpg)
 
-In order to stach the changes, turn the **"PROGRAM<->BPM"** knob on the KP3+ on 1 point right:
+In order to stash the changes, turn the **"PROGRAM<->BPM"** knob on the KP3+ on 1 point right:
 
 ![Stash resource sidechain levels](./resources/stash_recource_sidechain_levels.jpg)
 
