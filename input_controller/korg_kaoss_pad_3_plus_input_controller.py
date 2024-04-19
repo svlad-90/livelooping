@@ -172,6 +172,7 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
         self.__fx_preset_pages[self.__selected_fx_preset_page].select(not self.is_save_mode())
 
         self.set_fx_level(self.__fx_level, True)
+        self.__reset_panomatic()
 
     def set_shift_pressed_state(self, shift_pressed):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusInputController.set_shift_pressed_state.__name__ + ": shift pressed - " + str(shift_pressed))
@@ -197,6 +198,8 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
         self.__fx_preset_pages[self.__selected_fx_preset_page].select_fx_preset(preset_fx_id)
 
         self.set_fx_level(self.__fx_level, True)
+
+        self.__reset_panomatic()
 
     def update_fx_preset(self, fx_preset_id):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusInputController.update_fx_preset.__name__)
@@ -422,6 +425,10 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
 
         parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, knob_prefix + str(track_id + 1) + "S", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         return plugins.getParamValue(parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, True)
+
+    def __reset_panomatic(self):
+        plugins.setParamValue(constants.PANOMATIC_DEFAULT_PAN_LEVEL, constants.PANOMATIC_PAN_PARAM_INDEX, self.__context.fx3_channel, constants.INPUT_CONTROLLER_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(constants.PANOMATIC_DEFAULT_VOLUME_LEVEL, constants.PANOMATIC_VOLUME_PARAM_INDEX, self.__context.fx3_channel, constants.INPUT_CONTROLLER_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
 
     def on_midi_msg(self, event):
 

@@ -78,7 +78,7 @@ class MidiMappingInputDialog:
                     self.__selected_plugin_number = constants.MIN_PLUGIN_NUMBER
 
                     self.__selected_channel_idx += 1
-                    if self.__selected_channel_idx > len(self.__plugins_mixer_channels):
+                    if self.__selected_channel_idx >= len(self.__plugins_mixer_channels):
                         self.__selected_channel_idx = 0
 
                 plugin_name = plugins.getPluginName(self.__plugins_mixer_channels[self.__selected_channel_idx], self.__selected_plugin_number, True)

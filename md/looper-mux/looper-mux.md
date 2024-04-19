@@ -26,6 +26,7 @@
   * [Sidechain](#sidechain)
 	* [Loopers sidechain levels](#loopers-sidechain-levels)
 	* [Sidechain source parameters](#sidechain-source-parameters)
+  * [DAW transport sync](#daw-transport-sync)
   
 ----
 
@@ -289,13 +290,11 @@ In order to resample within the selected looper:
 
 - Once done, [stop the recording](#recording-audio-to-the-track) as usual.
 
-- After the recording is finished, all the tracks, which were recorded to the target track would be automatically muted:
+- After the recording is finished, all the tracks, which were recorded to the target track would be automatically cleared:
 
   ![Resampling of the selected looper finished](./resources/resample-selected-looper-finished.jpg)
-  
-  The content of those tracks would be still available. So you can turn them back on in case needed.
-  
-  The volume of the target resampling track would be restored to 100.
+    
+  The volume of the target resampling track would be restored to 100%.
 
 ----
 
@@ -495,6 +494,20 @@ The view will reflect that in the following way within the DAW:
 ![Changing the looper #1 sidechain parameters](./resources/looper-1-sidechain-parameters-changed.jpg)
 
 **Note!** These parameters are reset to default values each time when the loopermux is [stopped](#resetting-the-looper-mux).
+
+----
+
+### DAW transport sync
+
+When you start to record the track, there is no implicit synchronization of the start of your recording with the start of the FL Studio transport:
+
+![FL Studio transport](./resources/fl-studio-transport.jpg)
+
+It might cause unsynchronization with sequencer-based events, e.g., Turnado. In this case, you want your track and the whole arrangement to be synchronized with the DAW transport.
+
+To reset FL Studio's transport to the beginning at any moment, turn the "PROGRAM<->BPM" knob on the KP3+ on 1 point in any direction:
+
+![DAW transport sync](./resources/daw-transport-sync.jpg)
 
 ----
 

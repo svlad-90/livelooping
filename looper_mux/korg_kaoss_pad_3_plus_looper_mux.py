@@ -54,8 +54,6 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             try:
                 for looper_id in self.__loopers:
                     self.__loopers[looper_id].on_init_script()
-                mixer.setRouteTo(constants.MIC_ROUTE_CHANNEL, constants.MASTER_FX_1_CHANNEL, 1)
-                mixer.setRouteTo(constants.SYNTH_ROUTE_CHANNEL, constants.MASTER_FX_1_CHANNEL, 1)
                 self.__initialized = True
                 self.clear()
                 self.__view.set_tempo(mixer.getCurrentTempo() / 1000.0)
@@ -204,11 +202,9 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
 
         if (pressed_time - self.__buttons_last_press_time[pressed_button]) < 0.5:
             # double click
-            self.__buttons_last_press_time.clear()
             self.__buttons_last_press_time[pressed_button] = 0
             action()
         else:
-            self.__buttons_last_press_time.clear()
             self.__buttons_last_press_time[pressed_button] = pressed_time
 
     def set_looper_side_chain_level(self, track_id, sidechain_level):
@@ -301,6 +297,8 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
                 for track_id_it in self.__loopers[looper_id].get_tracks():
                     if ( looper_id != self.__selected_looper or track_id_it != track_id ):
                         self.__loopers[looper_id].clear_track(track_id_it)
+                        self.__loopers[looper_id].set_turnado_dictator_level(0.0)
+                        self.__loopers[looper_id].set_turnado_dry_wet_level(constants.DEFAULT_TURNADO_DRY_WET_LEVEL)
                     else:
                         self.__loopers[looper_id].set_track_volume(track_id_it, fl_helper.MAX_VOLUME_LEVEL_VALUE)
 
@@ -319,6 +317,10 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
 
         parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "SD", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sidechain_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
+
+    def __sync_daw_transport(self):
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.__sync_daw_transport.__name__)
+        transport.setSongPos(0.0)
 
     def __on_midi_msg_processing(self, event):
 
@@ -341,8 +343,9 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         elif event.data1 == constants.MIDI_CC_TRACK_4_SAMPLING and event.data2 == constants.KP3_PLUS_ABCD_RELEASED:
             self.removepressed_sampler_button(PressedSamplerButton.D_PRESSED)
 
-
-        if event.data1 == constants.MIDI_CC_LOOPER_VOLUME and self.get_shift_pressed_state():
+        if True == fl_helper.is_kp3_program_change_event(event):
+            self.__sync_daw_transport()
+        elif event.data1 == constants.MIDI_CC_LOOPER_VOLUME and self.get_shift_pressed_state():
             self.set_drop_intencity( (fl_helper.MIDI_MAX_VALUE - event.data2) / fl_helper.MIDI_MAX_VALUE )
         elif event.data1 == constants.MIDI_CC_RESAMPLE_MODE_FROM_LOOPER_TO_TRACK and self.get_shift_pressed_state():
             self.set_resample_mode(ResampleMode.FROM_LOOPER_TO_TRACK)

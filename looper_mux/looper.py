@@ -114,10 +114,10 @@ class Looper():
     def stop_recording_track(self, track_id):
 
         if self.__tracks[track_id].get_resample_mode() == ResampleMode.FROM_LOOPER_TO_TRACK:
-            # turn off the volume of all the tracks of the looper, except the one for which recording is over
+            # clear all the tracks of the looper, except the one for which recording is over
             for track_id_it in self.__tracks:
                 if track_id_it != track_id:
-                    self.__tracks[track_id_it].set_track_volume(0.0)
+                    self.__tracks[track_id_it].clear()
                 else:
                     self.__tracks[track_id_it].set_track_volume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
             self.set_turnado_dictator_level(0.0)
