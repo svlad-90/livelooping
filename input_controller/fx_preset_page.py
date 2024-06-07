@@ -124,3 +124,12 @@ class FxPresetPage:
     def set_active_fx_unit_custom(self, fx_preset_id, active_fx_unit):
         self.__fx_presets[fx_preset_id].set_active_fx_unit(active_fx_unit)
         self.__fx_presets[fx_preset_id].view_update_active_fx_unit()
+
+    def turn_off_scene(self, fx_preset_id):
+        self.__fx_presets[fx_preset_id].turn_off_scene()
+
+    def jump_to_next_scene(self, fx_preset_id):
+        self.__fx_presets[fx_preset_id].jump_to_next_scene()
+
+    def jump_to_previous_scene(self, fx_preset_id):
+        self.__fx_presets[fx_preset_id].jump_to_previous_scene()

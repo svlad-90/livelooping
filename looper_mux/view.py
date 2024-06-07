@@ -11,8 +11,25 @@ import plugins
 from looper_mux.resample_mode import ResampleMode
 from looper_mux import constants
 from common import fl_helper
+from looper_mux.sample_length import SampleLength
 
 class View:
+    def __init__(self):
+        self.supported_sample_lengths = [SampleLength.LENGTH_1,
+                                  SampleLength.LENGTH_2,
+                                  SampleLength.LENGTH_3,
+                                  SampleLength.LENGTH_4,
+                                  SampleLength.LENGTH_6,
+                                  SampleLength.LENGTH_8,
+                                  SampleLength.LENGTH_12,
+                                  SampleLength.LENGTH_16,
+                                  SampleLength.LENGTH_24,
+                                  SampleLength.LENGTH_32,
+                                  SampleLength.LENGTH_48,
+                                  SampleLength.LENGTH_64,
+                                  SampleLength.LENGTH_96,
+                                  SampleLength.LENGTH_128]
+
     def set_shift_pressed_state(self, shift_pressed):
         parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Shift", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(shift_pressed, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
@@ -121,9 +138,7 @@ class View:
         self.__clear_tracks_off()
 
     def update_sample_length(self, sample_length):
-
-        for i in range(8):
-            i_sample_length = int(math.pow(2, i))
+        for i_sample_length in self.supported_sample_lengths:
             parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Length_" + str(i_sample_length), constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
 
             value = 0
@@ -182,3 +197,7 @@ class View:
     def set_decay_side_chain_level(self, track_id, sidechain_level):
         parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "_SD", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sidechain_level, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
+
+    def set_prolonged_record_length_mode(self, status):
+        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "x1.5 length", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(status, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)

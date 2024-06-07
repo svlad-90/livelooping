@@ -1,6 +1,10 @@
 # name=device_korg_kaoss_pad_3_plus_looper_mux
+import device
+
 device_name="device_korg_kaoss_pad_3_plus_looper_mux"
 print(device_name + ': started')
+
+print("found MIDI receivers - ", device.dispatchReceiverCount())
 
 # internal imports
 from looper_mux.korg_kaoss_pad_3_plus_looper_mux import KorgKaossPad3PlusLooperMux

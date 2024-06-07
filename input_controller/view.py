@@ -146,3 +146,7 @@ class View:
     def get_turnado_patch(self):
         parameter_id = fl_helper.find_parameter_by_name(self.__context.main_channel, "T_Patch_Persistency", constants.INPUT_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         return plugins.getParamValue(parameter_id, self.__context.main_channel, constants.INPUT_CONTROL_SURFACE_MIXER_SLOT_INDEX, True)
+
+    def set_vocal_loopers_sc(self, status):
+        parameter_id = fl_helper.find_parameter_by_name(self.__context.main_channel, "Loopers side-chain", constants.INPUT_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+        plugins.setParamValue(status, parameter_id, self.__context.main_channel, constants.INPUT_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)

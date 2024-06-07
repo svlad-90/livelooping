@@ -6,6 +6,9 @@ Created on Jan 24, 2022
 
 import midi
 import plugins
+import patterns
+import transport
+import midi
 import math
 
 from common import fl_helper
@@ -43,6 +46,7 @@ class FxPreset(IFxPresetDataProvider):
 
         self.__active_fx_unit = FxUnit.FX_UNIT_CUSTOM
         self.__initialized = False
+        self.__current_scene_pattern = constants.SCENE_EMPTY_PATTERN
 
     def on_init_script(self):
 
@@ -111,6 +115,8 @@ class FxPreset(IFxPresetDataProvider):
 
         plugins.setParamValue(fl_helper.MAX_VOLUME_LEVEL_VALUE, constants.PANOMATIC_VOLUME_PARAM_INDEX, self.__context.main_channel, constants.PRESET_CHANGE_PROTECTOR_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
 
+        self.turn_off_scene()
+
     def view_update_fx_preset_availability(self):
         self.__view.set_fx_preset_availability(self.__fx_number, len(self.__persistency_item.get_plugin_parameters()) > 0)
 
@@ -169,6 +175,10 @@ class FxPreset(IFxPresetDataProvider):
                 for param_id in range(param_count):
 
                     if channel_id == self.__context.fx1_channel:
+
+                        if mixer_slot == constants.FX1_MULTIBAND_COMPRESSOR_SLOT_INDEX and param_id > constants.MULTIBAND_COMPRESSOR_PARAMS_LIMIT:
+                            break;
+
                         if mixer_slot == constants.FX1_FABFILTER_PRO_Q3_SLOT_INDEX and param_id > constants.FABFILTER_PRO_Q3_PARAMS_LIMIT:
                             break;
 
@@ -251,6 +261,7 @@ class FxPreset(IFxPresetDataProvider):
             else:
                 for mixer_slot_id, mixer_slot_data in channel_data.items():
                     if activation_state_data[channel_id][mixer_slot_id] == 1.0:
+
                         for param_id, param_value_str in reversed(list(enumerate(mixer_slot_data))):
                             param_value = float(param_value_str)
 
@@ -302,3 +313,38 @@ class FxPreset(IFxPresetDataProvider):
 
     def __reset_data(self):
         self.__persistency_item.reset_storage()
+
+    def turn_off_scene(self):
+        self.__jump_to_pattern(constants.SCENE_EMPTY_PATTERN)
+
+    def jump_to_next_scene(self):
+        target_pattern = 0
+        min_pattern = self.__context.first_scene_pattern + self.__fx_page_number * constants.SCENES_PER_PRESET * 8 + self.__fx_number * constants.SCENES_PER_PRESET + 1
+        max_pattern = self.__context.first_scene_pattern + self.__fx_page_number * constants.SCENES_PER_PRESET * 8 + self.__fx_number * constants.SCENES_PER_PRESET + constants.SCENES_PER_PRESET
+        if self.__current_scene_pattern == constants.SCENE_EMPTY_PATTERN:
+            target_pattern = min_pattern
+        elif self.__current_scene_pattern == max_pattern:
+            target_pattern = min_pattern
+        else:
+            target_pattern = self.__current_scene_pattern + 1
+        self.__jump_to_pattern(target_pattern)
+
+    def jump_to_previous_scene(self):
+        target_pattern = 0
+        min_pattern = self.__context.first_scene_pattern + self.__fx_page_number * constants.SCENES_PER_PRESET * 8 + self.__fx_number * constants.SCENES_PER_PRESET + 1
+        max_pattern = self.__context.first_scene_pattern + self.__fx_page_number * constants.SCENES_PER_PRESET * 8 + self.__fx_number * constants.SCENES_PER_PRESET + constants.SCENES_PER_PRESET
+        if self.__current_scene_pattern == constants.SCENE_EMPTY_PATTERN:
+            target_pattern = min_pattern
+        elif self.__current_scene_pattern == min_pattern:
+            target_pattern = max_pattern
+        else:
+            target_pattern = self.__current_scene_pattern - 1
+        self.__jump_to_pattern(target_pattern)
+
+    def __jump_to_pattern(self, pattern_id):
+        patterns.jumpToPattern(pattern_id)
+        self.__current_scene_pattern = pattern_id
+        self.__apply_parameters_to_plugins()
+        self.view_update_active_fx_unit()
+        if True == transport.isPlaying():
+            transport.setSongPos(transport.getSongPos())

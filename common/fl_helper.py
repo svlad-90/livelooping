@@ -1,4 +1,6 @@
 import plugins
+import device
+from common import global_constants
 
 MIDI_MAX_VALUE = 127
 MAX_VOLUME_LEVEL_VALUE   = 0.8
@@ -99,3 +101,19 @@ class PluginParametersCache:
 
 def find_parameter_by_name(mixer_channel, parameter_name, slot_index):
     return PluginParametersCache.find_parameter_by_name(mixer_channel, parameter_name, slot_index)
+
+def broadcast_midi_message(midi_id, midi_channel, data_1, data_2):
+    # Calculate the actual MIDI ID for the given channel
+    # 0xB0 is the base for Control Change on Channel 1
+    # midi_channel is assumed to be 0-indexed, so add directly for 1-based indexing
+    actual_midi_id = midi_id + midi_channel  # e.g., 0xB0 (176) + 15 for channel 16
+
+    # Construct the full MIDI message
+    # Shift the actual MIDI ID directly, assuming data bytes are added without further bit manipulation
+    full_midi_message = (actual_midi_id) | (data_1 << 8) | data_2 << 16
+    #print("broadcast_midi_message: midi_id -", midi_id, ", midi_channel -", midi_channel, ", data_1 -", data_1, \
+    #      ", data_2 -", data_2, ", full_midi_message -", full_midi_message)
+
+    # Dispatch the message to all MIDI receivers
+    for i in range(device.dispatchReceiverCount()):
+        device.dispatch(i, full_midi_message)

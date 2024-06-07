@@ -21,6 +21,7 @@ from looper_mux.sample_length import SampleLength
 from looper_mux.view import View
 from common import fl_helper
 
+
 class KorgKaossPad3PlusLooperMux(IContextInterface):
 
     def __init__(self, context):
@@ -45,6 +46,8 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         self.__initialized = False
         self.__resample_mode = ResampleMode.NONE
         self.__buttons_last_press_time = {}
+        self.__prolonged_record_length_mode = False
+        self.__selected_sample_length = SampleLength.LENGTH_1
 
     def on_init_script(self):
 
@@ -89,10 +92,10 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
     def set_tempo(self, tempo):
         target_tempo = tempo - tempo % 50
         current_tempo = mixer.getCurrentTempo() / 100.0
-        if math.fabs( int(current_tempo/10) - int(target_tempo/10) ) >= constants.TEMPO_JOG_ROTATION_THRESHOLD:
-            jog_rotation = int( target_tempo - current_tempo )
+        if math.fabs(int(current_tempo / 10) - int(target_tempo / 10)) >= constants.TEMPO_JOG_ROTATION_THRESHOLD:
+            jog_rotation = int(target_tempo - current_tempo)
             print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.set_tempo.__name__ + ": target tempo: " + str(target_tempo) + ", current tempo: " + str(current_tempo) + ", jog rotation: " + str(jog_rotation))
-            transport.globalTransport( 105, jog_rotation )
+            transport.globalTransport(105, jog_rotation)
             self.__view.set_tempo(target_tempo / 10.0)
 
     def set_shift_pressed_state(self, shift_pressed):
@@ -122,12 +125,12 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         self.__sidechain_change_mode
 
     def add_pressed_sampler_button(self, pressed_sampler_button):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.add_pressed_sampler_button.__name__ + ": added sampler button - " + str(pressed_sampler_button))
+        # print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.add_pressed_sampler_button.__name__ + ": added sampler button - " + str(pressed_sampler_button))
         self.__pressed_sampler_buttons.add(pressed_sampler_button)
         self.__last_pressed_sampler_button = pressed_sampler_button
 
     def removepressed_sampler_button(self, released_sampler_button):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.add_pressed_sampler_button.__name__ + ": removed sampler button - " + str(released_sampler_button))
+        # print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.add_pressed_sampler_button.__name__ + ": removed sampler button - " + str(released_sampler_button))
         self.__pressed_sampler_buttons.remove(released_sampler_button)
 
         if self.__last_pressed_sampler_button == released_sampler_button:
@@ -156,10 +159,11 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         self.__selected_sample_length = sample_length
         self.__view.update_sample_length(sample_length)
 
-        #print_all_plugin_parameters(17, 9)
+        # print_all_plugin_parameters(17, 9)
 
     def clear(self):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.clear.__name__)
+        self.__set_prolonged_record_length_mode(False)
         for looper_id in self.__loopers:
             self.__loopers[looper_id].clear_looper()
         self.select_looper(constants.Looper_1)
@@ -295,7 +299,7 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             # clear all tracks of all loopers, except the one for which recording is over
             for looper_id in self.__loopers:
                 for track_id_it in self.__loopers[looper_id].get_tracks():
-                    if ( looper_id != self.__selected_looper or track_id_it != track_id ):
+                    if (looper_id != self.__selected_looper or track_id_it != track_id):
                         self.__loopers[looper_id].clear_track(track_id_it)
                         self.__loopers[looper_id].set_turnado_dictator_level(0.0)
                         self.__loopers[looper_id].set_turnado_dry_wet_level(constants.DEFAULT_TURNADO_DRY_WET_LEVEL)
@@ -322,6 +326,16 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.__sync_daw_transport.__name__)
         transport.setSongPos(0.0)
 
+    def __set_prolonged_record_length_mode(self, val):
+        self.__prolonged_record_length_mode = val
+        self.__view.set_prolonged_record_length_mode(val)
+
+    def __get_prolonged_record_length_mode(self):
+        return self.__prolonged_record_length_mode
+
+    def __change_prolonged_record_length_mode(self):
+        self.__set_prolonged_record_length_mode(not self.__get_prolonged_record_length_mode())
+
     def __on_midi_msg_processing(self, event):
 
         # fl_helper.print_midi_event(event)
@@ -346,18 +360,18 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         if True == fl_helper.is_kp3_program_change_event(event):
             self.__sync_daw_transport()
         elif event.data1 == constants.MIDI_CC_LOOPER_VOLUME and self.get_shift_pressed_state():
-            self.set_drop_intencity( (fl_helper.MIDI_MAX_VALUE - event.data2) / fl_helper.MIDI_MAX_VALUE )
+            self.set_drop_intencity((fl_helper.MIDI_MAX_VALUE - event.data2) / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_RESAMPLE_MODE_FROM_LOOPER_TO_TRACK and self.get_shift_pressed_state():
             self.set_resample_mode(ResampleMode.FROM_LOOPER_TO_TRACK)
 
-            action = lambda self = self: ( self.set_resample_mode(ResampleMode.NONE), \
+            action = lambda self = self: (self.set_resample_mode(ResampleMode.NONE), \
                                            self.switch_to_prev_turnado_preset())
             self.action_on_double_click(constants.MIDI_CC_RESAMPLE_MODE_FROM_LOOPER_TO_TRACK + constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT, action)
 
         elif event.data1 == constants.MIDI_CC_RESAMPLE_MODE_FROM_ALL_LOOPERS_TO_TRACK and self.get_shift_pressed_state():
             self.set_resample_mode(ResampleMode.FROM_ALL_LOOPERS_TO_TRACK)
 
-            action = lambda self = self: ( self.set_resample_mode(ResampleMode.NONE), \
+            action = lambda self = self: (self.set_resample_mode(ResampleMode.NONE), \
                                            self.switch_to_next_turnado_preset())
             self.action_on_double_click(constants.MIDI_CC_RESAMPLE_MODE_FROM_ALL_LOOPERS_TO_TRACK + constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT, action)
         elif event.data1 == constants.MIDI_CC_LOOPER_1 and self.get_shift_pressed_state():
@@ -365,42 +379,61 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.action_on_double_click(constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT + constants.MIDI_CC_SAMPLE_LENGTH_1, self.drop)
         elif event.data1 == constants.MIDI_CC_LOOPER_2 and self.get_shift_pressed_state():
             self.select_looper(constants.Looper_2)
+            self.action_on_double_click(constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT + constants.MIDI_CC_SAMPLE_LENGTH_2, self.__change_prolonged_record_length_mode)
         elif event.data1 == constants.MIDI_CC_LOOPER_3 and self.get_shift_pressed_state():
             self.select_looper(constants.Looper_3)
         elif event.data1 == constants.MIDI_CC_LOOPER_4 and self.get_shift_pressed_state():
             self.select_looper(constants.Looper_4)
         elif event.data1 == constants.MIDI_CC_CLEAR_LOOPER and self.get_shift_pressed_state():
-            action = lambda self = self: ( self.clear_current_looper() )
+            action = lambda self = self: (self.clear_current_looper())
             self.action_on_double_click(constants.MIDI_CC_CLEAR_LOOPER, action)
         elif event.data1 == constants.MIDI_CC_PLAY_STOP and self.get_shift_pressed_state():
-            action = lambda self = self: ( self.play_stop() )
+            action = lambda self = self: (self.play_stop())
             self.action_on_double_click(constants.MIDI_CC_PLAY_STOP, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_1:
             self.set_sample_length(SampleLength.LENGTH_1)
             action = lambda self = self: self.turn_looper_on_off(constants.Looper_1)
             self.action_on_double_click(constants.MIDI_CC_SAMPLE_LENGTH_1, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_2:
-            self.set_sample_length(SampleLength.LENGTH_2)
+            if True == self.__get_prolonged_record_length_mode():
+                self.set_sample_length(SampleLength.LENGTH_3)
+            else:
+                self.set_sample_length(SampleLength.LENGTH_2)
             action = lambda self = self: self.turn_looper_on_off(constants.Looper_2)
             self.action_on_double_click(constants.MIDI_CC_SAMPLE_LENGTH_2, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_4:
-            self.set_sample_length(SampleLength.LENGTH_4)
+            if True == self.__get_prolonged_record_length_mode():
+                self.set_sample_length(SampleLength.LENGTH_6)
+            else:
+                self.set_sample_length(SampleLength.LENGTH_4)
             action = lambda self = self: self.turn_looper_on_off(constants.Looper_3)
             self.action_on_double_click(constants.MIDI_CC_SAMPLE_LENGTH_4, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_8:
-            self.set_sample_length(SampleLength.LENGTH_8)
+            if True == self.__get_prolonged_record_length_mode():
+                self.set_sample_length(SampleLength.LENGTH_12)
+            else:
+                self.set_sample_length(SampleLength.LENGTH_8)
             action = lambda self = self: self.turn_looper_on_off(constants.Looper_4)
             self.action_on_double_click(constants.MIDI_CC_SAMPLE_LENGTH_8, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_16:
-            self.set_sample_length(SampleLength.LENGTH_16)
+            if True == self.__get_prolonged_record_length_mode():
+                self.set_sample_length(SampleLength.LENGTH_24)
+            else:
+                self.set_sample_length(SampleLength.LENGTH_16)
             action = lambda self = self: self.turn_track_on_off(constants.Track_1)
             self.action_on_double_click(constants.MIDI_CC_SAMPLE_LENGTH_16, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_32:
-            self.set_sample_length(SampleLength.LENGTH_32)
+            if True == self.__get_prolonged_record_length_mode():
+                self.set_sample_length(SampleLength.LENGTH_48)
+            else:
+                self.set_sample_length(SampleLength.LENGTH_32)
             action = lambda self = self: self.turn_track_on_off(constants.Track_2)
             self.action_on_double_click(constants.MIDI_CC_SAMPLE_LENGTH_32, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_64:
-            self.set_sample_length(SampleLength.LENGTH_64)
+            if True == self.__get_prolonged_record_length_mode():
+                self.set_sample_length(SampleLength.LENGTH_96)
+            else:
+                self.set_sample_length(SampleLength.LENGTH_64)
             action = lambda self = self: self.turn_track_on_off(constants.Track_3)
             self.action_on_double_click(constants.MIDI_CC_SAMPLE_LENGTH_64, action)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_128:
@@ -468,16 +501,16 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
 
         self.on_init_script()
 
-        #fl_helper.print_all_plugin_parameters(LOOPER_1_CHANNEL, LOOPER_TURNADO_SLOT_INDEX)
+        # fl_helper.print_all_plugin_parameters(LOOPER_1_CHANNEL, LOOPER_TURNADO_SLOT_INDEX)
 
         event.handled = False
 
         if not self.is_playing():
             if event.data1 == constants.MIDI_CC_TEMPO and not self.is_playing():
-                self.set_tempo(800 + int((event.data2 / fl_helper.MIDI_MAX_VALUE) * 1000.0)) # from 80 to 180
+                self.set_tempo(800 + int((event.data2 / fl_helper.MIDI_MAX_VALUE) * 1000.0))  # from 80 to 180
             else:
-                if ( not ( event.data1 == constants.MIDI_CC_SHIFT and event.data2 == 0 ) \
-                and ( not ( event.data1 == constants.MIDI_CC_PLAY_STOP and self.get_shift_pressed_state() ) ) ):
+                if (not (event.data1 == constants.MIDI_CC_SHIFT and event.data2 == 0) \
+                and (not (event.data1 == constants.MIDI_CC_PLAY_STOP and self.get_shift_pressed_state()))):
                     self.play_stop()
 
                 self.__on_midi_msg_processing(event)

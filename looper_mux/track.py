@@ -7,11 +7,12 @@ Created on Feb 7, 2022
 import midi
 import plugins
 import mixer
+import device
 
 from looper_mux import constants
 from looper_mux.sample_length import SampleLength
 from looper_mux.resample_mode import ResampleMode
-from common import fl_helper
+from common import fl_helper, global_constants
 
 class Track():
 
@@ -95,10 +96,13 @@ class Track():
 
         # looper 1 is the source of the sidechain
         if self.__looper_number == constants.Looper_1:
-            plugins.setParamValue(fl_helper.MAX_VOLUME_LEVEL_VALUE, constants.PEAK_CONTROLLER_BASE_PARAM_INDEX, self.__mixer_track, constants.LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX, midi.PIM_None, True)
-            plugins.setParamValue(0.12, constants.PEAK_CONTROLLER_VOLUME_PARAM_INDEX, self.__mixer_track, constants.LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX, midi.PIM_None, True)
-            plugins.setParamValue(0.85, constants.PEAK_CONTROLLER_TENSION_PARAM_INDEX, self.__mixer_track, constants.LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX, midi.PIM_None, True)
-            plugins.setParamValue(0.5, constants.PEAK_CONTROLLER_DECAY_PARAM_INDEX, self.__mixer_track, constants.LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX, midi.PIM_None, True)
+
+            sidechain_filter_target_channel = constants.LOOPER_1_SIDECHAIN_FILTER_FIRST_CHANNEL + self.__track_number
+
+            plugins.setParamValue(fl_helper.MAX_VOLUME_LEVEL_VALUE, constants.PEAK_CONTROLLER_BASE_PARAM_INDEX, sidechain_filter_target_channel, constants.LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX, midi.PIM_None, True)
+            plugins.setParamValue(0.12, constants.PEAK_CONTROLLER_VOLUME_PARAM_INDEX, sidechain_filter_target_channel, constants.LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX, midi.PIM_None, True)
+            plugins.setParamValue(constants.DEFAULT_TENSION_SIDECHAIN_LEVEL, constants.PEAK_CONTROLLER_TENSION_PARAM_INDEX, sidechain_filter_target_channel, constants.LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX, midi.PIM_None, True)
+            plugins.setParamValue(constants.DEFAULT_DECAY_SIDECHAIN_LEVEL, constants.PEAK_CONTROLLER_DECAY_PARAM_INDEX, sidechain_filter_target_channel, constants.LOOPER_1_PEAK_CONTROLLER_SIDECHAIN_SLOT_INDEX, midi.PIM_None, True)
 
         self.set_sample_length(self.__sample_length, True)
 
@@ -190,6 +194,11 @@ class Track():
 
         # important to have this statement here
         self.__is_recording_in_progress = True
+
+        fl_helper.broadcast_midi_message(global_constants.LOOPER_MUX_MIDI_ID,
+                                         global_constants.LOOPER_MUX_MIDI_CHAN,
+                                         global_constants.LOOPER_MUX_START_RECORDING_MSG_DATA_1,
+                                         global_constants.LOOPER_MUX_START_RECORDING_MSG_DATA_2)
 
         if self.get_resample_mode() == ResampleMode.NONE:
             self.__view.set_track_recording_state(self.__track_number, 1.0)

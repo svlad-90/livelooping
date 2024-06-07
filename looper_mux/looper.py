@@ -59,7 +59,7 @@ class Looper():
 
         if self.__looper_number != constants.Looper_1:
             for track_id in self.__tracks:
-                self.set_looper_side_chain_level(track_id, 0.0)
+                self.set_looper_side_chain_level(track_id, constants.DEFAULT_SIDECHAIN_LEVEL)
 
     def get_resample_mode(self, track_id):
         return self.__tracks[track_id].get_resample_mode()
@@ -103,7 +103,7 @@ class Looper():
 
         if self.__looper_number != constants.Looper_1:
             for track_id in self.__tracks:
-                self.set_looper_side_chain_level(track_id, 0.0)
+                self.set_looper_side_chain_level(track_id, constants.DEFAULT_SIDECHAIN_LEVEL)
 
     def clear_track(self, track_id):
             self.__tracks[track_id].clear()
@@ -147,7 +147,7 @@ class Looper():
                 self.__view.set_looper_side_chain_level(track_id, sidechain_value)
         else:
             for track_id, sidechain_value in self.__sidechain_levels.items():
-                self.__view.set_looper_side_chain_level(track_id, 0.0)
+                self.__view.set_looper_side_chain_level(track_id, constants.DEFAULT_SIDECHAIN_LEVEL)
 
     def is_track_recording_in_progress(self, track_id):
         return self.__tracks[track_id].is_recording_in_progress()

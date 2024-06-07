@@ -5,6 +5,7 @@
 # Table of contents
 
 - ["Looper mux" logical device](#looper-mux-logical-device)
+  * [Predefined track roles](#predefined-track-roles)
   * [Selecting the active looper instance](#selecting-the-active-looper-instance)
   * [Selecting the sample length](#selecting-the-sample-length)
   * [Recording audio to the track](#recording-audio-to-the-track)
@@ -36,6 +37,17 @@
 
 The "looper-mux" logical device is a thing that allows you to manage the recording of the looped audio phrases. I can say that its purpose is to replace the RC-505 :)
 
+## Predefined track roles
+
+Looper 1 Track 1 - Kick drum
+Looper 1 Track 2 - Snare drum
+Looper 1 Track 3 - Hats
+
+Why is that important?
+
+- Snare and hats tracks have specific EQ settings assigned to them
+- Each channel from the above list produces specific sidechain data filtered by specific frequencies. It allows you to achieve the multiband sidechain effect from the drums on loopers 2, 3, and 4.
+
 ## Selecting the active looper instance
 
 The "looper mux" logical device consists of 4 looper instances:
@@ -58,9 +70,21 @@ After the target looper is selected, the next thing any looper artist would thin
 
 ![Sample length](./resources/sample-length.png)
 
-The supported sample lengths are 1, 2, 4, 8, 16, 32, 64, and 128 beats. You can select the length using the **1-8** digits:
+The supported sample lengths are 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96 and 128 beats. By default you can select the 1, 2, 4, 8, 16, 32, 64, 128 lengths using the **1-8** digits:
 
 ![Selecting sample length](./resources/selecting-sample-length.jpg)
+
+To be able to select lengths 3, 6, 12, 24, 48, 96 you need to enter the '1.5x length' mode. You can do it with the **Hold + 2** double click:
+
+![Change 1.5 recording length mode](./resources/change_1_5_recording_length_mode.jpg)
+
+The UI will react in the following way:
+
+![1.5 recording length mode active](./resources/1_5_recording_length_mode_active.jpg)
+
+The same thing should be done again to leave the '1.5x length' mode.
+
+**Note** 1.5X recording length mode is turned off once the looper mux was reset.
 
 ----
 
@@ -439,7 +463,7 @@ So, the best practice regarding this feature is to:
 
 ## Sidechain
 
-In terms of this project the sidechain means, that any of the tracks, recorded to the looper #1 can independently:
+In terms of this project the sidechain means, that tracks 1 ( kick ), 2 ( snare ) and 3 ( hats ) of the looper #1 can independently:
 1. impact the volume of the input sources ( mic, synth, etc. ) - handled by the [input controller](../input-controller/input-controller.md#sidechain-source-levels)
 2. impact the volume of the other loopers - handled by the looper mux
 
@@ -457,13 +481,13 @@ In order to change the sidechain levels of the selected looper, use the **"5-8 v
 
 ![Changing selected looper sidechain levels](./resources/changing-selected-looper-sidechain-levels.jpg)
 
-Fader **5** will change the side-chain level to the **track #1** of the **looper #1**.
+Fader **5** will change the sidechain level to the **track #1 ( kick )** of the **looper #1**. The low-frequency filter is applied to this track's sidechain data, impacting the target's low frequency.
 
-Fader **6** - to the track **track #2** of the **looper #1**.
+Fader **6** - to the track **track #2 ( snare )** of the **looper #1**. The low-mid frequency filter is applied to this track's sidechain data and impacts the target's mid-frequency.
 
-Fader **7** - same, but to the **track #3**.
+Fader **7** - to the track **track #3 ( hats )** of the **looper #1**. The mid-high frequency filter is applied to this track's sidechain data and impacts the target's high frequency.
 
-Fader **8** - same, but to the **track #4**.
+Fader **8** - to the track **track #1 ( kick )** of the **looper #1**. In this case, sidechain data is NOT filtered by frequency, and it impacts the VOLUME of the target.
 
 The view will reflect that in the following way within the DAW:
 
@@ -475,7 +499,7 @@ The view will reflect that in the following way within the DAW:
 
 There are 2 parameters you can adjust regarding the source of the sidechain. Those are tension and decay. A combination of these 2 parameters allows you to identify a sidechain shape that will fit your track the most.
 
-In order to change the sidechain levels of the selected looper, use the **old + 1-8 vertical faders"** shortcut on the KP3+:
+In order to change the sidechain levels of the selected looper, use the **"Hold + 1-8 vertical faders"** shortcut on the KP3+:
 
 ![Changing the looper #1 sidechain parameters](./resources/changing-looper-1-sidechain-parameters.jpg)
 
