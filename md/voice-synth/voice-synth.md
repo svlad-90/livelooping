@@ -12,12 +12,17 @@
 	* [Loop start and end points](#loop-start-and-end-points)
 	* [Hard sync](#hard-sync)
 	* [Record feedback](#record-feedback)
+	* [Buffer size](#buffer-size)
   * [One shot samples](#one-shot-samples)
     * [Recording one-shot samples](#recording-one-shot-samples)
   * [Mode independent controllers](#mode-independent-controllers)
     * [Volume](#volume)
 	* [Pan](#pan)
   * [Mic pan](#mic-pan)
+  * [FX Module](#fx-module)
+    * [Dry/Wet level](#drywet-level)
+    * [Switching between presets](#switching-between-presets)
+	* [Control knobs](#control-knobs)
 
 ----
 
@@ -130,6 +135,19 @@ It might be helpful when you want to:
 
 ----
 
+## Buffer size
+
+When you're operating in the 'crossfade loop' mode, you can use the following synth's knobs to change the crossfade loop's buffer size parameters:
+
+![Buffer size](./resources/buffer-size.jpg)
+
+- 'Filters -> Override' adjusts the 'buffer size Beats' parameter
+- 'Filters -> Resonance' adjusts the 'buffer size Divisor' parameter
+
+**Note!** On each recording of the input signal the voice synth will restore the buffer size parameters to the 2 beats size.
+
+----
+
 ## One-shot samples
 
 ### Recording one-shot samples
@@ -189,6 +207,57 @@ To adjust the pan use the Mod Wheel of the Novation Bass Station 2:
 To reset the pan to the center move the Pitch Wheel of the Novation Bass Station 2:
 
 ![Reset mic pan](./resources/reset_pan.jpg)
+
+----
+
+## FX Module
+
+An instance of the Snap Heap plugin is attached to the voice-synths audio chain:
+
+![Kilohearts Snap Heap](../prerequisites/vst-plugins/kilohearts_snapheap.jpg)
+
+It is a very versatile plugin that allows you to create a complex sound design and apply it to the voice synth sounds.
+
+You can create and save your own presets for this plugin. It is located on the mixer channel **16**. Search for the "Snap Heap" item.
+
+**Note!** When saving your presets, using the FL Studio format ( *.fst ) is crucial. It ensures that you can easily reference them in the future. Storing presets in the plugin's internal format may make them inaccessible for the FL Studio MIDI scripting API.
+
+**Note!** Keep track of the preset CPU usage. The more complex the effects chain you create, the greater the CPU load.
+
+### Dry/Wet level
+
+You can use the **Porta -> Glide Time** knob to change the level of applying the FX:
+
+![FX dry/wet level](./resources/fx-dry-wet-level.jpg)
+
+**Note!** When this parameter is reaching 0 level the Snap Heap VST plugin instance is turned off to decrease the CPU load.
+
+### Switching between presets
+
+Use the rubber buttons to switch between the created Snap Heap:
+
+- **LFOS -> LFO1** - switch to the next preset
+- **LFOS -> LFO1** - switch to the previous preset
+
+![Kilohearts Snap Heap](./resources/switch_between_snap_heap_presets.jpg)
+
+### Control knobs
+
+Each Kilohearts Snap Heap preset might have up to 8 control knobs, which are called "Macro" knobs. We've provided access to seven of them through the Novation Bass Station 2:
+
+![Macro knobs](./resources/macro-knobs.jpg)
+
+- Use **Oscillators -> Coarse** knob to operate on the **Macro #1**
+- Use **Oscillators -> Fine** knob to operate on the **Macro #2**
+- Use **Oscillators -> Mod Env depth** knob to operate on the **Macro #3**
+- Use **Oscillators -> LFO 1 depth** knob to operate on the **Macro #4**
+- Use **Oscillators -> Pulse Width** knob to operate on the **Macro #5**
+- Use **LFOS -> LFO1** knob to operate on the **Macro #6**
+- Use **LFOS -> LFO2** knob to operate on the **Macro #7**
+
+**Note!** We will try to find a way to inject usage of the 8th parameter. For now, there is no free place left on the Novation Bass Station 2 for it.
+
+**Note!** When switching the preset, all knob values will be restored from the saved preset. No default adjustments to the current position of the knobs on the synth is taking place.
 
 ----
 

@@ -60,18 +60,18 @@ The only mandatory thing here is port #5 for Novation Bass Station 2, so it coul
 
   ![Mixer view context menu](./resources/mixer-view-context-menu.png)
 
-- Visit channel 7 and assign the input source in a way that your mic's signal goes there:
+- Visit the 'Mic' mixer channel and assign the input source in a way that your mic's signal goes there:
 
   ![Mic source setting](./resources/mic-source-setting.png)
 
-  **Note!** In the above step the "Input X", which you'll select will depend on computation of your hardware. Do not blindly follow this instruction :)
+  **Note!** In the above step the "Input X", which you'll select will depend on your specific hardware. Do not blindly follow this instruction :)
 
 - Press "Function + MIDI Chan" buttons on the Novation Bass Station 2 and select channel 5
 
 - Check:
-  - whether the mic works and you can hear your voice in the headphones
-  - whether GUI views are reacting on the actions on the KP3+ instances
-  - whether Novation Bass Station 2 sends MIDI signals to the crossfade loop synth
+  - whether the mic works and you can hear your voice in the headphones.
+  - whether GUI Control Surface views are reacting on the actions on the KP3+ instances.
+  - whether FL Studio reacts to your input to Novation Bass Station 2. The voice synth logical device has no GUI. You can read more about its feature [here](../voice-synth./voice-synth.md).
 
   If answers to all the above points are "yes" - **then my congratulations**!
 

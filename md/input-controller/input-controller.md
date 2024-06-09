@@ -34,6 +34,11 @@
   * [Sidechain source levels](#sidechain-source-levels)
     * [Changing the sidechain source levels](#changing-the-sidechain-source-levels)
 	* [Stashing the sidechain source levels](#stashing-the-sidechain-source-levels)
+  * [Scenes](#scenes)
+    * [Navigation between the scenes](#navigation-between-the-scenes)
+	* [Scene configuration](#scene-configuration)
+	* [Reset the scene data](#reset-the-scene-data)
+  * [Sidechain loopers](#sidechain-loopers)
 ----
 
 # "Input controller" logical device
@@ -135,7 +140,7 @@ Once all settings are specified, you can save the preset in the following way:
   **Selecting the preset in the "Save mode" will cause the data to be saved into the selected slot.**
 
   After the preset is saved, the view will represent, that there is some data available in the slot, meaning that it is not empty anymore:
-  
+
   ![Not empty preset slot](./resources/not-empty-preset-slot.jpg)
 
 ----
@@ -161,7 +166,7 @@ You can delete the preset in the following way:
   **Selecting the preset in the "Delete mode" will cause the data to be deleted from the selected slot.**
 
   After the preset is deleted, the view will represent, that there is no more data available in the slot, meaning that it is empty:
-  
+
   ![Empty preset slot](./resources/empty-preset-slot.jpg)
 
 ----
@@ -191,14 +196,14 @@ The list of the VST plugins includes the following one:
 
 |#|Used VST plugin|Purpose|
 |---|---|---|
-|1|Fruity Multiband Compressor|Multiband compressor|
+|1|Waves C6|Multiband compressor|
 |2|Effector|12 performance oriented effects that can be used one at a time|
 |3|FabFilter Pro-Q 3|Advanced EQ|
 |4|Fruity Stereo Shaper|Control of individual Left/Right Mixer channels & how they're inter-mixed|
 |5|Fruity Balance|Balance plugin, optimized for real-time level automation|
-|6|Turnado 2|Turnado instance, related to the first eight available effects|
-|7|Turnado 2|Turnado instance, related to the second eight available effects|
-|8|Turnado 2|Turnado instance, related to the third eight available effects|
+|6|Turnado 2|Turnado instance, related to the first set of eight available effects|
+|7|Turnado 2|Turnado instance, related to the second set of eight available effects|
+|8|Turnado 2|Turnado instance, related to the third set of eight available effects|
 |9|Fruity Squeeze|Bit-reducing, distortion and filtering plugin|
 |10|Endless Smile|Creates all the tension you need in your music|
 |11|FabFilter Pro-Q 3|Advanced EQ|
@@ -218,7 +223,7 @@ From my experience, the above list is enough to create a wide range of different
 
 **Note!** As of now you can't change the order or exchange the elements of the list without touching the source code. And without losing already saved presets.
 
-Currently, the first instance of the input controller is using mixer channels **#5** and **#6** as the **FX_CHANNEL-s**. The second instance is using the mixer channel **#10** and **#11** as the **FX_CHANNEL-s**:
+Currently, the first instance of the input controller is using mixer channels **#9** and **#10** as the **FX_CHANNEL-s**. The second instance is using the mixer channel **#14** and **#15** as the **FX_CHANNEL-s**:
 
 ![FX channels](./resources/fx_channels.jpg)
 
@@ -256,8 +261,8 @@ In order to change it, do the following:
 
   |Instance id|Main mixer channel number|
   |---|---|
-  |#1|7|
-  |#2|12|
+  |#1|11|
+  |#2|16|
 
   ![Input controller main mixer channels](./resources/input-controller-main-mixer-channels.jpg)
 
@@ -286,7 +291,7 @@ Hopefully, we will revisit this section soon.
 ### MIDI mapping
 
   MIDI mapping data is also saved as part of the dedicated preset.
-  
+
   You can read more on what is the MIDI mapping [here](#assigning-midi-mapping). For this section, it's only important to know that midi mapping is also part of the stored pattern.
 
 ----
@@ -570,7 +575,7 @@ In order to achieve that, let's follow such steps:
   ![MIDI mapping save mode activated](./resources/midi-mapping-save-mode-activated.jpg)
 
   On top of that you'll see the following message in the console:
-  
+
   ```
   MIDI mapping input dialog >>> Please, enter fx parameter number.
   ```
@@ -580,9 +585,9 @@ In order to achieve that, let's follow such steps:
   ![Selecting the target preset slot](./resources/selecting-the-target-preset-slot.jpg)
 
   I've selected slot **#2**.
-  
+
   After the slot is selected, you'll see the following messages in the console:
-  
+
   ```
   MIDI mapping input dialog >>> Fx parameter number '1' was selected
   MIDI mapping input dialog >>> Please, select the target plugin
@@ -590,7 +595,7 @@ In order to achieve that, let's follow such steps:
   ```
 
 - Select the target VST plugin. Use the following controls on the KP3+ to navigate: 
-  
+
   |Control|Meaning|
   |---|---|
   |**"A"**|Previous item|
@@ -601,7 +606,7 @@ In order to achieve that, let's follow such steps:
   ![Navigation within the items list](./resources/navigating-within-the-items-list.jpg)
 
   In my case, I've pressed **"B + B + B + B + B + C"** to select the "Fruity Reverb 2" VST. I've seen the following output in the console:
-  
+
   ```
   MIDI mapping input dialog >>> Current cursor position is - #1 'FIN-VOOD'
   MIDI mapping input dialog >>> Current cursor position is - #2 'Manipulator'
@@ -616,7 +621,7 @@ In order to achieve that, let's follow such steps:
 - Select the target VST parameter. The navigation is totally the same as in the previous point.
 
   I've pressed **"B"** until I've scrolled to parameter #12 'Wet level'. Then I've pressed **"C"**. I've seen the following output in the console:
-  
+
   ```
   MIDI mapping input dialog >>> Current cursor position is - #1 'High cut'
   MIDI mapping input dialog >>> Current cursor position is - #2 'Predelay'
@@ -661,25 +666,25 @@ In order to achieve that:
   ![MIDI mapping check](./resources/deleting-midi-mapping.jpg)
 
   That will delete the MIDI mapping. You'll see the following message in the console:
-  
+
   ```
   MIDI mapping input dialog >>> Mapping was deleted.
   ```
 
   The FX parameter slot will become empty in the view:
-  
+
   ![MIDI mapping empty slot](./resources/midi-mapping-empty-slot.jpg)
 
 ----
 
 ## Sidechain source levels
 
-In terms of this project, the sidechain means, that any of the tracks, recorded to the looper #1 can independently:
-1. impact the volume of the input sources ( mic, synth, etc. ) - handled by the input controller
+In terms of this project the sidechain means, that tracks 1 ( kick ), 2 ( snare ) and 3 ( hats ) of the looper #1 can independently:
+1. impact the volume of the input sources ( mic, synth, etc. ) - handled by the [input controller](../input-controller/input-controller.md#sidechain-source-levels)
 2. impact the volume of the other loopers - handled by the [looper mux](../looper-mux/looper-mux.md#loopers-sidechain-levels)
 
 The most obvious use-case:
-- Record the square kick to the looper #1
+- Record the square kick to the track #1 of looper #1
 - Enable the sidechain of the input sources
 - Record bass, using your mic or synth, which will duck to the kick, resolving the kick-bass conflict
 
@@ -689,13 +694,13 @@ To change the sidechain levels of the input sources, use the **"Hold + 5-8 verti
 
 ![Changing input source sidechain levels](./resources/changing-input-source-sidechain-levels.jpg)
 
-Fader 5 will change the side-chain level to track #1 of the looper #1.
+Fader **5** will change the sidechain level to the **track #1 ( kick )** of the **looper #1**. The low-frequency filter is applied to this track's sidechain data, impacting the input signal's low frequency.
 
-Fader 6 - to the track track #2 of the looper #1.
+Fader **6** - to the track **track #2 ( snare )** of the **looper #1**. The low-mid frequency filter is applied to this track's sidechain data and impacts the input signal's mid-frequency.
 
-Fader 7 - same, but to the track #3.
+Fader **7** - to the track **track #3 ( hats )** of the **looper #1**. The mid-high frequency filter is applied to this track's sidechain data and impacts the input signal's high frequency.
 
-Fader 8 - same, but to the track #4.
+Fader **8** - to the track **track #1 ( kick )** of the **looper #1**. In this case, sidechain data is NOT filtered by frequency, and it impacts the VOLUME of the input signal.
 
 The view will reflect that in the following way within the DAW:
 
@@ -720,6 +725,78 @@ That will change all resource sidechain levels to zeroes, while previously exist
 Turn the **"PROGRAM<->BPM"** knob on the KP3+ on 1 point right or left to restore the values:
 
 ![Input source sidechain levels restored](./resources/input-source-sidechain-levels-changed.jpg)
+
+----
+
+## Scenes
+
+This feature adds ten composite automation clips to each saved input controller preset.
+
+### Navigation between the scenes
+
+Feature consists of three controllers:
+
+- **Hold + touch to the touchscreen fader #1** - Switch to the next scene
+- **Hold + touch to the touchscreen fader #2** - Switch to the previous scene
+- **Hold + touch to the touchscreen fader #3** - Turn off the scenes
+
+![Navigation between the scenes](./resources/scenes-navigation.jpg)
+
+### Scene configuration
+
+- [Select the target preset](./input-controller.md#selecting-the-preset)
+- Switch to the target scene. When switching between the scenes, the FL Studio pattern will switch from the default '999' to the specific number:
+
+  ![FL Studio patterns change](./resources/fl_studio_patterns_change.jpg)
+
+- Go to the input controller preset [FX VST plugins](./input-controller.md#vst-parameters) and create automation of target parameters.
+
+  More information regarding the FL Studio event editor is available [here](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/automation_eventeditor.htm).
+
+  In short, you should use the mouse to manually trigger a change in the target parameter. And then use the following menu to enter the event editor of that parameter:
+
+  ![Automate VST parameters](./resources/automate-vst-parameters.jpg)
+
+- Save the FL Studio project.
+
+You're done! Now, switching to the target scene will activate the programmed automation.
+
+**Note!** Switching between the presets will cause falling back to the FL Studio pattern #999, used as a "no operation" scene.
+
+**Note!** The Livelooping project has two instances of the input controller logical device—one for the microphone and the other for the synth. This leads to a limitation, as FL Studio patterns are an exclusive resource. You can't activate two patterns at the same time. Thus, be aware that activating the scene for the synth will turn off the microphone's active scene.
+
+**Note!** You might want to sync the DAW's transport to the recorded audio material so that the effects are properly synced with your material. To do this, use the [following feature](../looper-mux/looper-mux.md#daw-transport-sync).
+
+### Reset the scene data
+
+To reset the scene you can remove automation of the corresponding FL Studio pattern:
+
+![Reset the scene data](./resources/reset-scene-data.jpg)
+
+You also can remove automation of only one specific parameter.
+
+----
+
+## Sidechain loopers
+
+This feature is intended for the performer to use when singing or playing the keyboard over the prerecorded material ( without recording it ).
+
+When you've recorded your song's primary material and want to apply a singing or keyboard solo on top, you'll find it hard to place it inside the mix as the majority of the sound spectrum is already filled in with other instruments. The 'sidechain loopers' feature creates space in a mix by carving the frequencies the leading track needs into another track in real-time.
+
+To activate the feature use **Hold + touch 3-rd touchscreen slider":
+
+![Activate loopers sidechain mode](./resources/activate-loopers-sidechain-mode.jpg)
+
+Once avtivated, the UI will represent the updated status:
+
+![Loopers sidechain activated](./resources/loopers-sidechain-activated.jpg)
+
+**Note!** The 'sidechain loopers' mode will turn off when the sound preset changes.
+
+**Note!** The 'sidechain loopers' mode will turn off once you start recording on the Looper Mux logical device. That is done because:
+
+  - when you start recording, you will also begin to impact the recorded signal with itself, which will lead to the artifacts
+  - the effect is not applied to the sound of the voice, but to the sound of all the loopers. Permanent modification of the sound on the loopers would require resampling and complex rewiring of the audio routing, which doesn't work so well in the current version of the FL Studio.
 
 ----
 

@@ -22,8 +22,8 @@ from input_controller.fx_unit import FxUnit
 from input_controller.fx_parameter import FxParameter
 from input_controller.i_midi_mapping_input_client import IMidiMappingInputClient
 from input_controller.midi_mapping_input_dialog import MidiMappingInputDialog
-from common import fl_helper
-from looper_mux.track import Track
+from common import fl_helper, global_constants
+
 
 class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
 
@@ -42,26 +42,26 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
         self.__is_save_mode = False
         self.__is_delete_mode = False
         self.__is_midi_mapping_save_mode = False
-        self.__fxs = { Fx.FX_1 : Fx(self.__context, Fx.FX_1, self.__view),
-                      Fx.FX_2 : Fx(self.__context, Fx.FX_2, self.__view),
-                      Fx.FX_3 : Fx(self.__context, Fx.FX_3, self.__view),
-                      Fx.FX_4 : Fx(self.__context, Fx.FX_4, self.__view),
-                      Fx.FX_5 : Fx(self.__context, Fx.FX_5, self.__view),
-                      Fx.FX_6 : Fx(self.__context, Fx.FX_6, self.__view),
-                      Fx.FX_7 : Fx(self.__context, Fx.FX_7, self.__view),
-                      Fx.FX_8 : Fx(self.__context, Fx.FX_8, self.__view),
-                      Fx.FX_9 : Fx(self.__context, Fx.FX_9, self.__view),
-                      Fx.FX_10 : Fx(self.__context, Fx.FX_10, self.__view),
-                      Fx.FX_11 : Fx(self.__context, Fx.FX_11, self.__view),
-                      Fx.FX_12 : Fx(self.__context, Fx.FX_12, self.__view),
-                      Fx.FX_13 : Fx(self.__context, Fx.FX_13, self.__view),
-                      Fx.FX_14 : Fx(self.__context, Fx.FX_14, self.__view),
-                      Fx.FX_15 : Fx(self.__context, Fx.FX_15, self.__view),
-                      Fx.FX_16 : Fx(self.__context, Fx.FX_16, self.__view),
-                      Fx.FX_17 : Fx(self.__context, Fx.FX_17, self.__view),
-                      Fx.FX_18 : Fx(self.__context, Fx.FX_18, self.__view),
-                      Fx.FX_19 : Fx(self.__context, Fx.FX_19, self.__view),
-                      Fx.FX_20 : Fx(self.__context, Fx.FX_20, self.__view), }
+        self.__fxs = { Fx.FX_1: Fx(self.__context, Fx.FX_1, self.__view),
+                      Fx.FX_2: Fx(self.__context, Fx.FX_2, self.__view),
+                      Fx.FX_3: Fx(self.__context, Fx.FX_3, self.__view),
+                      Fx.FX_4: Fx(self.__context, Fx.FX_4, self.__view),
+                      Fx.FX_5: Fx(self.__context, Fx.FX_5, self.__view),
+                      Fx.FX_6: Fx(self.__context, Fx.FX_6, self.__view),
+                      Fx.FX_7: Fx(self.__context, Fx.FX_7, self.__view),
+                      Fx.FX_8: Fx(self.__context, Fx.FX_8, self.__view),
+                      Fx.FX_9: Fx(self.__context, Fx.FX_9, self.__view),
+                      Fx.FX_10: Fx(self.__context, Fx.FX_10, self.__view),
+                      Fx.FX_11: Fx(self.__context, Fx.FX_11, self.__view),
+                      Fx.FX_12: Fx(self.__context, Fx.FX_12, self.__view),
+                      Fx.FX_13: Fx(self.__context, Fx.FX_13, self.__view),
+                      Fx.FX_14: Fx(self.__context, Fx.FX_14, self.__view),
+                      Fx.FX_15: Fx(self.__context, Fx.FX_15, self.__view),
+                      Fx.FX_16: Fx(self.__context, Fx.FX_16, self.__view),
+                      Fx.FX_17: Fx(self.__context, Fx.FX_17, self.__view),
+                      Fx.FX_18: Fx(self.__context, Fx.FX_18, self.__view),
+                      Fx.FX_19: Fx(self.__context, Fx.FX_19, self.__view),
+                      Fx.FX_20: Fx(self.__context, Fx.FX_20, self.__view), }
 
         self.__buttons_last_press_time = {}
 
@@ -79,31 +79,35 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
 
         self.__stashed_sidechain_values = []
 
+        self.__interraction_with_screen_active = False
+        self.__shift_touch_action_considered = False
+        self.__sc_loopers_mode = False
+
     def on_init_script(self, event):
 
         if False == self.__initialized:
 
             print(self.__context.device_name + ': ' + KorgKaossPad3PlusInputController.on_init_script.__name__)
 
-            #try:
+            # try:
             for preset_page_id in self.__fx_preset_pages:
                 self.__fx_preset_pages[preset_page_id].on_init_script()
 
             if False == self.__midi_loop_started and True == self.__should_start_midi_loop:
                 pass
-                #old_event_data = event.data1
-                #event.data1 = constants.MIDI_CC_INTERNAL_LOOP
-                #device.repeatMidiEvent(event, 16, 16)
-                #event.data1 = old_event_data
-                #self.__midi_loop_started = True
+                # old_event_data = event.data1
+                # event.data1 = constants.MIDI_CC_INTERNAL_LOOP
+                # device.repeatMidiEvent(event, 16, 16)
+                # event.data1 = old_event_data
+                # self.__midi_loop_started = True
 
-            # fl_helper.print_all_plugin_parameters(self.__context.fx3_channel, constants.TURNADO_SLOT_INDEX)
+            # fl_helper.print_all_plugin_parameters(self.__context.fx1_channel, constants.FX1_FABFILTER_PRO_Q3_SLOT_INDEX)
 
             self.reset()
 
             self.__initialized = True
 
-            #except Exception as e:
+            # except Exception as e:
             #    print(self.__context.device_name + ': ' + KorgKaossPad3PlusInputController.on_init_script.__name__ + ": failed to initialize the script.")
             #    print(e)
 
@@ -173,6 +177,7 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
 
         self.set_fx_level(self.__fx_level, True)
         self.__reset_panomatic()
+        self.__set_sc_loopers_mode(False)
 
     def set_shift_pressed_state(self, shift_pressed):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusInputController.set_shift_pressed_state.__name__ + ": shift pressed - " + str(shift_pressed))
@@ -200,6 +205,7 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
         self.set_fx_level(self.__fx_level, True)
 
         self.__reset_panomatic()
+        self.__set_sc_loopers_mode(False)
 
     def update_fx_preset(self, fx_preset_id):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusInputController.update_fx_preset.__name__)
@@ -222,7 +228,7 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
         mixer.setTrackVolume(self.__context.fx3_channel, synth_volume)
         self.__view.set_volume(synth_volume)
 
-    def set_fx_level(self, fx_level, force = False):
+    def set_fx_level(self, fx_level, force=False):
         for fx_id in self.__fxs:
             self.__fxs[fx_id].set_fx_level(fx_level, force)
         self.__view.set_fx_level(fx_level)
@@ -390,9 +396,10 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
         self.set_volume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
 
         self.__reset_sidechain()
+        self.__set_sc_loopers_mode(False)
 
     def midi_loop(self):
-        #print(self.__context.device_name + ': ' + KorgKaossPad3PlusInputController.midi_loop.__name__)
+        # print(self.__context.device_name + ': ' + KorgKaossPad3PlusInputController.midi_loop.__name__)
         pass
 
     def midi_mapping_input_done(self, fx_parameter_number, midi_mapping):
@@ -430,6 +437,25 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
         plugins.setParamValue(constants.PANOMATIC_DEFAULT_PAN_LEVEL, constants.PANOMATIC_PAN_PARAM_INDEX, self.__context.fx3_channel, constants.INPUT_CONTROLLER_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
         plugins.setParamValue(constants.PANOMATIC_DEFAULT_VOLUME_LEVEL, constants.PANOMATIC_VOLUME_PARAM_INDEX, self.__context.fx3_channel, constants.INPUT_CONTROLLER_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
 
+    def __turn_off_scene(self):
+        self.__fx_preset_pages[self.__selected_fx_preset_page].turn_off_scene(self.get_selected_fx_preset_id())
+
+    def __jump_to_next_scene(self):
+        self.__fx_preset_pages[self.__selected_fx_preset_page].jump_to_next_scene(self.get_selected_fx_preset_id())
+
+    def __jump_to_previous_scene(self):
+        self.__fx_preset_pages[self.__selected_fx_preset_page].jump_to_previous_scene(self.get_selected_fx_preset_id())
+
+    def __set_sc_loopers_mode(self, value):
+        if self.__sc_loopers_mode != value:
+            parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, self.__context.loopers_sc_ctrl_name, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
+            plugins.setParamValue(1 if value else 0, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
+            self.__view.set_vocal_loopers_sc(1 if value else 0)
+            self.__sc_loopers_mode = value
+
+    def __get_sc_loopers_mode(self):
+        return self.__sc_loopers_mode
+
     def on_midi_msg(self, event):
 
         # fl_helper.print_midi_event(event)
@@ -443,9 +469,9 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
         else:
             if True == self.is_midi_mapping_save_mode():
                 if event.data1 == constants.MIDI_CC_ENTER_SAVE_MODE and self.get_shift_pressed_state():
-                    action = lambda self = self: ( self.set_midi_mapping_save_mode(not self.is_midi_mapping_save_mode()), \
+                    action = lambda self = self: (self.set_midi_mapping_save_mode(not self.is_midi_mapping_save_mode()), \
                                                    self.set_save_mode(False), \
-                                                   self.set_delete_mode(False) )
+                                                   self.set_delete_mode(False))
                     self.action_on_double_click(constants.MIDI_CC_ENTER_SAVE_MODE + constants.ENTER_MIDI_MAPPING_SAVE_MODE_SHIFT, action)
                 elif event.data1 == constants.MIDI_CC_SHIFT:
                     self.set_shift_pressed_state(event.data2 == fl_helper.MIDI_MAX_VALUE)
@@ -468,8 +494,8 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
                 elif event.data1 == constants.MIDI_CC_ENTER_SAVE_MODE and self.get_shift_pressed_state():
                     self.set_save_mode(not self.is_save_mode())
 
-                    action = lambda self = self: ( self.set_midi_mapping_save_mode(not self.is_midi_mapping_save_mode()), \
-                                                   self.set_save_mode(False) )
+                    action = lambda self = self: (self.set_midi_mapping_save_mode(not self.is_midi_mapping_save_mode()), \
+                                                   self.set_save_mode(False))
                     self.action_on_double_click(constants.MIDI_CC_ENTER_SAVE_MODE + constants.ENTER_MIDI_MAPPING_SAVE_MODE_SHIFT, action)
                 elif event.data1 == constants.MIDI_CC_ENTER_DELETE_MODE and self.get_shift_pressed_state():
                     self.set_delete_mode(not self.is_delete_mode())
@@ -485,6 +511,22 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
                     self.__set_input_side_chain_level(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
                 elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_4 and True == self.get_shift_pressed_state():
                     self.__set_input_side_chain_level(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
+                elif event.data1 == constants.MIDI_CC_NEXT_SCENE and True == self.get_shift_pressed_state():
+                    if False == self.__shift_touch_action_considered:
+                        self.__jump_to_next_scene()
+                        self.__shift_touch_action_considered = True
+                elif event.data1 == constants.MIDI_CC_PREV_SCENE and True == self.get_shift_pressed_state():
+                    if False == self.__shift_touch_action_considered:
+                        self.__jump_to_previous_scene()
+                        self.__shift_touch_action_considered = True
+                elif event.data1 == constants.MIDI_CC_TURN_OFF_SCENE and True == self.get_shift_pressed_state():
+                    if False == self.__shift_touch_action_considered:
+                        self.__turn_off_scene()
+                        self.__shift_touch_action_considered = True
+                elif event.data1 == constants.MIDI_CC_SC_LOOPERS_MODE and True == self.get_shift_pressed_state():
+                    if False == self.__shift_touch_action_considered:
+                        self.__set_sc_loopers_mode(not self.__get_sc_loopers_mode())
+                        self.__shift_touch_action_considered = True
                 elif event.data1 == constants.MIDI_CC_EFFECT_1 and self.is_delete_mode():
                     self.reset_fx_preset(FxPreset.fx_preset_1)
                     self.set_delete_mode(False)
@@ -599,6 +641,18 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
                     self.change_active_fx_unit()
                 elif event.data1 == constants.MIDI_CC_CHANGE_ACTIVE_FX_UNIT and self.get_shift_pressed_state() and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
                     self.reset()
+                elif event.data1 == constants.MIDI_CC_SCREEN_TOUCH_SCREEN_ACTION and event.data2 == 0:
+                    # begin of interaction with the touchscreen
+                    self.__interraction_with_screen_active = False
+                    self.__shift_touch_action_considered = False
+                elif event.data1 == constants.MIDI_CC_SCREEN_TOUCH_SCREEN_ACTION and event.data2 == 127:
+                    # end of interaction with the touchscreen
+                    self.__interraction_with_screen_active = True
+                elif event.midiId == global_constants.LOOPER_MUX_MIDI_ID and \
+                event.midiChan == global_constants.LOOPER_MUX_MIDI_CHAN and \
+                event.data1 == global_constants.LOOPER_MUX_START_RECORDING_MSG_DATA_1 and \
+                event.data2 == global_constants.LOOPER_MUX_START_RECORDING_MSG_DATA_2:
+                    self.__set_sc_loopers_mode(False)
 
         event.handled = True
 
@@ -607,3 +661,4 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
             if (flags & 256) != 0:
                 if(False == transport.isPlaying()):
                     self.__reset_sidechain()
+                    self.__set_sc_loopers_mode(False)
