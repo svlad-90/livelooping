@@ -52,6 +52,7 @@ class Looper():
                                          constants.Track_2: 0.0,
                                          constants.Track_3: 0.0,
                                          constants.Track_4: 0.0 }
+        self.__is_gui_active = False
 
     def on_init_script(self):
         for track_id in self.__tracks:
@@ -73,8 +74,10 @@ class Looper():
     def get_track(self, track_number):
         return self.__tracks.get(track_number)
 
-    def set_looper_volume(self, looper_volume, ignore_view=False):
+    def set_looper_volume(self, looper_volume):
         self.__looper_volume = looper_volume
+
+        ignore_view =  not self.__is_gui_active
 
         if ignore_view == False:
             self.__view.set_looper_volume(looper_volume)
@@ -87,8 +90,8 @@ class Looper():
     def get_looper_volume(self):
         return self.__looper_volume
 
-    def set_track_volume(self, track_id, track_volume):
-        self.__tracks.get(track_id).set_track_volume(track_volume)
+    def set_track_volume(self, track_id, track_volume, forward_to_device):
+        self.__tracks.get(track_id).set_track_volume(track_volume, forward_to_device)
 
     def get_track_volume(self, track_id):
         return self.__tracks.get(track_id).get_track_volume()
@@ -117,9 +120,9 @@ class Looper():
             # clear all the tracks of the looper, except the one for which recording is over
             for track_id_it in self.__tracks:
                 if track_id_it != track_id:
-                    self.__tracks[track_id_it].clear()
+                    self.__tracks[track_id_it].set_track_volume(0.0, True)
                 else:
-                    self.__tracks[track_id_it].set_track_volume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
+                    self.__tracks[track_id_it].set_track_volume(fl_helper.MAX_VOLUME_LEVEL_VALUE, True)
             self.set_turnado_dictator_level(0.0)
             self.set_turnado_dry_wet_level(constants.DEFAULT_TURNADO_DRY_WET_LEVEL)
 
@@ -131,23 +134,25 @@ class Looper():
         parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "L" + str(self.__looper_number + 1) + "L1SCT" + str(track_id + 1), constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sidechain_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-        self.__view.set_looper_side_chain_level(track_id, sidechain_level)
+        if self.__is_gui_active == True:
+            self.__view.set_looper_side_chain_level(track_id, sidechain_level)
 
-    def update_tracks_stats(self):
+    def __update_tracks_stats(self):
         for track_id in self.__tracks:
             self.__tracks[track_id].update_stats()
 
-    def update_looper_stats(self):
-        self.__view.set_looper_volume(self.__looper_volume)
-        self.__view.set_turnado_dictator_level(self.__turnado_dictator_level)
-        self.__view.set_turnado_dry_wet_level(self.__turnado_dry_wet_level)
+    def __update_looper_stats(self):
+        if True == self.__is_gui_active:
+            self.__view.set_looper_volume(self.__looper_volume)
+            self.__view.set_turnado_dictator_level(self.__turnado_dictator_level)
+            self.__view.set_turnado_dry_wet_level(self.__turnado_dry_wet_level)
 
-        if self.__looper_number != constants.Looper_1:
-            for track_id, sidechain_value in self.__sidechain_levels.items():
-                self.__view.set_looper_side_chain_level(track_id, sidechain_value)
-        else:
-            for track_id, sidechain_value in self.__sidechain_levels.items():
-                self.__view.set_looper_side_chain_level(track_id, constants.DEFAULT_SIDECHAIN_LEVEL)
+            if self.__looper_number != constants.Looper_1:
+                for track_id, sidechain_value in self.__sidechain_levels.items():
+                    self.__view.set_looper_side_chain_level(track_id, sidechain_value)
+            else:
+                for track_id, sidechain_value in self.__sidechain_levels.items():
+                    self.__view.set_looper_side_chain_level(track_id, constants.DEFAULT_SIDECHAIN_LEVEL)
 
     def is_track_recording_in_progress(self, track_id):
         return self.__tracks[track_id].is_recording_in_progress()
@@ -170,12 +175,16 @@ class Looper():
             self.__is_turnado_turned_on = False
 
         self.__turnado_dictator_level = turnado_dictator_level
-        self.__view.set_turnado_dictator_level(turnado_dictator_level)
+
+        if self.__is_gui_active == True:
+            self.__view.set_turnado_dictator_level(turnado_dictator_level)
 
     def set_turnado_dry_wet_level(self, turnado_dry_wet_level):
         plugins.setParamValue(turnado_dry_wet_level, constants.TURNADO_DRY_WET_PARAM_INDEX, self.__looper_channel, constants.LOOPER_TURNADO_SLOT_INDEX, midi.PIM_None, True)
         self.__turnado_dry_wet_level = turnado_dry_wet_level
-        self.__view.set_turnado_dry_wet_level(turnado_dry_wet_level)
+
+        if self.__is_gui_active == True:
+            self.__view.set_turnado_dry_wet_level(turnado_dry_wet_level)
 
     def randomize_turnado(self):
         print(self.__context_provider.get_device_name() + ': ' + Looper.randomize_turnado.__name__)
@@ -186,13 +195,32 @@ class Looper():
     def switch_to_next_turnado_preset(self):
         plugins.nextPreset(self.__looper_channel, constants.LOOPER_TURNADO_SLOT_INDEX, True)
         self.__restore_params()
-        self.__view.switch_to_next_turnado_preset()
+        if self.__is_gui_active == True:
+            self.__view.switch_to_next_turnado_preset()
 
     def switch_to_prev_turnado_preset(self):
         plugins.prevPreset(self.__looper_channel, constants.LOOPER_TURNADO_SLOT_INDEX, True)
         self.__restore_params()
-        self.__view.switch_to_prev_turnado_preset()
+        if self.__is_gui_active == True:
+            self.__view.switch_to_prev_turnado_preset()
 
     def __restore_params(self):
         plugins.setParamValue(self.__turnado_dictator_level, constants.TURNADO_DICTATOR_PARAM_INDEX, self.__looper_channel, constants.LOOPER_TURNADO_SLOT_INDEX, midi.PIM_None, True)
         plugins.setParamValue(self.__turnado_dry_wet_level, constants.TURNADO_DRY_WET_PARAM_INDEX, self.__looper_channel, constants.LOOPER_TURNADO_SLOT_INDEX, midi.PIM_None, True)
+
+    def select(self):
+        self.__set_gui_active(True)
+        self.__update_looper_stats()
+        self.__update_tracks_stats()
+        self.__view.select_looper(self.__looper_number)
+
+    def unselect(self):
+        self.__set_gui_active(False)
+
+    def set_track_pan(self, track_id, pan, forward_to_device):
+        self.__tracks.get(track_id).set_track_pan(pan, forward_to_device)
+
+    def __set_gui_active(self, value):
+        self.__is_gui_active = value
+        for track_id in self.__tracks:
+            self.__tracks[track_id].set_gui_active(value)

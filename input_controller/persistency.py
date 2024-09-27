@@ -351,24 +351,103 @@ class PersistencyItem:
 
         print("Version update from 2.7 to 2.8 has finished ...")
 
+    def __data_update_from_2_8_to_2_9(self, data):
+        print("Version update from 2.8 to 2.9 has started ...")
+
+        mic_fx_2_channel = 9
+        synth_fx_2_channel = 14
+
+        old_reverb_slot = 5
+        old_delay_slot = 6
+        compressor_slot = 8
+
+        if mic_fx_2_channel in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY]:
+            if old_reverb_slot in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][mic_fx_2_channel]:
+                del data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][mic_fx_2_channel][old_reverb_slot]
+
+        if mic_fx_2_channel in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY]:
+            if old_delay_slot in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][mic_fx_2_channel]:
+                del data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][mic_fx_2_channel][old_delay_slot]
+
+        if mic_fx_2_channel in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY]:
+            if compressor_slot in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][mic_fx_2_channel]:
+                del data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][mic_fx_2_channel][compressor_slot]
+
+        if synth_fx_2_channel in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY]:
+            if old_reverb_slot in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][synth_fx_2_channel]:
+                del data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][synth_fx_2_channel][old_reverb_slot]
+
+        if synth_fx_2_channel in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY]:
+            if old_delay_slot in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][synth_fx_2_channel]:
+                del data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][synth_fx_2_channel][old_delay_slot]
+
+        if synth_fx_2_channel in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY]:
+            if compressor_slot in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][synth_fx_2_channel]:
+                del data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][synth_fx_2_channel][compressor_slot]
+
+        print("Version update from 2.8 to 2.9 has finished ...")
+
+    def __data_update_from_2_9_to_2_10(self, data):
+        print("Version update from 2.9 to 2.10 has started ...")
+
+        mic_fx_2_channel = 9
+        synth_fx_2_channel = 14
+
+        delay_slot = 5
+
+        if mic_fx_2_channel in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY]:
+            if delay_slot in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][mic_fx_2_channel]:
+                del data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][mic_fx_2_channel][delay_slot]
+
+        if synth_fx_2_channel in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY]:
+            if delay_slot in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][synth_fx_2_channel]:
+                del data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][synth_fx_2_channel][delay_slot]
+
+        print("Version update from 2.9 to 2.10 has finished ...")
+
+    def __data_update_from_2_10_to_2_11(self, data):
+        print("Version update from 2.10 to 2.11 has started ...")
+
+        mic_fx_2_channel = 9
+        synth_fx_2_channel = 14
+
+        delay_slot = 5
+
+        if mic_fx_2_channel in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY]:
+            if delay_slot in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][mic_fx_2_channel]:
+                del data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][mic_fx_2_channel][delay_slot]
+
+        if synth_fx_2_channel in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY]:
+            if delay_slot in data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][synth_fx_2_channel]:
+                del data[constants.PERSISTENCY_PLUGIN_PARAMETERS_KEY][synth_fx_2_channel][delay_slot]
+
+        print("Version update from 2.10 to 2.11 has finished ...")
+
     def handle_version_mismatch(self, data, old_version, _):
 
         supported_version_updates = {
-            1.0: self.__data_update_from_1_0_to_2_0,
-            2.0: self.__data_update_from_2_0_to_2_1,
-            2.1: self.__data_update_from_2_1_to_2_2,
-            2.2: self.__data_update_from_2_2_to_2_3,
-            2.3: self.__data_update_from_2_3_to_2_4,
-            2.4: self.__data_update_from_2_4_to_2_5,
-            2.5: self.__data_update_from_2_5_to_2_6,
-            2.6: self.__data_update_from_2_6_to_2_7,
-            2.7: self.__data_update_from_2_7_to_2_8,
+            "1.0": self.__data_update_from_1_0_to_2_0,
+            "2.0": self.__data_update_from_2_0_to_2_1,
+            "2.1": self.__data_update_from_2_1_to_2_2,
+            "2.2": self.__data_update_from_2_2_to_2_3,
+            "2.3": self.__data_update_from_2_3_to_2_4,
+            "2.4": self.__data_update_from_2_4_to_2_5,
+            "2.5": self.__data_update_from_2_5_to_2_6,
+            "2.6": self.__data_update_from_2_6_to_2_7,
+            "2.7": self.__data_update_from_2_7_to_2_8,
+            "2.8": self.__data_update_from_2_8_to_2_9,
+            "2.9": self.__data_update_from_2_9_to_2_10,
+            "2.10": self.__data_update_from_2_10_to_2_11,
         }
 
         start = False
 
         for key, value in supported_version_updates.items():
-            if key == old_version:
-                start = True
+            if isinstance(old_version, float):
+                if key == str(old_version):
+                    start = True
+            else:
+                if key == old_version:
+                    start = True
             if start:
                 value(data)

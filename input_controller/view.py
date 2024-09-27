@@ -11,6 +11,7 @@ from common import fl_helper
 from input_controller import constants
 from input_controller.fx_unit import FxUnit
 
+
 class View:
 
     def __init__(self, context):
@@ -140,7 +141,7 @@ class View:
 
     def set_turnado_patch(self, turnado_patch_id):
         parameter_id = fl_helper.find_parameter_by_name(self.__context.main_channel, "T_Patch_Persistency", constants.INPUT_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        #print("parameter_id - " + str(parameter_id))
+        # print("parameter_id - " + str(parameter_id))
         plugins.setParamValue(turnado_patch_id, parameter_id, self.__context.main_channel, constants.INPUT_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
     def get_turnado_patch(self):

@@ -199,6 +199,15 @@ class FxPreset(IFxPresetDataProvider):
                         if mixer_slot == constants.FX2_FABFILTER_PRO_Q3_SLOT_INDEX and param_id > constants.FABFILTER_PRO_Q3_PARAMS_LIMIT:
                             break;
 
+                        if mixer_slot == constants.FX2_PULSAR_1178_SLOT_INDEX and param_id > constants.PULSAR_1178_PARAMS_LIMIT:
+                            break;
+
+                        if mixer_slot == constants.FX2_VALHALLA_VINTAGE_VERB_SLOT_INDEX and param_id > constants.VALHALLA_VINTAGE_VERB_PARAMS_LIMIT:
+                            break;
+
+                        if mixer_slot == constants.FX2_WAVES_H_DELAY_SLOT_INDEX and param_id > constants.WAVES_H_DELAY_PARAMS_LIMIT:
+                            break;
+
                     param_value = plugins.getParamValue(param_id, channel_id, mixer_slot, True)
                     param_value_str = str(param_value)
 

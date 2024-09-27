@@ -101,7 +101,7 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
                 # event.data1 = old_event_data
                 # self.__midi_loop_started = True
 
-            # fl_helper.print_all_plugin_parameters(self.__context.fx1_channel, constants.FX1_FABFILTER_PRO_Q3_SLOT_INDEX)
+            # fl_helper.print_all_plugin_parameters(self.__context.fx2_channel, constants.FX2_WAVES_H_DELAY_SLOT_INDEX)
 
             self.reset()
 
@@ -434,8 +434,8 @@ class KorgKaossPad3PlusInputController(IMidiMappingInputClient):
         return plugins.getParamValue(parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, True)
 
     def __reset_panomatic(self):
-        plugins.setParamValue(constants.PANOMATIC_DEFAULT_PAN_LEVEL, constants.PANOMATIC_PAN_PARAM_INDEX, self.__context.fx3_channel, constants.INPUT_CONTROLLER_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
-        plugins.setParamValue(constants.PANOMATIC_DEFAULT_VOLUME_LEVEL, constants.PANOMATIC_VOLUME_PARAM_INDEX, self.__context.fx3_channel, constants.INPUT_CONTROLLER_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(global_constants.DEFAULT_PANOMATIC_PAN_LEVEL, constants.PANOMATIC_PAN_PARAM_INDEX, self.__context.fx3_channel, constants.INPUT_CONTROLLER_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(global_constants.DEFAULT_PANOMATIC_VOLUME_LEVEL, constants.PANOMATIC_VOLUME_PARAM_INDEX, self.__context.fx3_channel, constants.INPUT_CONTROLLER_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
 
     def __turn_off_scene(self):
         self.__fx_preset_pages[self.__selected_fx_preset_page].turn_off_scene(self.get_selected_fx_preset_id())

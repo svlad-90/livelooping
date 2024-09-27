@@ -10,7 +10,7 @@ import plugins
 import channels
 
 from voice_synth import constants
-from common import fl_helper
+from common import fl_helper, global_constants
 from voice_synth.synth_mode import SynthMode
 
 
@@ -85,17 +85,17 @@ class NovationBassStation2VoiceSynth():
         plugins.setParamValue(value, constants.PANOMATIC_PAN_PARAM_INDEX, constants.MIC_ROUTE_CHANNEL, constants.INPUT_CONTROLLER_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
 
     def __reset_mic_pan(self):
-        plugins.setParamValue(constants.PANOMATIC_DEFAULT_PAN_LEVEL, constants.PANOMATIC_PAN_PARAM_INDEX, constants.MIC_ROUTE_CHANNEL, constants.INPUT_CONTROLLER_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(global_constants.DEFAULT_PANOMATIC_PAN_LEVEL, constants.PANOMATIC_PAN_PARAM_INDEX, constants.MIC_ROUTE_CHANNEL, constants.INPUT_CONTROLLER_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
 
     def __set_synth_pan(self, value):
         plugins.setParamValue(value, constants.PANOMATIC_PAN_PARAM_INDEX, constants.SYNTH_ROUTE_CHANNEL, constants.INPUT_CONTROLLER_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
 
     def __reset_synth_pan(self):
-        plugins.setParamValue(constants.PANOMATIC_DEFAULT_PAN_LEVEL, constants.PANOMATIC_PAN_PARAM_INDEX, constants.SYNTH_ROUTE_CHANNEL, constants.INPUT_CONTROLLER_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(global_constants.DEFAULT_PANOMATIC_PAN_LEVEL, constants.PANOMATIC_PAN_PARAM_INDEX, constants.SYNTH_ROUTE_CHANNEL, constants.INPUT_CONTROLLER_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
 
 
     def __reset_oneshot_params(self):
-        plugins.setParamValue(constants.PANOMATIC_DEFAULT_VOLUME_LEVEL, constants.PANOMATIC_VOLUME_PARAM_INDEX, constants.INSTANT_SAMPLER_SLOT_CHANNEL, constants.INSTANT_SAMPLER_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(global_constants.DEFAULT_PANOMATIC_VOLUME_LEVEL, constants.PANOMATIC_VOLUME_PARAM_INDEX, constants.INSTANT_SAMPLER_SLOT_CHANNEL, constants.INSTANT_SAMPLER_PANOMATIC_SLOT_INDEX, midi.PIM_None, True)
         self.__reset_mic_pan()
         self.__reset_synth_pan()
 
