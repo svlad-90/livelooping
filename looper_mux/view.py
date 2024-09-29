@@ -15,6 +15,7 @@ from common import fl_helper, global_constants
 from looper_mux.sample_length import SampleLength
 from looper_mux.track import Track
 import common
+from common import updateable
 
 class View:
     def __init__(self):
@@ -43,67 +44,93 @@ class View:
     def set_shift_pressed_state(self, shift_pressed):
         parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Shift", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(shift_pressed, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        self.reset_toggle_flags()
 
-    def set_looper_volume(self, looper_volume):
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Volume", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(looper_volume, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        self.reset_toggle_flags()
-
-    def set_looper_activation_status(self, looper_id, looper_volume):
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Looper_" + str(looper_id + 1) + "_AS", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(0.0 if looper_volume == 0.0 else 1.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-
-    def set_drop_intencity(self, drop_intencity):
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Drop FX", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(drop_intencity, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        self.reset_toggle_flags()
-
-    def select_looper(self, selected_looper):
-
-        for i in range(4):
-            value = 0.0
-            if i == selected_looper:
-                value = 1.0
-
-            parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Looper " + str(i + 1), constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-            plugins.setParamValue(value, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-
-            if i == constants.Looper_1:
+    def set_looper_volume(self, looper_index, looper_volume, forward_to_device):
+        if forward_to_device:
+            if looper_index == constants.Looper_1:
                 midi_id = midi.MIDI_CONTROLCHANGE
-                channel = constants.MIDI_CH_LOOPER_1
-                cc_number = constants.MIDI_CC_LOOPER_1
-            elif i == constants.Looper_2:
+                channel = constants.MIDI_CH_LOOPER_VOLUME_1
+                cc_number = constants.MIDI_CC_LOOPER_VOLUME_1
+            elif looper_index == constants.Looper_2:
                 midi_id = midi.MIDI_CONTROLCHANGE
-                channel = constants.MIDI_CH_LOOPER_2
-                cc_number = constants.MIDI_CC_LOOPER_2
-            elif i == constants.Looper_3:
+                channel = constants.MIDI_CH_LOOPER_VOLUME_2
+                cc_number = constants.MIDI_CC_LOOPER_VOLUME_2
+            elif looper_index == constants.Looper_3:
                 midi_id = midi.MIDI_CONTROLCHANGE
-                channel = constants.MIDI_CH_LOOPER_3
-                cc_number = constants.MIDI_CC_LOOPER_3
-            elif i == constants.Looper_4:
+                channel = constants.MIDI_CH_LOOPER_VOLUME_3
+                cc_number = constants.MIDI_CC_LOOPER_VOLUME_3
+            elif looper_index == constants.Looper_4:
                 midi_id = midi.MIDI_CONTROLCHANGE
-                channel = constants.MIDI_CH_LOOPER_4
-                cc_number = constants.MIDI_CC_LOOPER_4
-        
-            device_value = int(value * fl_helper.MIDI_MAX_VALUE)
+                channel = constants.MIDI_CH_LOOPER_VOLUME_4
+                cc_number = constants.MIDI_CC_LOOPER_VOLUME_4
+
+            device_value = int(looper_volume * fl_helper.MIDI_MAX_VALUE / fl_helper.MAX_VOLUME_LEVEL_VALUE)
     
             device.midiOutMsg(midi_id, channel, cc_number, device_value)
 
-        self.reset_toggle_flags()
+    def set_drop_fx_level(self, fx_level, midi_cc, midi_chan, forward_to_device):
+        if forward_to_device:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            value = int(fx_level * fl_helper.MIDI_MAX_VALUE)
+            device.midiOutMsg(midi_id, midi_chan, midi_cc, value)
 
-    def clear(self):
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Clear all", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(1.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
+    def set_drop_btn_state(self, state):
+        midi_id = midi.MIDI_CONTROLCHANGE
+        channel = constants.MIDI_CH_DROP
+        cc_number = constants.MIDI_CC_DROP
+        value = int(state * fl_helper.MIDI_MAX_VALUE)
+        device.midiOutMsg(midi_id, channel, cc_number, value)
 
-    def __clear_off(self):
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Clear all", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(0.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
+    LOOPER_STATE_OFF      = 0
+    LOOPER_STATE_PLAYING  = 66
+    LOOPER_STATE_SELECTED = 90
 
-    def __clear_tracks_off(self):
-        for i in range(constants.Track_4 + 1):
-            parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(i + 1) + "_Clear", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-            plugins.setParamValue(0.0, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
+    def set_looper_state(self, selected_looper, looper_state):
+
+        if selected_looper == constants.Looper_1:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_LOOPER_1
+            cc_number = constants.MIDI_CC_LOOPER_1
+        elif selected_looper == constants.Looper_2:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_LOOPER_2
+            cc_number = constants.MIDI_CC_LOOPER_2
+        elif selected_looper == constants.Looper_3:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_LOOPER_3
+            cc_number = constants.MIDI_CC_LOOPER_3
+        elif selected_looper == constants.Looper_4:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_LOOPER_4
+            cc_number = constants.MIDI_CC_LOOPER_4
+
+        device.midiOutMsg(midi_id, channel, cc_number, looper_state)
+
+    def set_sync_daw_transport_button_state(self, state):
+        midi_id = midi.MIDI_CONTROLCHANGE
+        channel = constants.MIDI_CH_SYNC_DAW_TRANSPORT
+        cc_number = constants.MIDI_CC_SYNC_DAW_TRANSPORT
+        value = state * fl_helper.MIDI_MAX_VALUE
+        device.midiOutMsg(midi_id, channel, cc_number, value)
+
+    def set_clear_btn_state(self, state):
+
+        midi_id = midi.MIDI_CONTROLCHANGE
+        channel = constants.MIDI_CH_CLEAR
+        cc_number = constants.MIDI_CC_CLEAR
+
+        value = 0
+
+        if state == updateable.DoubleClickTimeoutHandler.STATE_INITITAL:
+            value = 0
+        if state == updateable.DoubleClickTimeoutHandler.STATE_FIRST_CLICK_DONE:
+            value = 25
+        if state == updateable.DoubleClickTimeoutHandler.STATE_FIRST_CLICK_RELEASED:
+            value = 13
+        if state == updateable.DoubleClickTimeoutHandler.STATE_SECOND_CLICK_DONE:
+            value = 1
+
+        device.midiOutMsg(midi_id, channel, cc_number, value)
 
     def set_extra_1_state(self, value, forward_to_device):
         if True == forward_to_device:
@@ -116,10 +143,6 @@ class View:
             device.midiOutMsg(midi_id, channel, cc_number, normalized_value)
 
     def set_track_volume(self, track_index, track_volume, forward_to_device):
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_index + 1) + "_Volume", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(track_volume, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        self.reset_toggle_flags()
-
         if True == forward_to_device:
             if track_index == constants.Track_1:
                 midi_id = midi.MIDI_CONTROLCHANGE
@@ -138,7 +161,7 @@ class View:
                 channel = constants.MIDI_CH_TRACK_VOLUME_4
                 cc_number = constants.MIDI_CC_TRACK_VOLUME_4
         
-            value = int(track_volume * fl_helper.MIDI_MAX_VALUE)
+            value = int(track_volume * fl_helper.MIDI_MAX_VALUE / fl_helper.MAX_VOLUME_LEVEL_VALUE)
     
             device.midiOutMsg(midi_id, channel, cc_number, value)
 
@@ -168,33 +191,56 @@ class View:
     def set_track_muted(self, track_index, track_muted):
         if track_index == constants.Track_1:
             midi_id = midi.MIDI_CONTROLCHANGE
-            channel = constants.MIDI_CH_TRACK_MUTE_TRACK_1
+            channel = constants.MIDI_CH_TRACK_MUTE_1
             cc_number = constants.MIDI_CC_TRACK_MUTE_1
         elif track_index == constants.Track_2:
             midi_id = midi.MIDI_CONTROLCHANGE
-            channel = constants.MIDI_CH_TRACK_MUTE_TRACK_2
+            channel = constants.MIDI_CH_TRACK_MUTE_2
             cc_number = constants.MIDI_CC_TRACK_MUTE_2
         elif track_index == constants.Track_3:
             midi_id = midi.MIDI_CONTROLCHANGE
-            channel = constants.MIDI_CH_TRACK_MUTE_TRACK_3
+            channel = constants.MIDI_CH_TRACK_MUTE_3
             cc_number = constants.MIDI_CC_TRACK_MUTE_3
         elif track_index == constants.Track_4:
             midi_id = midi.MIDI_CONTROLCHANGE
-            channel = constants.MIDI_CH_TRACK_MUTE_TRACK_4
+            channel = constants.MIDI_CH_TRACK_MUTE_4
             cc_number = constants.MIDI_CC_TRACK_MUTE_4
     
         value = fl_helper.MIDI_MAX_VALUE if track_muted else 0
         device.midiOutMsg(midi_id, channel, cc_number, value)
 
-    def play(self, value):
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Play", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(value, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        self.reset_toggle_flags()
+    def set_looper_muted(self, looper_index, looper_muted):
+        if looper_index == constants.Track_1:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_LOOPER_MUTE_1
+            cc_number = constants.MIDI_CC_LOOPER_MUTE_1
+        elif looper_index == constants.Track_2:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_LOOPER_MUTE_2
+            cc_number = constants.MIDI_CC_LOOPER_MUTE_2
+        elif looper_index == constants.Track_3:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_LOOPER_MUTE_3
+            cc_number = constants.MIDI_CC_LOOPER_MUTE_3
+        elif looper_index == constants.Track_4:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_LOOPER_MUTE_4
+            cc_number = constants.MIDI_CC_LOOPER_MUTE_4
+    
+        value = fl_helper.MIDI_MAX_VALUE if looper_muted else 0
+        device.midiOutMsg(midi_id, channel, cc_number, value)
+
+    def set_start_btn_state(self, value):
+        midi_id = midi.MIDI_CONTROLCHANGE
+        channel = constants.MIDI_CH_START
+        cc_number = constants.MIDI_CC_START
+        device_value = int(value * fl_helper.MIDI_MAX_VALUE)
+
+        device.midiOutMsg(midi_id, channel, cc_number, device_value)
 
     def set_looper_side_chain_level(self, track_id, sidechain_level):
         parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "_L_S_CH", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(sidechain_level, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        self.reset_toggle_flags()
 
     def set_resample_mode(self, resample_mode):
 
@@ -216,14 +262,7 @@ class View:
         parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "Resample all loopers", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(resample_all_loopers, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-        self.reset_toggle_flags()
-
     def set_track_recording_state(self, track_index, recording_state):
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_index + 1) + "_Recording", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(recording_state, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-
-        self.reset_toggle_flags()
-
         if track_index == constants.Track_1:
             midi_id = midi.MIDI_CONTROLCHANGE
             channel = constants.MIDI_CH_TRACK_RECORD_1
@@ -240,20 +279,15 @@ class View:
             midi_id = midi.MIDI_CONTROLCHANGE
             channel = constants.MIDI_CH_TRACK_RECORD_4
             cc_number = constants.MIDI_CC_TRACK_RECORD_4
-    
-        value = int(1 if recording_state else 0)
-        device.midiOutMsg(midi_id, channel, cc_number, value)
+
+        device.midiOutMsg(midi_id, channel, cc_number, int(recording_state))
 
     def set_track_resampling_state(self, track_id, recording_state):
         parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "_Resampling", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(recording_state, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-        self.reset_toggle_flags()
-
-    def set_track_clear_state(self, track_index, recording_state):
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_index + 1) + "_Clear", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(recording_state, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-
+    def set_track_clear_state(self, track_index, clear_state):
+        # print("set_track_clear_state: track_index - " + str(track_index) + ", recording_state - " + str(clear_state))
         if track_index == constants.Track_1:
             midi_id = midi.MIDI_CONTROLCHANGE
             channel = constants.MIDI_CH_TRACK_CLEAR_1
@@ -271,39 +305,27 @@ class View:
             channel = constants.MIDI_CH_TRACK_CLEAR_4
             cc_number = constants.MIDI_CC_TRACK_CLEAR_4
     
-        value = int(recording_state * fl_helper.MIDI_MAX_VALUE)
+        value = int(clear_state * fl_helper.MIDI_MAX_VALUE)
         device.midiOutMsg(midi_id, channel, cc_number, value)
 
-    def set_track_playback_state(self, track_index, playback_state):
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_index + 1) + "_Playback", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(playback_state, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
+    def set_clear_looper_btn_state(self, state):
 
-        self.reset_toggle_flags()
+        midi_id = midi.MIDI_CONTROLCHANGE
+        channel = constants.MIDI_CH_CLEAR_LOOPER
+        cc_number = constants.MIDI_CC_CLEAR_LOOPER
 
-        if track_index == constants.Track_1:
-            midi_id = midi.MIDI_CONTROLCHANGE
-            channel = constants.MIDI_CH_TRACK_RECORD_1
-            cc_number = constants.MIDI_CC_TRACK_RECORD_1
-        elif track_index == constants.Track_2:
-            midi_id = midi.MIDI_CONTROLCHANGE
-            channel = constants.MIDI_CH_TRACK_RECORD_2
-            cc_number = constants.MIDI_CC_TRACK_RECORD_2
-        elif track_index == constants.Track_3:
-            midi_id = midi.MIDI_CONTROLCHANGE
-            channel = constants.MIDI_CH_TRACK_RECORD_3
-            cc_number = constants.MIDI_CC_TRACK_RECORD_3
-        elif track_index == constants.Track_4:
-            midi_id = midi.MIDI_CONTROLCHANGE
-            channel = constants.MIDI_CH_TRACK_RECORD_4
-            cc_number = constants.MIDI_CC_TRACK_RECORD_4
-    
-        value = int(37 if playback_state else 0)
-        print('midiOutMsg - midi_id - ' + str(midi_id) + ", channel - " + str(channel) + ', cc_number - ' + str(cc_number) + ", value - " + str(value))
+        value = 0
+
+        if state == updateable.DoubleClickTimeoutHandler.STATE_INITITAL:
+            value = 0
+        if state == updateable.DoubleClickTimeoutHandler.STATE_FIRST_CLICK_DONE:
+            value = 25
+        if state == updateable.DoubleClickTimeoutHandler.STATE_FIRST_CLICK_RELEASED:
+            value = 13
+        if state == updateable.DoubleClickTimeoutHandler.STATE_SECOND_CLICK_DONE:
+            value = 1
+
         device.midiOutMsg(midi_id, channel, cc_number, value)
-
-    def reset_toggle_flags(self):
-        self.__clear_off()
-        self.__clear_tracks_off()
 
     def update_sample_length(self, sample_length):
 
@@ -399,29 +421,13 @@ class View:
                 device.midiOutMsg(midi_id, channel, cc_number, value)
     
 
-    def set_tempo(self, tempo):
-        tempo_hundred = int(tempo) // 100
-        tempo_dozens = (tempo % 100) // 10
-        tempo_units = (tempo % 10)
-
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "TH", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(tempo_hundred / 10, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "TD", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(tempo_dozens / 10, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "TU", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(tempo_units / 10, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-
-    def set_track_sample_length(self, track_id, sample_length):
-        sample_length_hundred = int(sample_length) // 100
-        sample_length_dozens = (sample_length % 100) // 10
-        sample_length_units = (sample_length % 10)
-
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "H", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(sample_length_hundred / 10, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "D", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(sample_length_dozens / 10, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "U", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(sample_length_units / 10, parameter_id, constants.MASTER_CHANNEL, constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
+    def set_tempo(self, tempo, forward_to_device):
+        if True == forward_to_device:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_TEMPO
+            cc_number = constants.MIDI_CC_TEMPO
+            value = int(( ( tempo - constants.MIN_TEMPO ) / ( constants.MAX_TEMPO - constants.MIN_TEMPO ) ) * fl_helper.MIDI_MAX_VALUE)
+            device.midiOutMsg(midi_id, channel, cc_number, value)
 
     def set_turnado_dictator_level(self, turnado_dictator_level):
         parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T_D", constants.LOOPER_MUX_CONTROL_SURFACE_MIXER_SLOT_INDEX)

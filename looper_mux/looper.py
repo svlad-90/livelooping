@@ -11,7 +11,8 @@ from looper_mux.track import Track
 from looper_mux import constants
 from looper_mux.resample_mode import ResampleMode
 from common import fl_helper
-
+from common import updateable
+from looper_mux.view import View
 
 class Looper():
 
@@ -38,6 +39,26 @@ class Looper():
         self.__looper_channel = 0
         self.__turnado_dictator_level = 0
         self.__turnado_dry_wet_level = 0
+        
+        action_first_click = lambda: \
+            self.__view.set_clear_looper_btn_state(updateable.DoubleClickTimeoutHandler.STATE_FIRST_CLICK_DONE)
+        
+        action_first_release = lambda: \
+            self.__view.set_clear_looper_btn_state(updateable.DoubleClickTimeoutHandler.STATE_FIRST_CLICK_RELEASED)
+        
+        action_second_release = lambda: \
+            self.__view.set_clear_looper_btn_state(updateable.DoubleClickTimeoutHandler.STATE_INITITAL)
+        
+        action_timeout = lambda: \
+            self.__view.set_clear_looper_btn_state(updateable.DoubleClickTimeoutHandler.STATE_INITITAL)
+
+        self.__clear_looper_handler = updateable.DoubleClickTimeoutHandler(action_first_click,
+                                                                           action_first_release,
+                                                                           self.clear_second_click_handler,
+                                                                           action_second_release,
+                                                                           action_timeout, 0.5)
+
+        self.__context_provider.get_updateable_mux().add_updateable(self.__clear_looper_handler)
 
         if self.__looper_number == constants.Looper_1:
             self.__looper_channel = constants.LOOPER_1_CHANNEL
@@ -53,6 +74,10 @@ class Looper():
                                          constants.Track_3: 0.0,
                                          constants.Track_4: 0.0 }
         self.__is_gui_active = False
+
+    def clear_second_click_handler(self):
+        self.__view.set_clear_looper_btn_state(updateable.DoubleClickTimeoutHandler.STATE_SECOND_CLICK_DONE)
+        self.clear_looper()
 
     def on_init_script(self):
         for track_id in self.__tracks:
@@ -74,15 +99,11 @@ class Looper():
     def get_track(self, track_number):
         return self.__tracks.get(track_number)
 
-    def set_looper_volume(self, looper_volume):
+    def set_looper_volume(self, looper_volume, forward_to_device):
         self.__looper_volume = looper_volume
 
-        ignore_view =  not self.__is_gui_active
-
-        if ignore_view == False:
-            self.__view.set_looper_volume(looper_volume)
-
-        self.__view.set_looper_activation_status(self.__looper_number, looper_volume)
+        self.__view.set_looper_volume(self.get_looper_number(), looper_volume, forward_to_device)
+        self.__view.set_looper_muted(self.__looper_number, looper_volume == 0)
 
         for track_id in self.__tracks:
             self.__tracks[track_id].set_looper_volume(self.__looper_volume)
@@ -97,7 +118,7 @@ class Looper():
         return self.__tracks.get(track_id).get_track_volume()
 
     def clear_looper(self):
-        self.set_looper_volume(fl_helper.MAX_VOLUME_LEVEL_VALUE)
+        self.set_looper_volume(fl_helper.MAX_VOLUME_LEVEL_VALUE, True)
         self.set_turnado_dictator_level(0.0)
         self.set_turnado_dry_wet_level(constants.DEFAULT_TURNADO_DRY_WET_LEVEL)
         for track_id in self.__tracks:
@@ -143,7 +164,6 @@ class Looper():
 
     def __update_looper_stats(self):
         if True == self.__is_gui_active:
-            self.__view.set_looper_volume(self.__looper_volume)
             self.__view.set_turnado_dictator_level(self.__turnado_dictator_level)
             self.__view.set_turnado_dry_wet_level(self.__turnado_dry_wet_level)
 
@@ -153,6 +173,9 @@ class Looper():
             else:
                 for track_id, sidechain_value in self.__sidechain_levels.items():
                     self.__view.set_looper_side_chain_level(track_id, constants.DEFAULT_SIDECHAIN_LEVEL)
+
+        self.__view.set_looper_volume(self.get_looper_number(), self.__looper_volume, True)
+        self.__view.set_looper_muted(self.__looper_number, self.__looper_volume == 0)
 
     def is_track_recording_in_progress(self, track_id):
         return self.__tracks[track_id].is_recording_in_progress()
@@ -212,10 +235,27 @@ class Looper():
         self.__set_gui_active(True)
         self.__update_looper_stats()
         self.__update_tracks_stats()
-        self.__view.select_looper(self.__looper_number)
+        self.__view.set_looper_state(self.__looper_number, View.LOOPER_STATE_SELECTED)
+
+    def is_any_track_playing(self):
+        result = False
+        for track_id in self.__tracks:
+            if self.__tracks[track_id].is_playback_in_progress():
+                result = True
+                break
+        return result
 
     def unselect(self):
         self.__set_gui_active(False)
+
+        value = View.LOOPER_STATE_OFF
+
+        if self.is_any_track_playing():
+            value = View.LOOPER_STATE_PLAYING
+        else:
+            value = View.LOOPER_STATE_OFF
+
+        self.__view.set_looper_state(self.__looper_number, value)
 
     def set_track_pan(self, track_id, pan, forward_to_device):
         self.__tracks.get(track_id).set_track_pan(pan, forward_to_device)
@@ -224,3 +264,9 @@ class Looper():
         self.__is_gui_active = value
         for track_id in self.__tracks:
             self.__tracks[track_id].set_gui_active(value)
+
+    def handle_clear_looper_click(self):
+        self.__clear_looper_handler.click()
+
+    def handle_clear_looper_release(self):
+        self.__clear_looper_handler.release()

@@ -246,7 +246,7 @@ class FxPreset(IFxPresetDataProvider):
 
                     param_id_to_apply += 20 * channel_id_counter
 
-                    # print("~~~ channel_id - " + str(channel_id) + ", param_id_to_apply - " + str(param_id_to_apply))
+                    # print("__apply_parameters_to_plugins: channel_id - " + str(channel_id) + ", param_id_to_apply - " + str(param_id_to_apply))
 
                     param_value = float(param_value_str)
 

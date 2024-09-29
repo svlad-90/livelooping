@@ -16,3 +16,6 @@ looper_mux = KorgKaossPad3PlusLooperMux(context)
 
 def OnMidiMsg(event):
     looper_mux.on_midi_msg(event)
+
+def OnIdle():
+    looper_mux.on_update()
