@@ -11,10 +11,8 @@ import device
 
 from looper_mux import constants
 from looper_mux.sample_length import SampleLength
-from looper_mux.resample_mode import ResampleMode
 from common import fl_helper, global_constants
-from common import updateable
-
+from common import updateable    
 
 class Track():
 
@@ -22,18 +20,19 @@ class Track():
     RECORDING_STATE_RECORDING = 1
     RECORDING_STATE_PLAYBACK  = 37
 
-    def __init__(self, looper_number, track_number, mixer_track, view, context_provider):
+    def __init__(self, looper_number, track_number, mixer_channel, view, context_provider):
         self.__view = view
         self.__looper_number = looper_number
         self.__track_number = track_number
-        self.__mixer_track = mixer_track
+        self.__mixer_channel = mixer_channel
         self.__sample_length = SampleLength.LENGTH_0
-        self.__resample_mode = ResampleMode.NONE
         self.__volume = fl_helper.MAX_VOLUME_LEVEL_VALUE
         self.__recording_state = Track.RECORDING_STATE_OFF
         self.__context_provider = context_provider
         self.__is_gui_active = False
         self.__pan = global_constants.DEFAULT_PANOMATIC_PAN_LEVEL
+        self.__selection_status = False
+        self.__looper_fx_1_channel = self.__calculate_looper_fx_1_channel()
 
         action_click = lambda: \
             self.__view.set_track_clear_state(self.__track_number, True)
@@ -58,28 +57,41 @@ class Track():
         self.set_track_pan(global_constants.DEFAULT_PANOMATIC_PAN_LEVEL, True)
         self.__view.set_track_clear_state(self.__track_number, 0.0)
 
-    def get_resample_mode(self):
-        return self.__resample_mode
+    def __calculate_looper_fx1_mixer_channel(self):
+        result = 0
+        if self.__looper_number == constants.Looper_1:
+            result = constants.LOOPER_1_FX_1_CHANNEL
+        elif self.__looper_number == constants.Looper_2:
+            result = constants.LOOPER_2_FX_1_CHANNEL
+        elif self.__looper_number == constants.Looper_3:
+            result = constants.LOOPER_3_FX_1_CHANNEL
+        elif self.__looper_number == constants.Looper_4:
+            result = constants.LOOPER_4_FX_1_CHANNEL
+        return result
+
+    def __calculate_looper_fx_1_channel(self):
+        result = 0
+        if self.__looper_number == constants.Looper_1:
+            result = constants.LOOPER_1_FX_1_CHANNEL
+        if self.__looper_number == constants.Looper_2:
+            result = constants.LOOPER_2_FX_1_CHANNEL
+        if self.__looper_number == constants.Looper_3:
+            result = constants.LOOPER_3_FX_1_CHANNEL
+        if self.__looper_number == constants.Looper_4:
+            result = constants.LOOPER_4_FX_1_CHANNEL
+        return result
 
     def set_looper_volume(self, looper_volume):
         # print("set_looper_volume: looper_volume - " + str(looper_volume))
-        plugins.setParamValue(looper_volume, constants.PANOMATIC_VOLUME_PARAM_INDEX, self.__mixer_track, constants.LOOPER_PANOMATIC_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(looper_volume, constants.PANOMATIC_VOLUME_PARAM_INDEX, self.__mixer_channel, constants.LOOPER_PANOMATIC_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
     def set_track_volume(self, track_volume, forward_to_device):
         self.__volume = track_volume
-        plugins.setParamValue(track_volume, constants.PANOMATIC_VOLUME_PARAM_INDEX, self.__mixer_track, constants.TRACK_PANOMATIC_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(track_volume, constants.PANOMATIC_VOLUME_PARAM_INDEX, self.__mixer_channel, constants.TRACK_PANOMATIC_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
         self.__update_volume(forward_to_device)
 
     def get_track_volume(self):
         return self.__volume
-
-    def __set_track_volume_activation(self, track_volume_activation):
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1) + "VA", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(track_volume_activation, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-
-    def __set_resample_audio_routing_level(self, param_name, param_value):
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, param_name, constants.RESAMPLING_AUDIO_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(param_value, parameter_id, constants.MASTER_CHANNEL, constants.RESAMPLING_AUDIO_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
     def clear(self, stop_recording=False):
         # print('Track:' + Track.clear.__name__ + ": stop_recording - " + str(stop_recording) + \
@@ -91,7 +103,7 @@ class Track():
             self.stop_recording()
 
         plugins.setParamValue(1, constants.AUGUSTUS_LOOP_PLUGIN_CLEAR_LOOP_PARAM_INDEX,
-                              self.__mixer_track,
+                              self.__mixer_channel,
                               constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX,
                               midi.PIM_None, True)
 
@@ -107,42 +119,31 @@ class Track():
                 self.__recording_state = Track.RECORDING_STATE_OFF
                 if self.__is_gui_active == True:
                     self.__view.set_track_recording_state(self.__track_number, self.__recording_state)
-                self.__set_track_volume_activation(1.0)
                 self.set_sample_length(SampleLength.LENGTH_0)
             else:
                 if self.__recording_state != Track.RECORDING_STATE_RECORDING:
-                    self.__set_track_volume_activation(1.0)
                     self.set_sample_length(SampleLength.LENGTH_0)
                 else:
                     self.set_sample_length(self.__context_provider.get_sample_length())
 
         self.__clear_track_handler.release()
 
-    def __reset_routing(self):
-        for track_number in range(0, 4):
-            self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "T" + str(track_number + 1) + "_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
-            self.__set_resample_audio_routing_level("L" + str(self.__looper_number+ 1) + "T" + str(track_number + 1) + "_LA", 0.0)
-
-        self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_LA", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
-        self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_RBF", 0.0)
-        self.__set_resample_audio_routing_level("LA_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
-        self.__set_resample_audio_routing_level("LA_RBF", 0.0)
+        self.set_track_selection_status(False)
 
     def reset_track_params(self):
-        plugins.setParamValue(0.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_TIME_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        plugins.setParamValue(0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MIN_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        plugins.setParamValue(1.0, constants.AUGUSTUS_LOOP_PLUGIN_HOST_TEMPO_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        plugins.setParamValue(1.0, constants.AUGUSTUS_LOOP_PLUGIN_EFFECT_LEVEL_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        plugins.setParamValue(0.0, constants.AUGUSTUS_LOOP_PLUGIN_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        plugins.setParamValue(1.0, constants.AUGUSTUS_LOOP_PLUGIN_MASTER_FEEDBACK_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        plugins.setParamValue(1.0, constants.AUGUSTUS_LOOP_PLUGIN_DIGITAL_MODE_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        plugins.setParamValue(1.0, constants.AUGUSTUS_LOOP_PLUGIN_PITCH_INDEPENDENT_DELAY_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        plugins.setParamValue(1.0 / 3600.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        plugins.setParamValue(0.33, constants.AUGUSTUS_LOOP_PLUGIN_SYNC_GROUP_MODE_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        plugins.setParamValue(1.1, constants.AUGUSTUS_LOOP_PLUGIN_LL_FEEDBACK_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        plugins.setParamValue(1.1, constants.AUGUSTUS_LOOP_PLUGIN_RR_FEEDBACK_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        plugins.setParamValue(0.0, constants.AUGUSTUS_LOOP_PLUGIN_SATURATION_ON_OFF_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        self.__reset_routing()
+        plugins.setParamValue(0.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_TIME_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MIN_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(1.0, constants.AUGUSTUS_LOOP_PLUGIN_HOST_TEMPO_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(1.0, constants.AUGUSTUS_LOOP_PLUGIN_EFFECT_LEVEL_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(0.0, constants.AUGUSTUS_LOOP_PLUGIN_INPUT_LEVEL_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(1.0, constants.AUGUSTUS_LOOP_PLUGIN_MASTER_FEEDBACK_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(1.0, constants.AUGUSTUS_LOOP_PLUGIN_DIGITAL_MODE_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(1.0, constants.AUGUSTUS_LOOP_PLUGIN_PITCH_INDEPENDENT_DELAY_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(1.0 / 3600.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(0.33, constants.AUGUSTUS_LOOP_PLUGIN_SYNC_GROUP_MODE_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(1.1, constants.AUGUSTUS_LOOP_PLUGIN_LL_FEEDBACK_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(1.1, constants.AUGUSTUS_LOOP_PLUGIN_RR_FEEDBACK_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(0.0, constants.AUGUSTUS_LOOP_PLUGIN_SATURATION_ON_OFF_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
         # looper 1 is the source of the sidechain
         if self.__looper_number == constants.Looper_1:
@@ -162,71 +163,27 @@ class Track():
 
             if sample_length != SampleLength.LENGTH_0:
                 if(sample_length == SampleLength.LENGTH_128):
-                    plugins.setParamValue((64 - 1.0) / 3599.0 , constants.AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                    plugins.setParamValue(64 / 3600.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+                    plugins.setParamValue((64 - 1.0) / 3599.0 , constants.AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+                    plugins.setParamValue(64 / 3600.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
                 else:
-                    plugins.setParamValue((sample_length - 1.0) / 3599.0 , constants.AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                    plugins.setParamValue(sample_length / 3600.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+                    plugins.setParamValue((sample_length - 1.0) / 3599.0 , constants.AUGUSTUS_LOOP_PLUGIN_MAX_DELAY_TIME_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+                    plugins.setParamValue(sample_length / 3600.0, constants.AUGUSTUS_LOOP_PLUGIN_DELAY_SLIDER_MAX_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-                plugins.setParamValue(0.33, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-                plugins.setParamValue(sample_length / 128.0, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+                plugins.setParamValue(0.33, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_DIVISOR_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+                plugins.setParamValue(sample_length / 128.0, constants.AUGUSTUS_LOOP_PLUGIN_BEATS_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
         self.__sample_length = sample_length
 
-    def start_recording(self, sample_length, resample_mode):
+    def start_recording(self, sample_length):
 
         self.set_sample_length(sample_length)
-        self.__set_resample_mode(resample_mode)
 
-        self.__set_track_volume_activation(0.0)
-
-        plugins.setParamValue(1.0, constants.AUGUSTUS_LOOP_PLUGIN_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-
-        if ResampleMode.FROM_LOOPER_TO_TRACK != ResampleMode.NONE:
-            if ResampleMode.FROM_LOOPER_TO_TRACK == self.get_resample_mode():
-                for looper_number in range(0, 4):
-                    for track_number in range(0, 4):
-                        if looper_number != self.__looper_number:
-                            self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
-                            self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_LA", 0.0)
-                            self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_ALA", 0.0)
-                        else:
-                            if track_number == self.__track_number:
-                                self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_FX1", 0.0)
-                                self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_LA", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
-                                self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_ALA", 0.0)
-                            else:
-                                self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
-                                self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_LA", 0.0)
-                                self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_ALA", 0.0)
-
-                            self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "_LA", 0.0)
-                            self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "_RBF", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
-
-            elif ResampleMode.FROM_ALL_LOOPERS_TO_TRACK == self.get_resample_mode():
-                for looper_number in range(0, 4):
-                    for track_number in range(0, 4):
-                        if looper_number != self.__looper_number:
-                            self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
-                            self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_LA", 0.0)
-                            self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_ALA", 0.0)
-                        else:
-                            if track_number == self.__track_number:
-                                self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_FX1", 0.0)
-                                self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_LA", 0.0)
-                                self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_ALA", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
-                            else:
-                                self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
-                                self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_LA", 0.0)
-                                self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_ALA", 0.0)
-
-                self.__set_resample_audio_routing_level("LA_FX1", 0.0)
-                self.__set_resample_audio_routing_level("LA_RBF", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
+        plugins.setParamValue(1.0, constants.AUGUSTUS_LOOP_PLUGIN_INPUT_LEVEL_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
         if self.__recording_state != Track.RECORDING_STATE_PLAYBACK:
-            plugins.setParamValue(0.0, constants.AUGUSTUS_LOOP_PLUGIN_MASTER_FEEDBACK_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-            plugins.setParamValue(0.0, constants.AUGUSTUS_LOOP_PLUGIN_LL_FEEDBACK_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-            plugins.setParamValue(0.0, constants.AUGUSTUS_LOOP_PLUGIN_RR_FEEDBACK_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+            plugins.setParamValue(0.0, constants.AUGUSTUS_LOOP_PLUGIN_MASTER_FEEDBACK_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+            plugins.setParamValue(0.0, constants.AUGUSTUS_LOOP_PLUGIN_LL_FEEDBACK_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+            plugins.setParamValue(0.0, constants.AUGUSTUS_LOOP_PLUGIN_RR_FEEDBACK_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
         # important to have this statement here
         self.__recording_state = Track.RECORDING_STATE_RECORDING
@@ -236,58 +193,24 @@ class Track():
                                          global_constants.LOOPER_MUX_START_RECORDING_MSG_DATA_1,
                                          global_constants.LOOPER_MUX_START_RECORDING_MSG_DATA_2)
 
-        if self.get_resample_mode() == ResampleMode.NONE:
-            if self.__is_gui_active == True:
-                self.__view.set_track_recording_state(self.__track_number, self.__recording_state)
-        else:
-            self.clear()
-            if self.__is_gui_active == True:
-                self.__view.set_track_resampling_state(self.__track_number, self.__recording_state)
+        if self.__is_gui_active == True:
+            self.__view.set_track_recording_state(self.__track_number, self.__recording_state)
 
     def stop_recording(self):
 
         if self.__recording_state == Track.RECORDING_STATE_RECORDING:
-            plugins.setParamValue(0.0, constants.AUGUSTUS_LOOP_PLUGIN_INPUT_LEVEL_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+            plugins.setParamValue(0.0, constants.AUGUSTUS_LOOP_PLUGIN_INPUT_LEVEL_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
-            self.__set_track_volume_activation(1.0)
-
-            if ResampleMode.FROM_LOOPER_TO_TRACK != ResampleMode.NONE:
-                if ResampleMode.FROM_LOOPER_TO_TRACK == self.get_resample_mode():
-                    for looper_number in range(0, 4):
-                        for track_number in range(0, 4):
-                            self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
-                            self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_LA", 0.0)
-                            self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_ALA", 0.0)
-    
-                    self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_LA", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
-                    self.__set_resample_audio_routing_level("L" + str(self.__looper_number + 1) + "_RBF", 0.0)
-    
-                elif ResampleMode.FROM_ALL_LOOPERS_TO_TRACK == self.get_resample_mode():
-                    for looper_number in range(0, 4):
-                        for track_number in range(0, 4):
-                            self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
-                            self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_LA", 0.0)
-                            self.__set_resample_audio_routing_level("L" + str(looper_number + 1) + "T" + str(track_number + 1) + "_ALA", 0.0)
-    
-                    self.__set_resample_audio_routing_level("LA_FX1", constants.DEFAULT_AUDIO_ROUTING_LEVEL)
-                    self.__set_resample_audio_routing_level("LA_RBF", 0.0)
-    
-            if self.get_resample_mode() == ResampleMode.NONE:
-                if self.__is_gui_active == True:
-                    self.__view.set_track_recording_state(self.__track_number, Track.RECORDING_STATE_OFF)
-            else:
-                if self.__is_gui_active == True:
-                    self.__view.set_track_resampling_state(self.__track_number, 0.0)
-
-            self.__set_resample_mode(ResampleMode.NONE)
+            if self.__is_gui_active == True:
+                self.__view.set_track_recording_state(self.__track_number, Track.RECORDING_STATE_OFF)
 
             self.__recording_state = Track.RECORDING_STATE_PLAYBACK
             if self.__is_gui_active == True:
                 self.__view.set_track_recording_state(self.__track_number, self.__recording_state)
 
-            plugins.setParamValue(1.0, constants.AUGUSTUS_LOOP_PLUGIN_MASTER_FEEDBACK_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-            plugins.setParamValue(1.1, constants.AUGUSTUS_LOOP_PLUGIN_LL_FEEDBACK_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
-            plugins.setParamValue(1.1, constants.AUGUSTUS_LOOP_PLUGIN_RR_FEEDBACK_PARAM_INDEX, self.__mixer_track, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+            plugins.setParamValue(1.0, constants.AUGUSTUS_LOOP_PLUGIN_MASTER_FEEDBACK_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+            plugins.setParamValue(1.1, constants.AUGUSTUS_LOOP_PLUGIN_LL_FEEDBACK_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+            plugins.setParamValue(1.1, constants.AUGUSTUS_LOOP_PLUGIN_RR_FEEDBACK_PARAM_INDEX, self.__mixer_channel, constants.TRACK_AUGUSTUS_LOOP_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
     def is_recording_in_progress(self):
         return self.__recording_state == Track.RECORDING_STATE_RECORDING
@@ -298,7 +221,6 @@ class Track():
     def update_stats(self):
         if self.__is_gui_active == True:
             self.__view.set_track_recording_state(self.__track_number, self.__recording_state)
-            self.__view.set_track_resampling_state(self.__track_number, 0.0)
 
         self.__update_volume(True)
         self.__update_pan(True)
@@ -312,17 +234,35 @@ class Track():
         if self.__is_gui_active == True:
             self.__view.set_track_pan(self.__track_number, self.__pan, forward_to_device)
 
-    def __set_resample_mode(self, resample_mode):
-        self.__resample_mode = resample_mode
-
     def set_routing_level(self, routing_level):
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "L" + str(self.__looper_number + 1) + "T" + str(self.__track_number + 1), constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(routing_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
+
+        source_mixer_channel = constants.RECORDING_BUS_CHANNEL
+        target_mixer_channel = self.__mixer_channel
+
+        mixer.setRouteToLevel(source_mixer_channel, target_mixer_channel, routing_level)
 
     def set_gui_active(self, value):
         self.__is_gui_active = value
         
     def set_track_pan(self, pan, forward_to_device):
         self.__pan = pan
-        plugins.setParamValue(pan, constants.PANOMATIC_PAN_PARAM_INDEX, self.__mixer_track, constants.TRACK_PANOMATIC_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(pan, constants.PANOMATIC_PAN_PARAM_INDEX, self.__mixer_channel, constants.TRACK_PANOMATIC_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
         self.__update_pan(forward_to_device)
+
+    def __set_track_routing(self, source_channel, target_channel, touring_level):
+        mixer.setRouteToLevel(source_channel, target_channel, touring_level)
+
+    def set_track_selection_status(self, selection_status):
+        self.__selection_status = selection_status
+
+        if selection_status:
+            self.__set_track_routing(self.__mixer_channel, constants.FX_UNIT_IN_CHANNEL, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+            self.__set_track_routing(self.__mixer_channel, self.__looper_fx_1_channel, 0)
+        else:
+            self.__set_track_routing(self.__mixer_channel, constants.FX_UNIT_IN_CHANNEL, 0)
+            self.__set_track_routing(self.__mixer_channel, self.__looper_fx_1_channel, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+            
+        self.__view.set_track_selection_status(self.__track_number, selection_status)
+
+    def get_track_selection_status(self):
+        return self.__selection_status

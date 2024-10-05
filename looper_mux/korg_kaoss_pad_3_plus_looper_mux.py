@@ -13,22 +13,22 @@ import mixer
 import plugins
 
 from looper_mux.i_context_interface import IContextInterface
-from looper_mux.pressed_sampler_button import PressedSamplerButton
 from looper_mux.looper import Looper
 from looper_mux import constants
-from looper_mux.resample_mode import ResampleMode
 from looper_mux.sample_length import SampleLength
 from looper_mux.view import View
 from common import fl_helper
 from common import updateable
+from common import input_handlers
 from looper_mux import drop
+from looper_mux import sidechain
+from looper_mux import fx
 
 class KorgKaossPad3PlusLooperMux(IContextInterface):
 
     def __init__(self, context):
         self.__context = context
         self.__view = View()
-        self.__shift_pressed = False
         self.__extra_1_state = False
         self.__selected_looper = constants.Looper_1
         self.__updateable_mux = updateable.UpdateableMux()
@@ -45,7 +45,6 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
                                                    constants.LOOPER_4_INITIAL_TRACK_CHANNEL,
                                                    self.__view, self) }
         self.__initialized = False
-        self.__resample_mode = ResampleMode.NONE
         self.__buttons_last_press_time = {}
         self.__prolonged_record_length_mode = False
         self.__selected_sample_length = SampleLength.LENGTH_1
@@ -73,59 +72,13 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         sync_daw_transport_action_release = lambda: \
             self.__view.set_sync_daw_transport_button_state(False)
 
-        sync_daw_transport_action_delay = lambda: \
-            None
+        self.__sync_daw_transport_handler = input_handlers.ClickReleaseHandler(self.sync_daw_transport_action_click,
+                                                                           sync_daw_transport_action_release)
 
-        self.__sync_saw_transport_handler = updateable.DelayedActionHandler(self.sync_daw_transport_action_click,
-                                                                           sync_daw_transport_action_release,
-                                                                           sync_daw_transport_action_delay,
-                                                                           0.1)
+        self.__drop_manager = drop.DropManager(self.__view)
+        self.__sidechain_manager = sidechain.SidechainManager(self.__view)
 
-        self.__updateable_mux.add_updateable(self.__sync_saw_transport_handler)
-
-        self.__drop_manager = drop.DropManager(self.__view, self.__updateable_mux)
-
-        self.__drop_manager.add_drop_fx(constants.MIDI_CH_DROP_FX_1,
-                                        constants.MIDI_CC_DROP_FX_1,
-                                        constants.LOOPERS_ALL_CHANNEL,
-                                        constants.DROP_FX_1_MIXER_SLOT,
-                                        constants.ENDLESS_SMILE_PLUGIN_INTENSITY_PARAM_INDEX)
-
-        self.__drop_manager.add_drop_fx(constants.MIDI_CH_DROP_FX_2,
-                                        constants.MIDI_CC_DROP_FX_2,
-                                        constants.LOOPERS_ALL_CHANNEL,
-                                        constants.DROP_FX_2_MIXER_SLOT,
-                                        constants.TURNADO_DICTATOR_PARAM_INDEX)
-
-        self.__drop_manager.add_drop_fx(constants.MIDI_CH_DROP_FX_3,
-                                        constants.MIDI_CC_DROP_FX_3,
-                                        constants.LOOPERS_ALL_CHANNEL,
-                                        constants.DROP_FX_3_MIXER_SLOT,
-                                        constants.TURNADO_DICTATOR_PARAM_INDEX)
-
-        self.__drop_manager.add_drop_fx(constants.MIDI_CH_DROP_FX_4,
-                                        constants.MIDI_CC_DROP_FX_4,
-                                        constants.LOOPERS_ALL_CHANNEL,
-                                        constants.DROP_FX_4_MIXER_SLOT,
-                                        constants.TURNADO_DICTATOR_PARAM_INDEX)
-
-        self.__drop_manager.add_drop_fx(constants.MIDI_CH_DROP_FX_5,
-                                        constants.MIDI_CC_DROP_FX_5,
-                                        constants.LOOPERS_ALL_CHANNEL,
-                                        constants.DROP_FX_5_MIXER_SLOT,
-                                        constants.TURNADO_DICTATOR_PARAM_INDEX)
-
-        self.__drop_manager.add_drop_fx(constants.MIDI_CH_DROP_FX_6,
-                                        constants.MIDI_CC_DROP_FX_6,
-                                        constants.LOOPERS_ALL_CHANNEL,
-                                        constants.DROP_FX_6_MIXER_SLOT,
-                                        constants.TURNADO_DICTATOR_PARAM_INDEX)
-
-        self.__drop_manager.add_drop_fx(constants.MIDI_CH_DROP_FX_7,
-                                        constants.MIDI_CC_DROP_FX_7,
-                                        constants.LOOPERS_ALL_CHANNEL,
-                                        constants.DROP_FX_7_MIXER_SLOT,
-                                        constants.TURNADO_DICTATOR_PARAM_INDEX)
+        self.__fx_manager = fx.FXManager(self.__view)
 
     def on_init_script(self):
 
@@ -133,13 +86,81 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.on_init_script.__name__)
 
             try:
+
+                self.__sidechain_manager.add_sidechain_item(constants.MIDI_CH_SIDECHAIN_TENSION_T1,
+                                            constants.MIDI_CC_SIDECHAIN_TENSION_T1,
+                                            constants.MIDI_CH_SIDECHAIN_DECAY_T1,
+                                            constants.MIDI_CC_SIDECHAIN_DECAY_T1,
+                                            constants.Track_1)
+
+                self.__sidechain_manager.add_sidechain_item(constants.MIDI_CH_SIDECHAIN_TENSION_T2,
+                                                            constants.MIDI_CC_SIDECHAIN_TENSION_T2,
+                                                            constants.MIDI_CH_SIDECHAIN_DECAY_T2,
+                                                            constants.MIDI_CC_SIDECHAIN_DECAY_T2,
+                                                            constants.Track_2)
+        
+                self.__sidechain_manager.add_sidechain_item(constants.MIDI_CH_SIDECHAIN_TENSION_T3,
+                                                            constants.MIDI_CC_SIDECHAIN_TENSION_T3,
+                                                            constants.MIDI_CH_SIDECHAIN_DECAY_T3,
+                                                            constants.MIDI_CC_SIDECHAIN_DECAY_T3,
+                                                            constants.Track_3)
+        
+                self.__sidechain_manager.add_sidechain_item(constants.MIDI_CH_SIDECHAIN_TENSION_T4,
+                                                            constants.MIDI_CC_SIDECHAIN_TENSION_T4,
+                                                            constants.MIDI_CH_SIDECHAIN_DECAY_T4,
+                                                            constants.MIDI_CC_SIDECHAIN_DECAY_T4,
+                                                            constants.Track_4)
+
+                self.__drop_manager.add_drop_fx(constants.MIDI_CH_DROP_FX_1,
+                                constants.MIDI_CC_DROP_FX_1,
+                                constants.LOOPERS_ALL_CHANNEL,
+                                constants.DROP_FX_1_MIXER_SLOT,
+                                constants.ENDLESS_SMILE_PLUGIN_INTENSITY_PARAM_INDEX)
+
+                self.__drop_manager.add_drop_fx(constants.MIDI_CH_DROP_FX_2,
+                                                constants.MIDI_CC_DROP_FX_2,
+                                                constants.LOOPERS_ALL_CHANNEL,
+                                                constants.DROP_FX_2_MIXER_SLOT,
+                                                constants.TURNADO_DICTATOR_PARAM_INDEX)
+        
+                self.__drop_manager.add_drop_fx(constants.MIDI_CH_DROP_FX_3,
+                                                constants.MIDI_CC_DROP_FX_3,
+                                                constants.LOOPERS_ALL_CHANNEL,
+                                                constants.DROP_FX_3_MIXER_SLOT,
+                                                constants.TURNADO_DICTATOR_PARAM_INDEX)
+        
+                self.__drop_manager.add_drop_fx(constants.MIDI_CH_DROP_FX_4,
+                                                constants.MIDI_CC_DROP_FX_4,
+                                                constants.LOOPERS_ALL_CHANNEL,
+                                                constants.DROP_FX_4_MIXER_SLOT,
+                                                constants.TURNADO_DICTATOR_PARAM_INDEX)
+        
+                self.__drop_manager.add_drop_fx(constants.MIDI_CH_DROP_FX_5,
+                                                constants.MIDI_CC_DROP_FX_5,
+                                                constants.LOOPERS_ALL_CHANNEL,
+                                                constants.DROP_FX_5_MIXER_SLOT,
+                                                constants.TURNADO_DICTATOR_PARAM_INDEX)
+        
+                self.__drop_manager.add_drop_fx(constants.MIDI_CH_DROP_FX_6,
+                                                constants.MIDI_CC_DROP_FX_6,
+                                                constants.LOOPERS_ALL_CHANNEL,
+                                                constants.DROP_FX_6_MIXER_SLOT,
+                                                constants.TURNADO_DICTATOR_PARAM_INDEX)
+        
+                self.__drop_manager.add_drop_fx(constants.MIDI_CH_DROP_FX_7,
+                                                constants.MIDI_CC_DROP_FX_7,
+                                                constants.LOOPERS_ALL_CHANNEL,
+                                                constants.DROP_FX_7_MIXER_SLOT,
+                                                constants.TURNADO_DICTATOR_PARAM_INDEX)
+
+                self.__fx_manager.on_init_script()
+
                 for looper_id in self.__loopers:
                     self.__loopers[looper_id].on_init_script()
                 self.__initialized = True
                 self.clear()
                 self.__view.set_tempo(mixer.getCurrentTempo() / 1000.0, True)
                 self.set_sample_length(SampleLength.LENGTH_1)
-                self.set_resample_mode(ResampleMode.NONE)
                 self.__loopers[self.__selected_looper].select()
             except Exception as e:
                 print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.on_init_script.__name__ + ": failed to initialize the script.")
@@ -195,32 +216,9 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             transport.globalTransport(105, jog_rotation)
             self.__view.set_tempo(target_tempo / 10.0, forward_to_device)
 
-    def set_shift_pressed_state(self, shift_pressed):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.set_shift_pressed_state.__name__ + ": shift pressed - " + str(shift_pressed))
-
-        self.__view.set_shift_pressed_state(shift_pressed)
-
-        self.__shift_pressed = shift_pressed
-
-        # if(True == shift_pressed):
-        #    self.action_on_double_click(constants.MIDI_CC_SHIFT, self.__loopers[self.__selected_looper].randomize_turnado)
-
     def set_extra_1_state(self, value, forward_to_device):
         self.__extra_1_state = value
         self.__view.set_extra_1_state(value, forward_to_device)
-
-    def switch_to_next_turnado_preset(self):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.switch_to_next_turnado_preset.__name__)
-        self.__loopers[self.__selected_looper].switch_to_next_turnado_preset()
-
-        self.__view.switch_to_next_turnado_preset()
-
-    def switch_to_prev_turnado_preset(self):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.switch_to_prev_turnado_preset.__name__)
-        self.__loopers[self.__selected_looper].switch_to_prev_turnado_preset()
-
-    def get_shift_pressed_state(self):
-        return self.__shift_pressed
 
     def get_extra_1_state(self):
         return self.__extra_1_state
@@ -246,8 +244,8 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
     def __get_looper_volume(self, looper_index):
         return self.__loopers.get(looper_index).get_looper_volume()
 
-    def __set_track_volume(self, track_index, track_volume, forward_to_device):
-        self.__loopers.get(self.__selected_looper).set_track_volume(track_index, track_volume, forward_to_device)
+    def __set_track_volume(self, track_id, track_volume, forward_to_device):
+        self.__loopers.get(self.__selected_looper).set_track_volume(track_id, track_volume, forward_to_device)
 
     def set_sample_length(self, sample_length):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.set_sample_length.__name__ + ": selected sample length - " + str(sample_length))
@@ -265,15 +263,14 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         self.__drop_manager.click_drop()
         self.__drop_manager.release_drop()
         self.set_sample_length(SampleLength.LENGTH_1)
-        self.set_resample_mode(ResampleMode.NONE)
-        self.set_decay_side_chain_level(constants.Track_1, constants.DEFAULT_DECAY_SIDECHAIN_LEVEL)
-        self.set_decay_side_chain_level(constants.Track_2, constants.DEFAULT_DECAY_SIDECHAIN_LEVEL)
-        self.set_decay_side_chain_level(constants.Track_3, constants.DEFAULT_DECAY_SIDECHAIN_LEVEL)
-        self.set_decay_side_chain_level(constants.Track_4, constants.DEFAULT_DECAY_SIDECHAIN_LEVEL)
-        self.set_tension_side_chain_level(constants.Track_1, constants.DEFAULT_TENSION_SIDECHAIN_LEVEL)
-        self.set_tension_side_chain_level(constants.Track_2, constants.DEFAULT_TENSION_SIDECHAIN_LEVEL)
-        self.set_tension_side_chain_level(constants.Track_3, constants.DEFAULT_TENSION_SIDECHAIN_LEVEL)
-        self.set_tension_side_chain_level(constants.Track_4, constants.DEFAULT_TENSION_SIDECHAIN_LEVEL)
+        self.__sidechain_manager.set_sidechain_decay(constants.Track_1, constants.DEFAULT_DECAY_SIDECHAIN_LEVEL, True)
+        self.__sidechain_manager.set_sidechain_decay(constants.Track_2, constants.DEFAULT_DECAY_SIDECHAIN_LEVEL, True)
+        self.__sidechain_manager.set_sidechain_decay(constants.Track_3, constants.DEFAULT_DECAY_SIDECHAIN_LEVEL, True)
+        self.__sidechain_manager.set_sidechain_decay(constants.Track_4, constants.DEFAULT_DECAY_SIDECHAIN_LEVEL, True)
+        self.__sidechain_manager.set_sidechain_tension(constants.Track_1, constants.DEFAULT_TENSION_SIDECHAIN_LEVEL, True)
+        self.__sidechain_manager.set_sidechain_tension(constants.Track_2, constants.DEFAULT_TENSION_SIDECHAIN_LEVEL, True)
+        self.__sidechain_manager.set_sidechain_tension(constants.Track_3, constants.DEFAULT_TENSION_SIDECHAIN_LEVEL, True)
+        self.__sidechain_manager.set_sidechain_tension(constants.Track_4, constants.DEFAULT_TENSION_SIDECHAIN_LEVEL, True)
         self.set_extra_1_state(0, True)
         self.__reset_recording_routing_status()
 
@@ -284,16 +281,11 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.clear_track.__name__ + ": track - " + str(track_id))
         self.__loopers[self.__selected_looper].clear_track(track_id)
 
-    def __set_restream_activation_status(self, status):
-        parameter_id_restream_activation_status = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "RESTREAM_ACTIVATION_STATUS", constants.RESAMPLING_AUDIO_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(status, parameter_id_restream_activation_status, constants.MASTER_CHANNEL, constants.RESAMPLING_AUDIO_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-
     def __reset_recording_routing_status(self):
         parameter_id_route_to_master = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "RouteInput2Master", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         parameter_id_route_to_recodring_bus = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "RouteInput2RB", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(fl_helper.MAX_VOLUME_LEVEL_VALUE, parameter_id_route_to_master, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
         plugins.setParamValue(0.0, parameter_id_route_to_recodring_bus, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-        self.__set_restream_activation_status(False)
 
     def set_recording_routing_status(self, recording_status):
 
@@ -325,30 +317,8 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.__buttons_last_press_time[pressed_button] = pressed_time
             action_first_click()
 
-    def set_looper_side_chain_level(self, track_id, sidechain_level):
-        if self.__selected_looper != constants.Looper_1:
-            self.__loopers[self.__selected_looper].set_looper_side_chain_level(track_id, sidechain_level)
-
-    def set_resample_mode(self, resample_mode):
-
-        if resample_mode == self.get_resample_mode():
-            resample_mode = ResampleMode.NONE
-
-        self.__set_restream_activation_status(resample_mode != ResampleMode.NONE)
-
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.set_resample_mode.__name__ + ": to - " + str(resample_mode))
-        self.__resample_mode = resample_mode
-
-        self.__view.set_resample_mode(resample_mode)
-
-    def get_resample_mode(self):
-        return self.__resample_mode
-
-    def set_turnado_dictator_level(self, turnado_dictator_level):
-        self.__loopers[self.__selected_looper].set_turnado_dictator_level(turnado_dictator_level)
-
-    def set_turnado_dry_wet_level(self, turnado_dry_wet_level):
-        self.__loopers[self.__selected_looper].set_turnado_dry_wet_level(turnado_dry_wet_level)
+    def set_looper_side_chain_level(self, track_id, sidechain_level, forward_to_device):
+        self.__loopers[self.__selected_looper].set_looper_side_chain_level(track_id, sidechain_level, forward_to_device)
 
     def drop(self):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.drop.__name__)
@@ -358,8 +328,6 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         self.__loopers[constants.Looper_1].set_track_volume(constants.Track_3, fl_helper.MAX_VOLUME_LEVEL_VALUE, True)
         self.__loopers[constants.Looper_1].set_track_volume(constants.Track_4, fl_helper.MAX_VOLUME_LEVEL_VALUE, True)
         self.__set_looper_volume(constants.Looper_1, fl_helper.MAX_VOLUME_LEVEL_VALUE, True)
-        self.__loopers[constants.Looper_1].set_turnado_dictator_level(0.0)
-        self.__loopers[constants.Looper_1].set_turnado_dry_wet_level(constants.DEFAULT_TURNADO_DRY_WET_LEVEL)
 
     def turn_track_on_off(self, track_id):
         if 0 != self.__loopers[self.__selected_looper].get_track_volume(track_id):
@@ -390,8 +358,8 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.set_recording_routing_status(False)
 
     def __start_recording_track(self, selected_track_id):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.__start_recording_track.__name__ + ": track - " + str(selected_track_id) + ", resample mode - " + str(self.get_resample_mode()))
-        self.__loopers[self.__selected_looper].start_recording_track(selected_track_id, self.__selected_sample_length, self.get_resample_mode())
+        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.__start_recording_track.__name__ + ": track - " + str(selected_track_id))
+        self.__loopers[self.__selected_looper].start_recording_track(selected_track_id, self.__selected_sample_length)
 
         for looper_id in self.__loopers:
             for track_id in self.__loopers[looper_id].get_tracks():
@@ -406,34 +374,8 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
     def __stop_recording_track(self, track_id, selected_track_id):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.__stop_recording_track.__name__ + ": track - " + str(track_id))
 
-        if self.__loopers[self.__selected_looper].get_resample_mode(track_id) == ResampleMode.FROM_ALL_LOOPERS_TO_TRACK:
-            # clear all tracks of all loopers, except the one for which recording is over
-            for looper_id in self.__loopers:
-                for track_id_it in self.__loopers[looper_id].get_tracks():
-                    if (looper_id != self.__selected_looper or track_id_it != track_id):
-                        self.__loopers[looper_id].clear_track(track_id_it)
-                    else:
-                        self.__loopers[looper_id].set_track_volume(track_id_it, fl_helper.MAX_VOLUME_LEVEL_VALUE, True)
-                self.__loopers[looper_id].set_turnado_dictator_level(0.0)
-                self.__loopers[looper_id].set_turnado_dry_wet_level(constants.DEFAULT_TURNADO_DRY_WET_LEVEL)
-
         self.__loopers[self.__selected_looper].stop_recording_track(track_id)
         self.__loopers[self.__selected_looper].get_track(track_id).set_routing_level(0.0)
-
-        if track_id == selected_track_id:
-            self.set_resample_mode(ResampleMode.NONE)
-
-    def set_tension_side_chain_level(self, track_id, sidechain_level):
-        self.__view.set_tension_side_chain_level(track_id, sidechain_level)
-
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "ST", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(sidechain_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-
-    def set_decay_side_chain_level(self, track_id, sidechain_level):
-        self.__view.set_decay_side_chain_level(track_id, sidechain_level)
-
-        parameter_id = fl_helper.find_parameter_by_name(constants.MASTER_CHANNEL, "T" + str(track_id + 1) + "SD", constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(sidechain_level, parameter_id, constants.MASTER_CHANNEL, constants.MIDI_ROUTING_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
     def __sync_daw_transport(self):
         # print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.__sync_daw_transport.__name__)
@@ -441,7 +383,6 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
 
     def __set_prolonged_record_length_mode(self, val):
         self.__prolonged_record_length_mode = val
-        self.__view.set_prolonged_record_length_mode(val)
 
     def __get_prolonged_record_length_mode(self):
         return self.__prolonged_record_length_mode
@@ -482,7 +423,11 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
     def __set_track_pan(self, track_id, pan, forward_to_device):
         self.__loopers[self.__selected_looper].set_track_pan(track_id, pan, forward_to_device)
 
-    
+    def __set_track_selection_status(self, track_id, selection_status):
+        self.__loopers[self.__selected_looper].set_track_selection_status(track_id, selection_status)
+
+    def __get_track_selection_status(self, track_id):
+        return self.__loopers[self.__selected_looper].get_track_selection_status(track_id)
 
     def __on_midi_msg_processing(self, event):
 
@@ -490,9 +435,9 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
 
         if event.data1 == constants.MIDI_CC_SYNC_DAW_TRANSPORT and event.midiChan == constants.MIDI_CH_SYNC_DAW_TRANSPORT:
             if event.data2 != 0:
-                self.__sync_saw_transport_handler.click()
+                self.__sync_daw_transport_handler.click()
             else:
-                self.__sync_saw_transport_handler.release()
+                self.__sync_daw_transport_handler.release()
         elif event.data1 == constants.MIDI_CC_DROP_FX_1 and event.midiChan == constants.MIDI_CH_DROP_FX_1:
             self.__drop_manager.set_fx_level(event.midiChan, event.data1, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
         elif event.data1 == constants.MIDI_CC_DROP_FX_2 and event.midiChan == constants.MIDI_CH_DROP_FX_2:
@@ -512,24 +457,10 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
                 self.drop()
             else:
                 self.__drop_manager.release_drop()
-        # elif event.data1 == constants.MIDI_CC_RESAMPLE_MODE_FROM_LOOPER_TO_TRACK and self.get_shift_pressed_state():
-        #    self.set_resample_mode(ResampleMode.FROM_LOOPER_TO_TRACK)
-
-            # action = lambda self = self: (self.set_resample_mode(ResampleMode.NONE), \
-            #                             self.switch_to_prev_turnado_preset())
-            # self.action_on_double_click(constants.MIDI_CC_RESAMPLE_MODE_FROM_LOOPER_TO_TRACK + constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT, action)
-
-        # elif event.data1 == constants.MIDI_CC_RESAMPLE_MODE_FROM_ALL_LOOPERS_TO_TRACK and self.get_shift_pressed_state():
-            # self.set_resample_mode(ResampleMode.FROM_ALL_LOOPERS_TO_TRACK)
-            #
-            # action = lambda self = self: (self.set_resample_mode(ResampleMode.NONE), \
-            #                               self.switch_to_next_turnado_preset())
-            # self.action_on_double_click(constants.MIDI_CC_RESAMPLE_MODE_FROM_ALL_LOOPERS_TO_TRACK + constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT, action)
         elif event.data1 == constants.MIDI_CC_LOOPER_1 and event.midiChan == constants.MIDI_CH_LOOPER_1:
             self.__select_looper(constants.Looper_1)
         elif event.data1 == constants.MIDI_CC_LOOPER_2 and event.midiChan == constants.MIDI_CH_LOOPER_2:
             self.__select_looper(constants.Looper_2)
-            # self.action_on_double_click(constants.SHIFT_BUTTON_ON_DOUBLE_CLICK_SHIFT + constants.MIDI_CC_SAMPLE_LENGTH_2, self.__change_prolonged_record_length_mode)
         elif event.data1 == constants.MIDI_CC_LOOPER_3 and event.midiChan == constants.MIDI_CH_LOOPER_3:
             self.__select_looper(constants.Looper_3)
         elif event.data1 == constants.MIDI_CC_LOOPER_4 and event.midiChan == constants.MIDI_CH_LOOPER_4:
@@ -593,6 +524,22 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
                 self.set_sample_length(SampleLength.LENGTH_64)
         elif event.data1 == constants.MIDI_CC_SAMPLE_LENGTH_128:
             self.set_sample_length(SampleLength.LENGTH_128)
+        elif event.data1 == constants.MIDI_CC_SIDECHAIN_TENSION_T1 and event.midiChan == constants.MIDI_CH_SIDECHAIN_TENSION_T1:
+            self.__sidechain_manager.set_sidechain_tension(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_SIDECHAIN_TENSION_T2 and event.midiChan == constants.MIDI_CH_SIDECHAIN_TENSION_T2:
+            self.__sidechain_manager.set_sidechain_tension(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_SIDECHAIN_TENSION_T3 and event.midiChan == constants.MIDI_CH_SIDECHAIN_TENSION_T3:
+            self.__sidechain_manager.set_sidechain_tension(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_SIDECHAIN_TENSION_T4 and event.midiChan == constants.MIDI_CH_SIDECHAIN_TENSION_T4:
+            self.__sidechain_manager.set_sidechain_tension(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_SIDECHAIN_DECAY_T1 and event.midiChan == constants.MIDI_CH_SIDECHAIN_DECAY_T1:
+            self.__sidechain_manager.set_sidechain_decay(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_SIDECHAIN_DECAY_T2 and event.midiChan == constants.MIDI_CH_SIDECHAIN_DECAY_T2:
+            self.__sidechain_manager.set_sidechain_decay(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_SIDECHAIN_DECAY_T3 and event.midiChan == constants.MIDI_CH_SIDECHAIN_DECAY_T3:
+            self.__sidechain_manager.set_sidechain_decay(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_SIDECHAIN_DECAY_T4 and event.midiChan == constants.MIDI_CH_SIDECHAIN_DECAY_T4:
+            self.__sidechain_manager.set_sidechain_decay(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
         elif event.data1 == constants.MIDI_CC_TRACK_CLEAR_1 and event.midiChan == constants.MIDI_CH_TRACK_CLEAR_1:
             self.__process_clear_track(event, constants.Track_1)
         elif event.data1 == constants.MIDI_CC_TRACK_CLEAR_2 and event.midiChan == constants.MIDI_CH_TRACK_CLEAR_2:
@@ -601,10 +548,6 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.__process_clear_track(event, constants.Track_3)
         elif event.data1 == constants.MIDI_CC_TRACK_CLEAR_4 and event.midiChan == constants.MIDI_CH_TRACK_CLEAR_4:
             self.__process_clear_track(event, constants.Track_4)
-        elif event.data1 == constants.MIDI_CC_SHIFT:
-            self.set_shift_pressed_state(event.data2 == fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TURNADO_DRY_WET and self.get_shift_pressed_state():
-            self.set_turnado_dry_wet_level(event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_LOOPER_VOLUME_1 and event.midiChan == constants.MIDI_CH_LOOPER_VOLUME_1:
             self.__set_looper_volume(constants.Looper_1, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE, False)
         elif event.data1 == constants.MIDI_CC_LOOPER_VOLUME_2 and event.midiChan == constants.MIDI_CH_LOOPER_VOLUME_2:
@@ -621,14 +564,6 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.__process_mute_looper(event, constants.Looper_3)
         elif event.data1 == constants.MIDI_CC_LOOPER_MUTE_4 and event.midiChan == constants.MIDI_CH_LOOPER_MUTE_4:
             self.__process_mute_looper(event, constants.Looper_4)
-        elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_1 and True == self.get_shift_pressed_state():
-            self.set_tension_side_chain_level(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_2 and True == self.get_shift_pressed_state():
-            self.set_decay_side_chain_level(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_3 and True == self.get_shift_pressed_state():
-            self.set_tension_side_chain_level(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_4 and True == self.get_shift_pressed_state():
-            self.set_decay_side_chain_level(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
         elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_1 and event.midiChan == constants.MIDI_CH_TRACK_VOLUME_1:
             self.__set_track_volume(constants.Track_1, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE, False)
         elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_2 and event.midiChan == constants.MIDI_CH_TRACK_VOLUME_2:
@@ -663,30 +598,90 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.change_recording_state(constants.Track_3)
         elif event.data1 == constants.MIDI_CC_TRACK_RECORD_4 and event.midiChan == constants.MIDI_CH_TRACK_RECORD_4:
             self.change_recording_state(constants.Track_4)
-        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_1 and True == self.get_shift_pressed_state():
-            self.set_tension_side_chain_level(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_2 and True == self.get_shift_pressed_state():
-            self.set_decay_side_chain_level(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_3 and True == self.get_shift_pressed_state():
-            self.set_tension_side_chain_level(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_4 and True == self.get_shift_pressed_state():
-            self.set_decay_side_chain_level(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_1:
-            self.set_looper_side_chain_level(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_2:
-            self.set_looper_side_chain_level(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_3:
-            self.set_looper_side_chain_level(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TRACK_SIDECHAIN_4:
-            self.set_looper_side_chain_level(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE)
-        elif event.data1 == constants.MIDI_CC_TURNADO_DICTATOR and self.is_playing():
-            self.set_turnado_dictator_level(event.data2 / fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_SIDECHAIN_T1 and event.midiChan == constants.MIDI_CH_SIDECHAIN_T1:
+            self.set_looper_side_chain_level(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_SIDECHAIN_T2 and event.midiChan == constants.MIDI_CH_SIDECHAIN_T2:
+            self.set_looper_side_chain_level(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_SIDECHAIN_T3 and event.midiChan == constants.MIDI_CH_SIDECHAIN_T3:
+            self.set_looper_side_chain_level(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_SIDECHAIN_T4 and event.midiChan == constants.MIDI_CH_SIDECHAIN_T4:
+            self.set_looper_side_chain_level(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_SELECT_T1 and event.midiChan == constants.MIDI_CH_SELECT_T1:
+            self.__set_track_selection_status(constants.Track_1, not self.__get_track_selection_status(constants.Track_1))
+        elif event.data1 == constants.MIDI_CC_SELECT_T2 and event.midiChan == constants.MIDI_CH_SELECT_T2:
+            self.__set_track_selection_status(constants.Track_2, not self.__get_track_selection_status(constants.Track_2))
+        elif event.data1 == constants.MIDI_CC_SELECT_T3 and event.midiChan == constants.MIDI_CH_SELECT_T3:
+            self.__set_track_selection_status(constants.Track_3, not self.__get_track_selection_status(constants.Track_3))
+        elif event.data1 == constants.MIDI_CC_SELECT_T4 and event.midiChan == constants.MIDI_CH_SELECT_T4:
+            self.__set_track_selection_status(constants.Track_4, not self.__get_track_selection_status(constants.Track_4))
+        elif event.data1 == constants.MIDI_CC_FX_SLOT_1 and event.midiChan == constants.MIDI_CH_FX_SLOT_1:
+            self.__fx_manager.select_slot(fx.FXSlot.SLOT_1)
+        elif event.data1 == constants.MIDI_CC_FX_SLOT_2 and event.midiChan == constants.MIDI_CH_FX_SLOT_2:
+            self.__fx_manager.select_slot(fx.FXSlot.SLOT_2)
+        elif event.data1 == constants.MIDI_CC_FX_SLOT_3 and event.midiChan == constants.MIDI_CH_FX_SLOT_3:
+            self.__fx_manager.select_slot(fx.FXSlot.SLOT_3)
+        elif event.data1 == constants.MIDI_CC_FX_SLOT_4 and event.midiChan == constants.MIDI_CH_FX_SLOT_4:
+            self.__fx_manager.select_slot(fx.FXSlot.SLOT_4)
+        elif event.data1 == constants.MIDI_CC_FX_SLOT_5 and event.midiChan == constants.MIDI_CH_FX_SLOT_5:
+            self.__fx_manager.select_slot(fx.FXSlot.SLOT_5)
+        elif event.data1 == constants.MIDI_CC_FX_SLOT_6 and event.midiChan == constants.MIDI_CH_FX_SLOT_6:
+            self.__fx_manager.select_slot(fx.FXSlot.SLOT_6)
+        elif event.data1 == constants.MIDI_CC_FX_SLOT_7 and event.midiChan == constants.MIDI_CH_FX_SLOT_7:
+            self.__fx_manager.select_slot(fx.FXSlot.SLOT_7)
+        elif event.data1 == constants.MIDI_CC_FX_SLOT_8 and event.midiChan == constants.MIDI_CH_FX_SLOT_8:
+            self.__fx_manager.select_slot(fx.FXSlot.SLOT_8)
+        elif event.data1 == constants.MIDI_CC_FX_SLOT_9 and event.midiChan == constants.MIDI_CH_FX_SLOT_9:
+            self.__fx_manager.select_slot(fx.FXSlot.SLOT_9)
+        elif event.data1 == constants.MIDI_CC_FX_SLOT_10 and event.midiChan == constants.MIDI_CH_FX_SLOT_10:
+            self.__fx_manager.select_slot(fx.FXSlot.SLOT_10)
+        elif event.data1 == constants.MIDI_CC_FX_BANK_1 and event.midiChan == constants.MIDI_CH_FX_BANK_1:
+            self.__fx_manager.select_bank(fx.FXBank.BANK_1)
+        elif event.data1 == constants.MIDI_CC_FX_BANK_2 and event.midiChan == constants.MIDI_CH_FX_BANK_2:
+            self.__fx_manager.select_bank(fx.FXBank.BANK_2)
+        elif event.data1 == constants.MIDI_CC_FX_BANK_3 and event.midiChan == constants.MIDI_CH_FX_BANK_3:
+            self.__fx_manager.select_bank(fx.FXBank.BANK_3)
+        elif event.data1 == constants.MIDI_CC_FX_BANK_4 and event.midiChan == constants.MIDI_CH_FX_BANK_4:
+            self.__fx_manager.select_bank(fx.FXBank.BANK_4)
+        elif event.data1 == constants.MIDI_CC_FX_BANK_5 and event.midiChan == constants.MIDI_CH_FX_BANK_5:
+            self.__fx_manager.select_bank(fx.FXBank.BANK_5)
+        elif event.data1 == constants.MIDI_CC_FX_ANIMATION_1 and event.midiChan == constants.MIDI_CH_FX_ANIMATION_1:
+            self.__fx_manager.select_animation(fx.FXAnimation.ANIMATION_1)
+        elif event.data1 == constants.MIDI_CC_FX_ANIMATION_2 and event.midiChan == constants.MIDI_CH_FX_ANIMATION_2:
+            self.__fx_manager.select_animation(fx.FXAnimation.ANIMATION_2)
+        elif event.data1 == constants.MIDI_CC_FX_ANIMATION_3 and event.midiChan == constants.MIDI_CH_FX_ANIMATION_3:
+            self.__fx_manager.select_animation(fx.FXAnimation.ANIMATION_3)
+        elif event.data1 == constants.MIDI_CC_FX_ANIMATION_4 and event.midiChan == constants.MIDI_CH_FX_ANIMATION_4:
+            self.__fx_manager.select_animation(fx.FXAnimation.ANIMATION_4)
+        elif event.data1 == constants.MIDI_CC_FX_ANIMATION_5 and event.midiChan == constants.MIDI_CH_FX_ANIMATION_5:
+            self.__fx_manager.select_animation(fx.FXAnimation.ANIMATION_5)
+        elif event.data1 == constants.MIDI_CC_FX_ANIMATION_6 and event.midiChan == constants.MIDI_CH_FX_ANIMATION_6:
+            self.__fx_manager.select_animation(fx.FXAnimation.ANIMATION_6)
+        elif event.data1 == constants.MIDI_CC_FX_ANIMATION_7 and event.midiChan == constants.MIDI_CH_FX_ANIMATION_7:
+            self.__fx_manager.select_animation(fx.FXAnimation.ANIMATION_7)
+        elif event.data1 == constants.MIDI_CC_FX_ANIMATION_8 and event.midiChan == constants.MIDI_CH_FX_ANIMATION_8:
+            self.__fx_manager.select_animation(fx.FXAnimation.ANIMATION_8)
+        elif event.data1 == constants.MIDI_CC_FX_X1 and event.midiChan == constants.MIDI_CH_FX_X1:
+            self.__fx_manager.set_param_x1(event.data2 / fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_FX_Y1 and event.midiChan == constants.MIDI_CH_FX_Y1:
+            self.__fx_manager.set_param_y1(event.data2 / fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_FX_X2 and event.midiChan == constants.MIDI_CH_FX_X2:
+            self.__fx_manager.set_param_x2(event.data2 / fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_FX_Y2 and event.midiChan == constants.MIDI_CH_FX_Y2:
+            self.__fx_manager.set_param_y2(event.data2 / fl_helper.MIDI_MAX_VALUE)
+        elif event.data1 == constants.MIDI_CC_FX_DRY_WET and event.midiChan == constants.MIDI_CH_FX_DRY_WET:
+            self.__fx_manager.set_dry_wet_level(event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_FX_DRY_WET_RESET and event.midiChan == constants.MIDI_CH_FX_DRY_WET_RESET:
+            self.__fx_manager.set_dry_wet_level(1.0, True)
+        elif event.data1 == constants.MIDI_CC_FX_EXTRA_PARAMETER_1 and event.midiChan == constants.MIDI_CH_FX_EXTRA_PARAMETER_1:
+            self.__fx_manager.set_extra_param_1_level(event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_FX_EXTRA_PARAMETER_1_RESET and event.midiChan == constants.MIDI_CH_FX_EXTRA_PARAMETER_1_RESET:
+            self.__fx_manager.set_extra_param_1_level(0.0, True)
 
     def on_midi_msg(self, event):
 
         self.on_init_script()
 
-        # fl_helper.print_all_plugin_parameters(LOOPER_1_CHANNEL, LOOPER_TURNADO_SLOT_INDEX)
+        # fl_helper.print_all_plugin_parameters(constants.FX_UNIT_IN_CHANNEL + 2, 0)
 
         event.handled = False
 

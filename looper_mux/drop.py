@@ -6,7 +6,7 @@ Created on Sep 28, 2024
 
 import midi
 import plugins
-from common import updateable
+from common import input_handlers
 
 from looper_mux import view
 
@@ -49,23 +49,15 @@ class DropFX:
                               midi.PIM_None, True)
 
 class DropManager:
-    def __init__(self, view, updateable_mux):
+    def __init__(self, view):
         self.__drop_fx_items = {}
         self.__view = view
-        self.__updateable_mux = updateable_mux
 
         drop_btn_release = lambda: \
             self.__view.set_drop_btn_state(False)
 
-        drop_btn_action_delay = lambda: \
-            self.__view.set_drop_btn_state(False)
-
-        self.__drop_button_handler = updateable.DelayedActionHandler(self.__drop_btn_click,
-                                                                     drop_btn_release,
-                                                                     drop_btn_action_delay,
-                                                                     0.3)
-
-        self.__updateable_mux.add_updateable(self.__drop_button_handler)
+        self.__drop_button_handler = input_handlers.ClickReleaseHandler(self.__drop_btn_click,
+                                                                     drop_btn_release)
 
     def __drop_btn_click(self):
         self.__view.set_drop_btn_state(True)
