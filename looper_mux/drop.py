@@ -7,6 +7,8 @@ Created on Sep 28, 2024
 import midi
 import plugins
 from common import input_handlers
+from looper_mux import constants
+from common import updateable
 
 from looper_mux import view
 
@@ -48,10 +50,11 @@ class DropFX:
                               self.__mixer_slot,
                               midi.PIM_None, True)
 
-class DropManager:
+class DropManager(updateable.Updateable):
     def __init__(self, view):
         self.__drop_fx_items = {}
         self.__view = view
+        self.__delayed_reverb_activation = False
 
         drop_btn_release = lambda: \
             self.__view.set_drop_btn_state(False)
@@ -81,6 +84,40 @@ class DropManager:
         self.__drop_button_handler.click()
         for drop_fx_item in self.__drop_fx_items:
             self.__drop_fx_items[drop_fx_item].drop()
+        plugins.setParamValue(0.0,
+                              constants.TURNADO_CONTROL_PARAMETER_1,
+                              constants.DROP_REVERB_MIXER_CHANNEL,
+                              constants.DROP_REVERB_MIXER_SLOT,
+                              midi.PIM_None, True)
+        plugins.setParamValue(0.0,
+                              constants.TURNADO_CONTROL_PARAMETER_2,
+                              constants.DROP_REVERB_MIXER_CHANNEL,
+                              constants.DROP_REVERB_MIXER_SLOT,
+                              midi.PIM_None, True)
+        plugins.setParamValue(0.0,
+                              constants.TURNADO_CONTROL_PARAMETER_3,
+                              constants.DROP_REVERB_MIXER_CHANNEL,
+                              constants.DROP_REVERB_MIXER_SLOT,
+                              midi.PIM_None, True)
+        self.__delayed_reverb_activation = True
 
     def release_drop(self):
         self.__drop_button_handler.release()
+
+    def update(self, update_time):
+        if self.__delayed_reverb_activation:
+            plugins.setParamValue(1.0,
+                              constants.TURNADO_CONTROL_PARAMETER_1,
+                              constants.DROP_REVERB_MIXER_CHANNEL,
+                              constants.DROP_REVERB_MIXER_SLOT,
+                              midi.PIM_None, True)
+            plugins.setParamValue(1.0,
+                              constants.TURNADO_CONTROL_PARAMETER_2,
+                              constants.DROP_REVERB_MIXER_CHANNEL,
+                              constants.DROP_REVERB_MIXER_SLOT,
+                              midi.PIM_None, True)
+            plugins.setParamValue(1.0,
+                              constants.TURNADO_CONTROL_PARAMETER_3,
+                              constants.DROP_REVERB_MIXER_CHANNEL,
+                              constants.DROP_REVERB_MIXER_SLOT,
+                              midi.PIM_None, True)

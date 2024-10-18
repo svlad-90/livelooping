@@ -23,6 +23,7 @@ from common import input_handlers
 from looper_mux import drop
 from looper_mux import sidechain
 from looper_mux import fx
+from looper_mux import repeater, repeater_constants
 
 class KorgKaossPad3PlusLooperMux(IContextInterface):
 
@@ -76,9 +77,12 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
                                                                            sync_daw_transport_action_release)
 
         self.__drop_manager = drop.DropManager(self.__view)
+        self.__updateable_mux.add_updateable(self.__drop_manager)
         self.__sidechain_manager = sidechain.SidechainManager(self.__view)
 
         self.__fx_manager = fx.FXManager(self.__view)
+
+        self.__repeater = repeater.Repeater(self.__view)
 
     def on_init_script(self):
 
@@ -86,6 +90,8 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.on_init_script.__name__)
 
             try:
+
+                # fl_helper.print_all_plugin_parameters(29, 6)
 
                 self.__sidechain_manager.add_sidechain_item(constants.MIDI_CH_SIDECHAIN_TENSION_T1,
                                             constants.MIDI_CC_SIDECHAIN_TENSION_T1,
@@ -154,6 +160,8 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
                                                 constants.TURNADO_DICTATOR_PARAM_INDEX)
 
                 self.__fx_manager.on_init_script()
+
+                self.__repeater.on_init_script()
 
                 for looper_id in self.__loopers:
                     self.__loopers[looper_id].on_init_script()
@@ -247,12 +255,16 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
     def __set_track_volume(self, track_id, track_volume, forward_to_device):
         self.__loopers.get(self.__selected_looper).set_track_volume(track_id, track_volume, forward_to_device)
 
+    def __set_track_hp_filter_level(self, track_id, hp_filter_level, forward_to_device):
+        self.__loopers.get(self.__selected_looper).set_track_hp_filter_level(track_id, hp_filter_level, forward_to_device)
+
+    def __set_track_lp_filter_level(self, track_id, lp_filter_level, forward_to_device):
+        self.__loopers.get(self.__selected_looper).set_track_lp_filter_level(track_id, lp_filter_level, forward_to_device)
+
     def set_sample_length(self, sample_length):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.set_sample_length.__name__ + ": selected sample length - " + str(sample_length))
         self.__selected_sample_length = sample_length
         self.__view.update_sample_length(sample_length)
-
-        # print_all_plugin_parameters(17, 9)
 
     def clear(self):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.clear.__name__)
@@ -262,6 +274,7 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         self.__select_looper(constants.Looper_1, True)
         self.__drop_manager.click_drop()
         self.__drop_manager.release_drop()
+        self.__repeater.drop()
         self.set_sample_length(SampleLength.LENGTH_1)
         self.__sidechain_manager.set_sidechain_decay(constants.Track_1, constants.DEFAULT_DECAY_SIDECHAIN_LEVEL, True)
         self.__sidechain_manager.set_sidechain_decay(constants.Track_2, constants.DEFAULT_DECAY_SIDECHAIN_LEVEL, True)
@@ -323,10 +336,13 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
     def drop(self):
         print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.drop.__name__)
         self.__drop_manager.click_drop()
+        self.__repeater.drop()
         self.__loopers[constants.Looper_1].set_track_volume(constants.Track_1, fl_helper.MAX_VOLUME_LEVEL_VALUE, True)
         self.__loopers[constants.Looper_1].set_track_volume(constants.Track_2, fl_helper.MAX_VOLUME_LEVEL_VALUE, True)
         self.__loopers[constants.Looper_1].set_track_volume(constants.Track_3, fl_helper.MAX_VOLUME_LEVEL_VALUE, True)
         self.__loopers[constants.Looper_1].set_track_volume(constants.Track_4, fl_helper.MAX_VOLUME_LEVEL_VALUE, True)
+        self.__loopers[constants.Looper_1].set_track_hp_filter_level(constants.Track_1, fl_helper.MAX_LEVEL_VALUE, True)
+        self.__loopers[constants.Looper_1].set_track_hp_filter_level(constants.Track_1, fl_helper.MIN_LEVEL_VALUE, True)
         self.__set_looper_volume(constants.Looper_1, fl_helper.MAX_VOLUME_LEVEL_VALUE, True)
 
     def turn_track_on_off(self, track_id):
@@ -416,6 +432,19 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             if event.data2 != 0:
                 self.turn_looper_on_off(looper_id)
 
+    def __process_repeater_event(self, event, repeater_length):
+        if event.data2 != 0:
+            if self.__repeater.get_mode() == repeater_constants.RepeaterMode.MODE_OFF:
+                self.__repeater.start_recording(repeater_length)
+            elif self.__repeater.get_mode() == repeater_constants.RepeaterMode.MODE_PLAYBACK and self.__repeater.get_length() != repeater_length:
+                self.__repeater.set_playback_length(repeater_length)
+            elif self.__repeater.get_mode() == repeater_constants.RepeaterMode.MODE_PLAYBACK and self.__repeater.get_length() == repeater_length:
+                self.__repeater.drop()
+        else:
+            if self.__repeater.get_mode() == repeater_constants.RepeaterMode.MODE_RECORDING \
+                and self.__repeater.get_length() == repeater_length:
+                self.__repeater.stop_recording()
+
     def __process_clear_track(self, event, track_id):
         if event.data2 != 0:
             self.clear_track(track_id)
@@ -465,7 +494,7 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.__select_looper(constants.Looper_3)
         elif event.data1 == constants.MIDI_CC_LOOPER_4 and event.midiChan == constants.MIDI_CH_LOOPER_4:
             self.__select_looper(constants.Looper_4)
-        elif event.data1 == constants.MIDI_CC_CLEAR_LOOPER and constants.MIDI_CH_CLEAR_LOOPER:
+        elif event.data1 == constants.MIDI_CC_CLEAR_LOOPER and event.midiChan == constants.MIDI_CH_CLEAR_LOOPER:
             if event.data2 != 0:
                 self.__loopers[self.__selected_looper].handle_clear_looper_click()
             else:
@@ -548,14 +577,22 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.__process_clear_track(event, constants.Track_3)
         elif event.data1 == constants.MIDI_CC_TRACK_CLEAR_4 and event.midiChan == constants.MIDI_CH_TRACK_CLEAR_4:
             self.__process_clear_track(event, constants.Track_4)
-        elif event.data1 == constants.MIDI_CC_LOOPER_VOLUME_1 and event.midiChan == constants.MIDI_CH_LOOPER_VOLUME_1:
-            self.__set_looper_volume(constants.Looper_1, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE, False)
-        elif event.data1 == constants.MIDI_CC_LOOPER_VOLUME_2 and event.midiChan == constants.MIDI_CH_LOOPER_VOLUME_2:
-            self.__set_looper_volume(constants.Looper_2, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE, False)
-        elif event.data1 == constants.MIDI_CC_LOOPER_VOLUME_3 and event.midiChan == constants.MIDI_CH_LOOPER_VOLUME_3:
-            self.__set_looper_volume(constants.Looper_3, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE, False)
-        elif event.data1 == constants.MIDI_CC_LOOPER_VOLUME_4 and event.midiChan == constants.MIDI_CH_LOOPER_VOLUME_4:
-            self.__set_looper_volume(constants.Looper_4, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_TRACK_1_HP_FILTER and event.midiChan == constants.MIDI_CH_TRACK_1_HP_FILTER:
+            self.__set_track_hp_filter_level(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_TRACK_2_HP_FILTER and event.midiChan == constants.MIDI_CH_TRACK_2_HP_FILTER:
+            self.__set_track_hp_filter_level(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_TRACK_3_HP_FILTER and event.midiChan == constants.MIDI_CH_TRACK_3_HP_FILTER:
+            self.__set_track_hp_filter_level(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_TRACK_4_HP_FILTER and event.midiChan == constants.MIDI_CH_TRACK_4_HP_FILTER:
+            self.__set_track_hp_filter_level(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_TRACK_1_LP_FILTER and event.midiChan == constants.MIDI_CH_TRACK_1_LP_FILTER:
+            self.__set_track_lp_filter_level(constants.Track_1, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_TRACK_2_LP_FILTER and event.midiChan == constants.MIDI_CH_TRACK_2_LP_FILTER:
+            self.__set_track_lp_filter_level(constants.Track_2, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_TRACK_3_LP_FILTER and event.midiChan == constants.MIDI_CH_TRACK_3_LP_FILTER:
+            self.__set_track_lp_filter_level(constants.Track_3, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_TRACK_4_LP_FILTER and event.midiChan == constants.MIDI_CH_TRACK_4_LP_FILTER:
+            self.__set_track_lp_filter_level(constants.Track_4, event.data2 / fl_helper.MIDI_MAX_VALUE, False)
         elif event.data1 == constants.MIDI_CC_LOOPER_MUTE_1 and event.midiChan == constants.MIDI_CH_LOOPER_MUTE_1:
             self.__process_mute_looper(event, constants.Looper_1)
         elif event.data1 == constants.MIDI_CC_LOOPER_MUTE_2 and event.midiChan == constants.MIDI_CH_LOOPER_MUTE_2:
@@ -676,12 +713,26 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.__fx_manager.set_extra_param_1_level(event.data2 / fl_helper.MIDI_MAX_VALUE, False)
         elif event.data1 == constants.MIDI_CC_FX_EXTRA_PARAMETER_1_RESET and event.midiChan == constants.MIDI_CH_FX_EXTRA_PARAMETER_1_RESET:
             self.__fx_manager.set_extra_param_1_level(0.0, True)
+        elif event.data1 == constants.MIDI_CC_REPEATER_4 and event.midiChan == constants.MIDI_CH_REPEATER_4:
+            self.__process_repeater_event(event, repeater_constants.RepeaterLength.LENGTH_4)
+        elif event.data1 == constants.MIDI_CC_REPEATER_2 and event.midiChan == constants.MIDI_CH_REPEATER_2:
+            self.__process_repeater_event(event, repeater_constants.RepeaterLength.LENGTH_2)
+        elif event.data1 == constants.MIDI_CC_REPEATER_1 and event.midiChan == constants.MIDI_CH_REPEATER_1:
+            self.__process_repeater_event(event, repeater_constants.RepeaterLength.LENGTH_1)
+        elif event.data1 == constants.MIDI_CC_REPEATER_1_2 and event.midiChan == constants.MIDI_CH_REPEATER_1_2:
+            self.__process_repeater_event(event, repeater_constants.RepeaterLength.LENGTH_1_2)
+        elif event.data1 == constants.MIDI_CC_REPEATER_1_4 and event.midiChan == constants.MIDI_CH_REPEATER_1_4:
+            self.__process_repeater_event(event, repeater_constants.RepeaterLength.LENGTH_1_4)
+        elif event.data1 == constants.MIDI_CC_REPEATER_1_8 and event.midiChan == constants.MIDI_CH_REPEATER_1_8:
+            self.__process_repeater_event(event, repeater_constants.RepeaterLength.LENGTH_1_8)
+        elif event.data1 == constants.MIDI_CC_REPEATER_1_16 and event.midiChan == constants.MIDI_CH_REPEATER_1_16:
+            self.__process_repeater_event(event, repeater_constants.RepeaterLength.LENGTH_1_16)
+        elif event.data1 == constants.MIDI_CC_REPEATER_1_32 and event.midiChan == constants.MIDI_CH_REPEATER_1_32:
+            self.__process_repeater_event(event, repeater_constants.RepeaterLength.LENGTH_1_32)
 
     def on_midi_msg(self, event):
 
         self.on_init_script()
-
-        # fl_helper.print_all_plugin_parameters(constants.FX_UNIT_IN_CHANNEL + 2, 0)
 
         event.handled = False
 

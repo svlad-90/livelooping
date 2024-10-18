@@ -103,7 +103,6 @@ class Looper():
     def set_looper_volume(self, looper_volume, forward_to_device):
         self.__looper_volume = looper_volume
 
-        self.__view.set_looper_volume(self.get_looper_number(), looper_volume, forward_to_device)
         self.__view.set_looper_muted(self.__looper_number, looper_volume == 0)
 
         for track_id in self.__tracks:
@@ -114,6 +113,12 @@ class Looper():
 
     def set_track_volume(self, track_id, track_volume, forward_to_device):
         self.__tracks.get(track_id).set_track_volume(track_volume, forward_to_device)
+
+    def set_track_hp_filter_level(self, track_id, hp_filter_level, forward_to_device):
+        self.__tracks.get(track_id).set_track_hp_filter_level(hp_filter_level, forward_to_device)
+
+    def set_track_lp_filter_level(self, track_id, lp_filter_level, forward_to_device):
+        self.__tracks.get(track_id).set_track_lp_filter_level(lp_filter_level, forward_to_device)
 
     def get_track_volume(self, track_id):
         return self.__tracks.get(track_id).get_track_volume()
@@ -173,7 +178,6 @@ class Looper():
             for track_id, sidechain_value in self.__sidechain_levels.items():
                 self.__view.set_looper_side_chain_level(track_id, sidechain_value, True)
 
-        self.__view.set_looper_volume(self.get_looper_number(), self.__looper_volume, True)
         self.__view.set_looper_muted(self.__looper_number, self.__looper_volume == 0)
 
     def is_track_recording_in_progress(self, track_id):

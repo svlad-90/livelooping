@@ -2,8 +2,10 @@ import plugins
 import device
 from common import global_constants
 
-MIDI_MAX_VALUE = 127
+MIDI_MAX_VALUE           = 127
 MAX_VOLUME_LEVEL_VALUE   = 0.8
+MAX_LEVEL_VALUE          = 1.0
+MIN_LEVEL_VALUE          = 0.0
 
 def print_all_plugin_parameters(mixer_track, slot):
 

@@ -27,6 +27,8 @@ class Track():
         self.__mixer_channel = mixer_channel
         self.__sample_length = SampleLength.LENGTH_0
         self.__volume = fl_helper.MAX_VOLUME_LEVEL_VALUE
+        self.__hp_filter_level = fl_helper.MIN_LEVEL_VALUE
+        self.__lp_filter_level = fl_helper.MAX_LEVEL_VALUE
         self.__recording_state = Track.RECORDING_STATE_OFF
         self.__context_provider = context_provider
         self.__is_gui_active = False
@@ -54,6 +56,8 @@ class Track():
         if self.__is_gui_active == True:
             self.__view.update_sample_length(self.__sample_length)
         self.set_track_volume(fl_helper.MAX_VOLUME_LEVEL_VALUE, True)
+        self.set_track_hp_filter_level(fl_helper.MIN_LEVEL_VALUE, True)
+        self.set_track_lp_filter_level(fl_helper.MAX_LEVEL_VALUE, True)
         self.set_track_pan(global_constants.DEFAULT_PANOMATIC_PAN_LEVEL, True)
         self.__view.set_track_clear_state(self.__track_number, 0.0)
 
@@ -90,6 +94,22 @@ class Track():
         plugins.setParamValue(track_volume, constants.PANOMATIC_VOLUME_PARAM_INDEX, self.__mixer_channel, constants.TRACK_PANOMATIC_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
         self.__update_volume(forward_to_device)
 
+    def set_track_hp_filter_level(self, hp_filter_level, forward_to_device):
+        self.__hp_filter_level = hp_filter_level
+        plugins.setParamValue(hp_filter_level != 0, constants.TRACK_FILTER_HP_R_ON_PARAMETER_INDEX, self.__mixer_channel, constants.TRACK_FILTER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(hp_filter_level, constants.TRACK_FILTER_HP_R_FREQ_PARAMETER_INDEX, self.__mixer_channel, constants.TRACK_FILTER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(hp_filter_level != 0, constants.TRACK_FILTER_HP_L_ON_PARAMETER_INDEX, self.__mixer_channel, constants.TRACK_FILTER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(hp_filter_level, constants.TRACK_FILTER_HP_L_FREQ_PARAMETER_INDEX, self.__mixer_channel, constants.TRACK_FILTER_SLOT_INDEX, midi.PIM_None, True)
+        self.__update_hp_filter_level(forward_to_device)
+
+    def set_track_lp_filter_level(self, lp_filter_level, forward_to_device):
+        self.__lp_filter_level = lp_filter_level
+        plugins.setParamValue(lp_filter_level != fl_helper.MAX_LEVEL_VALUE, constants.TRACK_FILTER_LP_R_ON_PARAMETER_INDEX, self.__mixer_channel, constants.TRACK_FILTER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(lp_filter_level, constants.TRACK_FILTER_LP_R_FREQ_PARAMETER_INDEX, self.__mixer_channel, constants.TRACK_FILTER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(lp_filter_level != fl_helper.MAX_LEVEL_VALUE, constants.TRACK_FILTER_LP_L_ON_PARAMETER_INDEX, self.__mixer_channel, constants.TRACK_FILTER_SLOT_INDEX, midi.PIM_None, True)
+        plugins.setParamValue(lp_filter_level, constants.TRACK_FILTER_LP_L_FREQ_PARAMETER_INDEX, self.__mixer_channel, constants.TRACK_FILTER_SLOT_INDEX, midi.PIM_None, True)
+        self.__update_lp_filter_level(forward_to_device)
+
     def get_track_volume(self):
         return self.__volume
 
@@ -108,6 +128,8 @@ class Track():
                               midi.PIM_None, True)
 
         self.set_track_volume(fl_helper.MAX_VOLUME_LEVEL_VALUE, True)
+        self.set_track_hp_filter_level(fl_helper.MIN_LEVEL_VALUE, True)
+        self.set_track_lp_filter_level(fl_helper.MAX_LEVEL_VALUE, True)
         self.set_track_pan(global_constants.DEFAULT_PANOMATIC_PAN_LEVEL, True)
 
         if self.__recording_state == Track.RECORDING_STATE_PLAYBACK:
@@ -223,12 +245,22 @@ class Track():
             self.__view.set_track_recording_state(self.__track_number, self.__recording_state)
 
         self.__update_volume(True)
+        self.__update_hp_filter_level(True)
+        self.__update_lp_filter_level(True)
         self.__update_pan(True)
 
     def __update_volume(self, forward_to_device):
         if self.__is_gui_active == True:
             self.__view.set_track_volume(self.__track_number, self.__volume, forward_to_device)
             self.__view.set_track_muted(self.__track_number, self.__volume == 0)
+
+    def __update_hp_filter_level(self, forward_to_device):
+        if self.__is_gui_active == True:
+            self.__view.set_hp_filter_level(self.__track_number, self.__hp_filter_level, forward_to_device)
+
+    def __update_lp_filter_level(self, forward_to_device):
+        if self.__is_gui_active == True:
+            self.__view.set_lp_filter_level(self.__track_number, self.__lp_filter_level, forward_to_device)
 
     def __update_pan(self, forward_to_device):
         if self.__is_gui_active == True:
@@ -249,8 +281,8 @@ class Track():
         plugins.setParamValue(pan, constants.PANOMATIC_PAN_PARAM_INDEX, self.__mixer_channel, constants.TRACK_PANOMATIC_PLUGIN_MIXER_SLOT_INDEX, midi.PIM_None, True)
         self.__update_pan(forward_to_device)
 
-    def __set_track_routing(self, source_channel, target_channel, touring_level):
-        mixer.setRouteToLevel(source_channel, target_channel, touring_level)
+    def __set_track_routing(self, source_channel, target_channel, routing_level):
+        mixer.setRouteToLevel(source_channel, target_channel, routing_level)
 
     def set_track_selection_status(self, selection_status):
         self.__selection_status = selection_status

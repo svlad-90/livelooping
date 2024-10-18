@@ -17,6 +17,7 @@ import common
 from common import updateable
 from looper_mux import fx
 from looper_mux.fx import FXBank, FXSlot
+from looper_mux import repeater_constants
 
 class View:
     def __init__(self):
@@ -41,29 +42,6 @@ class View:
             SampleLength.LENGTH_64,
             SampleLength.LENGTH_96,
             SampleLength.LENGTH_128]
-
-    def set_looper_volume(self, looper_index, looper_volume, forward_to_device):
-        if forward_to_device:
-            if looper_index == constants.Looper_1:
-                midi_id = midi.MIDI_CONTROLCHANGE
-                channel = constants.MIDI_CH_LOOPER_VOLUME_1
-                cc_number = constants.MIDI_CC_LOOPER_VOLUME_1
-            elif looper_index == constants.Looper_2:
-                midi_id = midi.MIDI_CONTROLCHANGE
-                channel = constants.MIDI_CH_LOOPER_VOLUME_2
-                cc_number = constants.MIDI_CC_LOOPER_VOLUME_2
-            elif looper_index == constants.Looper_3:
-                midi_id = midi.MIDI_CONTROLCHANGE
-                channel = constants.MIDI_CH_LOOPER_VOLUME_3
-                cc_number = constants.MIDI_CC_LOOPER_VOLUME_3
-            elif looper_index == constants.Looper_4:
-                midi_id = midi.MIDI_CONTROLCHANGE
-                channel = constants.MIDI_CH_LOOPER_VOLUME_4
-                cc_number = constants.MIDI_CC_LOOPER_VOLUME_4
-
-            device_value = int(looper_volume * fl_helper.MIDI_MAX_VALUE / fl_helper.MAX_VOLUME_LEVEL_VALUE)
-    
-            device.midiOutMsg(midi_id, channel, cc_number, device_value)
 
     def set_drop_fx_level(self, fx_level, midi_cc, midi_chan, forward_to_device):
         if forward_to_device:
@@ -182,6 +160,52 @@ class View:
                 cc_number = constants.MIDI_CC_TRACK_PAN_4
         
             value = int(pan * fl_helper.MIDI_MAX_VALUE)
+    
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+    def set_hp_filter_level(self, track_id, hp_filter_level, forward_to_device):
+        if forward_to_device:
+            if track_id == constants.Track_1:
+                midi_id = midi.MIDI_CONTROLCHANGE
+                channel = constants.MIDI_CH_TRACK_1_HP_FILTER
+                cc_number = constants.MIDI_CC_TRACK_1_HP_FILTER
+            elif track_id == constants.Track_2:
+                midi_id = midi.MIDI_CONTROLCHANGE
+                channel = constants.MIDI_CH_TRACK_2_HP_FILTER
+                cc_number = constants.MIDI_CC_TRACK_2_HP_FILTER
+            elif track_id == constants.Track_3:
+                midi_id = midi.MIDI_CONTROLCHANGE
+                channel = constants.MIDI_CH_TRACK_3_HP_FILTER
+                cc_number = constants.MIDI_CC_TRACK_3_HP_FILTER
+            elif track_id == constants.Track_4:
+                midi_id = midi.MIDI_CONTROLCHANGE
+                channel = constants.MIDI_CH_TRACK_4_HP_FILTER
+                cc_number = constants.MIDI_CC_TRACK_4_HP_FILTER
+        
+            value = int(hp_filter_level * fl_helper.MIDI_MAX_VALUE)
+    
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+    def set_lp_filter_level(self, track_id, lp_filter_level, forward_to_device):
+        if forward_to_device:
+            if track_id == constants.Track_1:
+                midi_id = midi.MIDI_CONTROLCHANGE
+                channel = constants.MIDI_CH_TRACK_1_LP_FILTER
+                cc_number = constants.MIDI_CC_TRACK_1_LP_FILTER
+            elif track_id == constants.Track_2:
+                midi_id = midi.MIDI_CONTROLCHANGE
+                channel = constants.MIDI_CH_TRACK_2_LP_FILTER
+                cc_number = constants.MIDI_CC_TRACK_2_LP_FILTER
+            elif track_id == constants.Track_3:
+                midi_id = midi.MIDI_CONTROLCHANGE
+                channel = constants.MIDI_CH_TRACK_3_LP_FILTER
+                cc_number = constants.MIDI_CC_TRACK_3_LP_FILTER
+            elif track_id == constants.Track_4:
+                midi_id = midi.MIDI_CONTROLCHANGE
+                channel = constants.MIDI_CH_TRACK_4_LP_FILTER
+                cc_number = constants.MIDI_CC_TRACK_4_LP_FILTER
+        
+            value = int(lp_filter_level * fl_helper.MIDI_MAX_VALUE)
     
             device.midiOutMsg(midi_id, channel, cc_number, value)
 
@@ -558,3 +582,187 @@ class View:
             cc_number = constants.MIDI_CC_FX_EXTRA_PARAMETER_1_RESET
             value = int(parameter_level * fl_helper.MIDI_MAX_VALUE)
             device.midiOutMsg(midi_id, channel, cc_number, value)
+
+    REPEATER_COLOR_OFF              = 24
+    REPEATER_COLOR_PLAYBACK         = 24
+    REPEATER_COLOR_RECORDING_TARGET = 1
+    REPEATER_COLOR_PLAYBACK_TARGET  = 48
+
+    def set_repeater_buttons_state(self, repeater_mode, repeater_length):
+        if repeater_mode == repeater_constants.RepeaterMode.MODE_OFF:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_4
+            cc_number = constants.MIDI_CC_REPEATER_4
+            value = View.REPEATER_COLOR_OFF
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_2
+            cc_number = constants.MIDI_CC_REPEATER_2
+            value = View.REPEATER_COLOR_OFF
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1
+            cc_number = constants.MIDI_CC_REPEATER_1
+            value = View.REPEATER_COLOR_OFF
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1_2
+            cc_number = constants.MIDI_CC_REPEATER_1_2
+            value = View.REPEATER_COLOR_OFF
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1_4
+            cc_number = constants.MIDI_CC_REPEATER_1_4
+            value = View.REPEATER_COLOR_OFF
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1_8
+            cc_number = constants.MIDI_CC_REPEATER_1_8
+            value = View.REPEATER_COLOR_OFF
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1_16
+            cc_number = constants.MIDI_CC_REPEATER_1_16
+            value = View.REPEATER_COLOR_OFF
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1_32
+            cc_number = constants.MIDI_CC_REPEATER_1_32
+            value = View.REPEATER_COLOR_OFF
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+        elif repeater_mode == repeater_constants.RepeaterMode.MODE_RECORDING:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_4
+            cc_number = constants.MIDI_CC_REPEATER_4
+            value = View.REPEATER_COLOR_OFF \
+            if not repeater_length == repeater_constants.RepeaterLength.LENGTH_4 \
+            else View.REPEATER_COLOR_RECORDING_TARGET
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_2
+            cc_number = constants.MIDI_CC_REPEATER_2
+            value = View.REPEATER_COLOR_OFF \
+            if not repeater_length == repeater_constants.RepeaterLength.LENGTH_2 \
+            else View.REPEATER_COLOR_RECORDING_TARGET
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1
+            cc_number = constants.MIDI_CC_REPEATER_1
+            value = View.REPEATER_COLOR_OFF \
+            if not repeater_length == repeater_constants.RepeaterLength.LENGTH_1 \
+            else View.REPEATER_COLOR_RECORDING_TARGET
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1_2
+            cc_number = constants.MIDI_CC_REPEATER_1_2
+            value = View.REPEATER_COLOR_OFF \
+            if not repeater_length == repeater_constants.RepeaterLength.LENGTH_1_2 \
+            else View.REPEATER_COLOR_RECORDING_TARGET
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1_4
+            cc_number = constants.MIDI_CC_REPEATER_1_4
+            value = View.REPEATER_COLOR_OFF \
+            if not repeater_length == repeater_constants.RepeaterLength.LENGTH_1_4 \
+            else View.REPEATER_COLOR_RECORDING_TARGET
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1_8
+            cc_number = constants.MIDI_CC_REPEATER_1_8
+            value = View.REPEATER_COLOR_OFF \
+            if not repeater_length == repeater_constants.RepeaterLength.LENGTH_1_8 \
+            else View.REPEATER_COLOR_RECORDING_TARGET
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1_16
+            cc_number = constants.MIDI_CC_REPEATER_1_16
+            value = View.REPEATER_COLOR_OFF \
+            if not repeater_length == repeater_constants.RepeaterLength.LENGTH_1_16 \
+            else View.REPEATER_COLOR_RECORDING_TARGET
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1_32
+            cc_number = constants.MIDI_CC_REPEATER_1_32
+            value = View.REPEATER_COLOR_OFF \
+            if not repeater_length == repeater_constants.RepeaterLength.LENGTH_1_32 \
+            else View.REPEATER_COLOR_RECORDING_TARGET
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+        elif repeater_mode == repeater_constants.RepeaterMode.MODE_PLAYBACK:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_4
+            cc_number = constants.MIDI_CC_REPEATER_4
+            value = View.REPEATER_COLOR_PLAYBACK \
+            if not repeater_length == repeater_constants.RepeaterLength.LENGTH_4 \
+            else View.REPEATER_COLOR_PLAYBACK_TARGET
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_2
+            cc_number = constants.MIDI_CC_REPEATER_2
+            value = View.REPEATER_COLOR_PLAYBACK \
+            if not repeater_length == repeater_constants.RepeaterLength.LENGTH_2 \
+            else View.REPEATER_COLOR_PLAYBACK_TARGET
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1
+            cc_number = constants.MIDI_CC_REPEATER_1
+            value = View.REPEATER_COLOR_PLAYBACK \
+            if not repeater_length == repeater_constants.RepeaterLength.LENGTH_1 \
+            else View.REPEATER_COLOR_PLAYBACK_TARGET
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1_2
+            cc_number = constants.MIDI_CC_REPEATER_1_2
+            value = View.REPEATER_COLOR_PLAYBACK \
+            if not repeater_length == repeater_constants.RepeaterLength.LENGTH_1_2 \
+            else View.REPEATER_COLOR_PLAYBACK_TARGET
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1_4
+            cc_number = constants.MIDI_CC_REPEATER_1_4
+            value = View.REPEATER_COLOR_PLAYBACK \
+            if not repeater_length == repeater_constants.RepeaterLength.LENGTH_1_4 \
+            else View.REPEATER_COLOR_PLAYBACK_TARGET
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1_8
+            cc_number = constants.MIDI_CC_REPEATER_1_8
+            value = View.REPEATER_COLOR_PLAYBACK \
+            if not repeater_length == repeater_constants.RepeaterLength.LENGTH_1_8 \
+            else View.REPEATER_COLOR_PLAYBACK_TARGET
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1_16
+            cc_number = constants.MIDI_CC_REPEATER_1_16
+            value = View.REPEATER_COLOR_PLAYBACK \
+            if not repeater_length == repeater_constants.RepeaterLength.LENGTH_1_16 \
+            else View.REPEATER_COLOR_PLAYBACK_TARGET
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REPEATER_1_32
+            cc_number = constants.MIDI_CC_REPEATER_1_32
+            value = View.REPEATER_COLOR_PLAYBACK \
+            if not repeater_length == repeater_constants.RepeaterLength.LENGTH_1_32 \
+            else View.REPEATER_COLOR_PLAYBACK_TARGET
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+        
