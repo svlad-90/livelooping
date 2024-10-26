@@ -99,6 +99,11 @@ class DropManager(updateable.Updateable):
                               constants.DROP_REVERB_MIXER_CHANNEL,
                               constants.DROP_REVERB_MIXER_SLOT,
                               midi.PIM_None, True)
+        plugins.setParamValue(0.0,
+                              constants.TURNADO_CONTROL_PARAMETER_4,
+                              constants.DROP_REVERB_MIXER_CHANNEL,
+                              constants.DROP_REVERB_MIXER_SLOT,
+                              midi.PIM_None, True)
         self.__delayed_reverb_activation = True
 
     def release_drop(self):
@@ -121,3 +126,9 @@ class DropManager(updateable.Updateable):
                               constants.DROP_REVERB_MIXER_CHANNEL,
                               constants.DROP_REVERB_MIXER_SLOT,
                               midi.PIM_None, True)
+            plugins.setParamValue(1.0,
+                              constants.TURNADO_CONTROL_PARAMETER_4,
+                              constants.DROP_REVERB_MIXER_CHANNEL,
+                              constants.DROP_REVERB_MIXER_SLOT,
+                              midi.PIM_None, True)
+            self.__delayed_reverb_activation = False

@@ -75,9 +75,9 @@ class Looper():
             self.__looper_fx1_channel = constants.LOOPER_4_FX_1_CHANNEL
 
         self.__sidechain_levels = { constants.Track_1: 0.0,
-                                         constants.Track_2: 0.0,
-                                         constants.Track_3: 0.0,
-                                         constants.Track_4: 0.0 }
+                                    constants.Track_2: 0.0,
+                                    constants.Track_3: 0.0,
+                                    constants.Track_4: 0.0 }
         self.__is_gui_active = False
 
     def clear_second_click_handler(self):
@@ -91,6 +91,8 @@ class Looper():
         for track_id in self.__tracks:
             self.set_looper_side_chain_level(track_id, constants.DEFAULT_SIDECHAIN_LEVEL, True)
 
+        self.__view.set_clear_looper_btn_state(updateable.DoubleClickTimeoutHandler.STATE_INITITAL)
+
     def get_looper_number(self):
         return self.__looper_number
 
@@ -100,10 +102,20 @@ class Looper():
     def get_track(self, track_number):
         return self.__tracks.get(track_number)
 
+    def __calculate_loop_mute_state(self):
+        loop_mute_state = View.MUTE_STATE_OFF
+
+        if self.__looper_volume == 0:
+            loop_mute_state = View.MUTE_STATE_MUTED
+        elif self.is_any_track_playing():
+            loop_mute_state = View.MUTE_STATE_PLAYING
+    
+        return loop_mute_state
+
     def set_looper_volume(self, looper_volume, forward_to_device):
         self.__looper_volume = looper_volume
 
-        self.__view.set_looper_muted(self.__looper_number, looper_volume == 0)
+        self.__view.set_looper_muted(self.__looper_number, self.__calculate_loop_mute_state())
 
         for track_id in self.__tracks:
             self.__tracks[track_id].set_looper_volume(self.__looper_volume)
@@ -132,8 +144,14 @@ class Looper():
         for track_id in self.__tracks:
             self.set_looper_side_chain_level(track_id, constants.DEFAULT_SIDECHAIN_LEVEL, True)
 
+        self.__update_looper_stats()
+        self.__update_tracks_stats()
+
     def clear_track(self, track_id):
-            self.__tracks[track_id].clear()
+        self.__tracks[track_id].clear()
+
+        self.__update_looper_stats()
+        self.__update_tracks_stats()
 
     def start_recording_track(self, track_id, sample_length):
         if self.__tracks[track_id].get_track_selection_status():
@@ -155,6 +173,9 @@ class Looper():
             self.__set_track_routing(constants.FX_UNIT_OUT_CHANNEL, self.__looper_fx1_channel, fl_helper.MAX_VOLUME_LEVEL_VALUE)
             self.__set_track_routing(constants.FX_UNIT_OUT_CHANNEL, constants.RECORDING_BUS_FEEDBACK_LOOP_CHANNEL, 0.0)
             self.__reset_all_tracks_selection()
+
+        self.__update_looper_stats()
+        self.__update_tracks_stats()
 
     def set_looper_side_chain_level(self, track_id, sidechain_level, forward_to_device):
         if self.__looper_number != constants.Looper_1:
@@ -178,7 +199,7 @@ class Looper():
             for track_id, sidechain_value in self.__sidechain_levels.items():
                 self.__view.set_looper_side_chain_level(track_id, sidechain_value, True)
 
-        self.__view.set_looper_muted(self.__looper_number, self.__looper_volume == 0)
+        self.__view.set_looper_muted(self.__looper_number, self.__calculate_loop_mute_state())
 
     def is_track_recording_in_progress(self, track_id):
         return self.__tracks[track_id].is_recording_in_progress()

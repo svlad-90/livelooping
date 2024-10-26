@@ -3,6 +3,7 @@ import device
 from common import global_constants
 
 MIDI_MAX_VALUE           = 127
+MIDI_MIN_VALUE           = 0
 MAX_VOLUME_LEVEL_VALUE   = 0.8
 MAX_LEVEL_VALUE          = 1.0
 MIN_LEVEL_VALUE          = 0.0
@@ -21,6 +22,7 @@ def print_all_plugin_parameters(mixer_track, slot):
 def print_midi_event(event):
         print("handled - " + str(event.handled) + "; "
               "timestamp - " + str(event.timestamp) + "; "
+              "status - " + str(event.status) + "; "
               "data1 - " + str(event.data1) + "; "
               "data2 - " + str(event.data2) + "; "
               "port - " + str(event.port) + "; "

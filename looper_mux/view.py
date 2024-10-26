@@ -12,7 +12,6 @@ import device
 from looper_mux import constants
 from common import fl_helper, global_constants
 from looper_mux.sample_length import SampleLength
-from looper_mux.track import Track
 import common
 from common import updateable
 from looper_mux import fx
@@ -20,6 +19,13 @@ from looper_mux.fx import FXBank, FXSlot
 from looper_mux import repeater_constants
 
 class View:
+
+    VALUE_OFF = 24
+    VALUE_OFF_2 = 25
+    VALUE_SELECTED = 80
+    VALUE_SELECTED_2 = 100
+    VALUE_RED = 1
+
     def __init__(self):
         self.supported_sample_lengths = [
             SampleLength.LENGTH_1_64,
@@ -56,7 +62,7 @@ class View:
         value = int(state * fl_helper.MIDI_MAX_VALUE)
         device.midiOutMsg(midi_id, channel, cc_number, value)
 
-    LOOPER_STATE_OFF      = 0
+    LOOPER_STATE_OFF      = VALUE_OFF
     LOOPER_STATE_PLAYING  = 66
     LOOPER_STATE_SELECTED = 120
 
@@ -94,10 +100,10 @@ class View:
         channel = constants.MIDI_CH_CLEAR
         cc_number = constants.MIDI_CC_CLEAR
 
-        value = 0
+        value = View.VALUE_OFF
 
         if state == updateable.DoubleClickTimeoutHandler.STATE_INITITAL:
-            value = 0
+            value = View.VALUE_OFF
         if state == updateable.DoubleClickTimeoutHandler.STATE_FIRST_CLICK_DONE:
             value = 25
         if state == updateable.DoubleClickTimeoutHandler.STATE_FIRST_CLICK_RELEASED:
@@ -107,15 +113,18 @@ class View:
 
         device.midiOutMsg(midi_id, channel, cc_number, value)
 
-    def set_extra_1_state(self, value, forward_to_device):
+    def set_extra_1_state(self, extra_state, forward_to_device):
         if True == forward_to_device:
             midi_id = midi.MIDI_CONTROLCHANGE
             channel = constants.MIDI_CH_EXTRA_1
             cc_number = constants.MIDI_CC_EXTRA_1
 
-            normalized_value = int(value * fl_helper.MIDI_MAX_VALUE)
+            if not extra_state:
+                value = View.VALUE_OFF
+            else:
+                value = View.VALUE_SELECTED_2
     
-            device.midiOutMsg(midi_id, channel, cc_number, normalized_value)
+            device.midiOutMsg(midi_id, channel, cc_number, value)
 
     def set_track_volume(self, track_id, track_volume, forward_to_device):
         if True == forward_to_device:
@@ -209,7 +218,11 @@ class View:
     
             device.midiOutMsg(midi_id, channel, cc_number, value)
 
-    def set_track_muted(self, track_id, track_muted):
+    MUTE_STATE_OFF = VALUE_OFF
+    MUTE_STATE_PLAYING = 66
+    MUTE_STATE_MUTED = 1
+
+    def set_track_muted(self, track_id, track_muted_state):
         if track_id == constants.Track_1:
             midi_id = midi.MIDI_CONTROLCHANGE
             channel = constants.MIDI_CH_TRACK_MUTE_1
@@ -227,37 +240,77 @@ class View:
             channel = constants.MIDI_CH_TRACK_MUTE_4
             cc_number = constants.MIDI_CC_TRACK_MUTE_4
     
-        value = fl_helper.MIDI_MAX_VALUE if track_muted else 0
-        device.midiOutMsg(midi_id, channel, cc_number, value)
+        device.midiOutMsg(midi_id, channel, cc_number, track_muted_state)
 
-    def set_looper_muted(self, looper_index, looper_muted):
-        if looper_index == constants.Track_1:
+        if track_id == constants.Track_1:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_TRACK_MUTE_INVERTED_1
+            cc_number = constants.MIDI_CC_TRACK_MUTE_INVERTED_1
+        elif track_id == constants.Track_2:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_TRACK_MUTE_INVERTED_2
+            cc_number = constants.MIDI_CC_TRACK_MUTE_INVERTED_2
+        elif track_id == constants.Track_3:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_TRACK_MUTE_INVERTED_3
+            cc_number = constants.MIDI_CC_TRACK_MUTE_INVERTED_3
+        elif track_id == constants.Track_4:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_TRACK_MUTE_INVERTED_4
+            cc_number = constants.MIDI_CC_TRACK_MUTE_INVERTED_4
+    
+        device.midiOutMsg(midi_id, channel, cc_number, track_muted_state)
+
+    def set_looper_muted(self, looper_index, looper_muted_state):
+        if looper_index == constants.Looper_1:
             midi_id = midi.MIDI_CONTROLCHANGE
             channel = constants.MIDI_CH_LOOPER_MUTE_1
             cc_number = constants.MIDI_CC_LOOPER_MUTE_1
-        elif looper_index == constants.Track_2:
+        elif looper_index == constants.Looper_2:
             midi_id = midi.MIDI_CONTROLCHANGE
             channel = constants.MIDI_CH_LOOPER_MUTE_2
             cc_number = constants.MIDI_CC_LOOPER_MUTE_2
-        elif looper_index == constants.Track_3:
+        elif looper_index == constants.Looper_3:
             midi_id = midi.MIDI_CONTROLCHANGE
             channel = constants.MIDI_CH_LOOPER_MUTE_3
             cc_number = constants.MIDI_CC_LOOPER_MUTE_3
-        elif looper_index == constants.Track_4:
+        elif looper_index == constants.Looper_4:
             midi_id = midi.MIDI_CONTROLCHANGE
             channel = constants.MIDI_CH_LOOPER_MUTE_4
             cc_number = constants.MIDI_CC_LOOPER_MUTE_4
-    
-        value = fl_helper.MIDI_MAX_VALUE if looper_muted else 0
-        device.midiOutMsg(midi_id, channel, cc_number, value)
 
-    def set_start_btn_state(self, value):
+        device.midiOutMsg(midi_id, channel, cc_number, looper_muted_state)
+
+        if looper_index == constants.Looper_1:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_LOOPER_MUTE_INVERTED_1
+            cc_number = constants.MIDI_CC_LOOPER_MUTE_INVERTED_1
+        elif looper_index == constants.Looper_2:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_LOOPER_MUTE_INVERTED_2
+            cc_number = constants.MIDI_CC_LOOPER_MUTE_INVERTED_2
+        elif looper_index == constants.Looper_3:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_LOOPER_MUTE_INVERTED_3
+            cc_number = constants.MIDI_CC_LOOPER_MUTE_INVERTED_3
+        elif looper_index == constants.Looper_4:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_LOOPER_MUTE_INVERTED_4
+            cc_number = constants.MIDI_CC_LOOPER_MUTE_INVERTED_4
+    
+        device.midiOutMsg(midi_id, channel, cc_number, looper_muted_state)
+
+    def set_start_btn_state(self, btn_state):
         midi_id = midi.MIDI_CONTROLCHANGE
         channel = constants.MIDI_CH_START
         cc_number = constants.MIDI_CC_START
-        device_value = int(value * fl_helper.MIDI_MAX_VALUE)
 
-        device.midiOutMsg(midi_id, channel, cc_number, device_value)
+        if not btn_state:
+            value = View.VALUE_OFF
+        else:
+            value = View.VALUE_RED
+
+        device.midiOutMsg(midi_id, channel, cc_number, value)
 
     def set_looper_side_chain_level(self, track_id, sidechain_level, forward_to_device):
         if track_id == constants.Track_1:
@@ -320,7 +373,11 @@ class View:
             channel = constants.MIDI_CH_TRACK_CLEAR_4
             cc_number = constants.MIDI_CC_TRACK_CLEAR_4
     
-        value = int(clear_state * fl_helper.MIDI_MAX_VALUE)
+        if clear_state:
+            value = View.VALUE_SELECTED_2
+        else:
+            value = View.VALUE_OFF
+
         device.midiOutMsg(midi_id, channel, cc_number, value)
 
     def set_clear_looper_btn_state(self, state):
@@ -329,10 +386,10 @@ class View:
         channel = constants.MIDI_CH_CLEAR_LOOPER
         cc_number = constants.MIDI_CC_CLEAR_LOOPER
 
-        value = 0
+        value = View.VALUE_OFF
 
         if state == updateable.DoubleClickTimeoutHandler.STATE_INITITAL:
-            value = 0
+            value = View.VALUE_OFF
         if state == updateable.DoubleClickTimeoutHandler.STATE_FIRST_CLICK_DONE:
             value = 25
         if state == updateable.DoubleClickTimeoutHandler.STATE_FIRST_CLICK_RELEASED:
@@ -425,10 +482,10 @@ class View:
                 channel = constants.MIDI_CH_SAMPLE_LENGTH_128
                 cc_number = constants.MIDI_CC_SAMPLE_LENGTH_128
 
-            value = 0
-
             if sample_length == i_sample_length:
-                value = 1 * fl_helper.MIDI_MAX_VALUE
+                value = View.VALUE_SELECTED
+            else:
+                value = View.VALUE_OFF
 
             duplicates_prevention[i_sample_length] = value
 
@@ -480,7 +537,11 @@ class View:
             channel = constants.MIDI_CH_SELECT_T4
             cc_number = constants.MIDI_CC_SELECT_T4
 
-        value = int(selection_status * fl_helper.MIDI_MAX_VALUE)
+        if not selection_status:
+            value = View.VALUE_OFF
+        else:
+            value = View.VALUE_SELECTED_2
+
         device.midiOutMsg(midi_id, channel, cc_number, value)
 
     def set_fx_bank_status(self, bank_id, status):
@@ -506,7 +567,11 @@ class View:
             channel = constants.MIDI_CH_FX_BANK_5
             cc_number = constants.MIDI_CC_FX_BANK_5
 
-        value = int(status * fl_helper.MIDI_MAX_VALUE)
+        if status:
+            value = View.VALUE_SELECTED
+        else:
+            value = View.VALUE_OFF_2
+
         # print("set_fx_bank_status - midi_id - " + str(midi_id) + ", channel - " + str(channel) + ", cc_number - " + str(cc_number) + ", value - " + str(value))
         device.midiOutMsg(midi_id, channel, cc_number, value)
 
@@ -557,7 +622,11 @@ class View:
             channel = constants.MIDI_CH_FX_SLOT_10
             cc_number = constants.MIDI_CC_FX_SLOT_10
 
-        value = int(status * fl_helper.MIDI_MAX_VALUE)
+        if status:
+            value = View.VALUE_SELECTED
+        else:
+            value = View.VALUE_OFF
+
         # print("set_fx_bank_status - midi_id - " + str(midi_id) + ", channel - " + str(channel) + ", cc_number - " + str(cc_number) + ", value - " + str(value))
         device.midiOutMsg(midi_id, channel, cc_number, value)
 
@@ -583,8 +652,8 @@ class View:
             value = int(parameter_level * fl_helper.MIDI_MAX_VALUE)
             device.midiOutMsg(midi_id, channel, cc_number, value)
 
-    REPEATER_COLOR_OFF              = 24
-    REPEATER_COLOR_PLAYBACK         = 24
+    REPEATER_COLOR_OFF              = VALUE_OFF
+    REPEATER_COLOR_PLAYBACK         = VALUE_OFF
     REPEATER_COLOR_RECORDING_TARGET = 1
     REPEATER_COLOR_PLAYBACK_TARGET  = 48
 
@@ -765,4 +834,55 @@ class View:
             if not repeater_length == repeater_constants.RepeaterLength.LENGTH_1_32 \
             else View.REPEATER_COLOR_PLAYBACK_TARGET
             device.midiOutMsg(midi_id, channel, cc_number, value)
-        
+
+    ONESHOT_SAMPLER_STATUS_OFF = VALUE_OFF
+    ONESHOT_SAMPLER_STATUS_RECORDING = VALUE_RED
+    ONESHOT_SAMPLER_STATUS_RECORDED = VALUE_SELECTED_2
+
+    def set_remixer_slot_state(self, slot_id, value):
+        midi_id = midi.MIDI_CONTROLCHANGE
+
+        if slot_id == constants.RemixerSlot_1:
+            channel = constants.MIDI_CH_REMIXER_PLAY_ONESHOT_1
+            cc_number = constants.MIDI_CC_REMIXER_PLAY_ONESHOT_1
+        elif slot_id == constants.RemixerSlot_2:
+            channel = constants.MIDI_CH_REMIXER_PLAY_ONESHOT_2
+            cc_number = constants.MIDI_CC_REMIXER_PLAY_ONESHOT_2
+        elif slot_id == constants.RemixerSlot_3:
+            channel = constants.MIDI_CH_REMIXER_PLAY_ONESHOT_3
+            cc_number = constants.MIDI_CC_REMIXER_PLAY_ONESHOT_3
+        elif slot_id == constants.RemixerSlot_4:
+            channel = constants.MIDI_CH_REMIXER_PLAY_ONESHOT_4
+            cc_number = constants.MIDI_CC_REMIXER_PLAY_ONESHOT_4
+        elif slot_id == constants.RemixerSlot_5:
+            channel = constants.MIDI_CH_REMIXER_PLAY_ONESHOT_5
+            cc_number = constants.MIDI_CC_REMIXER_PLAY_ONESHOT_5
+        elif slot_id == constants.RemixerSlot_6:
+            channel = constants.MIDI_CH_REMIXER_PLAY_ONESHOT_6
+            cc_number = constants.MIDI_CC_REMIXER_PLAY_ONESHOT_6
+        elif slot_id == constants.RemixerSlot_7:
+            channel = constants.MIDI_CH_REMIXER_PLAY_ONESHOT_7
+            cc_number = constants.MIDI_CC_REMIXER_PLAY_ONESHOT_7
+        elif slot_id == constants.RemixerSlot_8:
+            channel = constants.MIDI_CH_REMIXER_PLAY_ONESHOT_8
+            cc_number = constants.MIDI_CC_REMIXER_PLAY_ONESHOT_8
+
+        device.midiOutMsg(midi_id, channel, cc_number, value)
+
+    def set_remixer_clear_button_state(self, state):
+        midi_id = midi.MIDI_CONTROLCHANGE
+        channel = constants.MIDI_CH_REMIXER_CLEAR_MODE
+        cc_number = constants.MIDI_CC_REMIXER_CLEAR_MODE
+
+        value = View.VALUE_OFF
+
+        if state == updateable.DoubleClickTimeoutHandler.STATE_INITITAL:
+            value = View.VALUE_OFF
+        if state == updateable.DoubleClickTimeoutHandler.STATE_FIRST_CLICK_DONE:
+            value = 25
+        if state == updateable.DoubleClickTimeoutHandler.STATE_FIRST_CLICK_RELEASED:
+            value = 13
+        if state == updateable.DoubleClickTimeoutHandler.STATE_SECOND_CLICK_DONE:
+            value = 1
+
+        device.midiOutMsg(midi_id, channel, cc_number, value)

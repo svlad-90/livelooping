@@ -36,7 +36,7 @@ class SidechainItem:
                                                                          self.__mixer_slot)
 
     def set_sidechain_tension(self, tension, forward_to_device):
-        print("set_sidechain_tension: tension - " + str(tension) + ", forward_to_device - " + str(forward_to_device))
+        # print("set_sidechain_tension: tension - " + str(tension) + ", forward_to_device - " + str(forward_to_device))
         self.__tension = tension
         plugins.setParamValue(self.__tension,
                               self.__tension_parameter_slot,
@@ -49,7 +49,7 @@ class SidechainItem:
                                                  forward_to_device)
 
     def set_sidechain_decay(self, decay, forward_to_device):
-        print("set_sidechain_decay: decay - " + str(decay) + ", forward_to_device - " + str(forward_to_device))
+        # print("set_sidechain_decay: decay - " + str(decay) + ", forward_to_device - " + str(forward_to_device))
         self.__decay = decay
         plugins.setParamValue(self.__decay,
                               self.__decay_parameter_slot,

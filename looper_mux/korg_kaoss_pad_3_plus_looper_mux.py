@@ -24,6 +24,7 @@ from looper_mux import drop
 from looper_mux import sidechain
 from looper_mux import fx
 from looper_mux import repeater, repeater_constants
+from looper_mux import remixer
 
 class KorgKaossPad3PlusLooperMux(IContextInterface):
 
@@ -84,6 +85,10 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
 
         self.__repeater = repeater.Repeater(self.__view)
 
+        self.__mic_one_shot_sampler = remixer.OneshotSampler(self.__view, self.__updateable_mux,
+                                                                     constants.MIC_ONESHOT_SAMPLER_MIXER_CHANNEL,
+                                                                     constants.MIC_ONESHOT_SAMPLER_MIXER_SLOT)
+
     def on_init_script(self):
 
         if False == self.__initialized:
@@ -91,7 +96,7 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
 
             try:
 
-                # fl_helper.print_all_plugin_parameters(29, 6)
+                # fl_helper.print_all_plugin_parameters(72, 0)
 
                 self.__sidechain_manager.add_sidechain_item(constants.MIDI_CH_SIDECHAIN_TENSION_T1,
                                             constants.MIDI_CC_SIDECHAIN_TENSION_T1,
@@ -170,6 +175,10 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
                 self.__view.set_tempo(mixer.getCurrentTempo() / 1000.0, True)
                 self.set_sample_length(SampleLength.LENGTH_1)
                 self.__loopers[self.__selected_looper].select()
+
+                self.__view.set_clear_btn_state(updateable.DoubleClickTimeoutHandler.STATE_INITITAL)
+
+                self.__mic_one_shot_sampler.on_init_script()
             except Exception as e:
                 print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.on_init_script.__name__ + ": failed to initialize the script.")
                 print(e)
@@ -419,6 +428,15 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             if event.data2 != 0:
                 self.turn_track_on_off(track_id)
 
+    def __process_mute_track_inverted(self, event, track_id):
+        visible_track_volume = self.__get_visible_track_volume(track_id)
+        if event.data2 == 0:
+            if visible_track_volume != 0:
+                self.turn_track_on_off(track_id)
+        else:
+            if visible_track_volume == 0:
+                self.turn_track_on_off(track_id)
+
     def __process_mute_looper(self, event, looper_id):
         visible_looper_volume = self.__get_looper_volume(looper_id)
         if self.get_extra_1_state():
@@ -430,6 +448,15 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
                     self.turn_looper_on_off(looper_id)
         else:
             if event.data2 != 0:
+                self.turn_looper_on_off(looper_id)
+
+    def __process_mute_looper_inverted(self, event, looper_id):
+        visible_looper_volume = self.__get_looper_volume(looper_id)
+        if event.data2 == 0:
+            if visible_looper_volume != 0:
+                self.turn_looper_on_off(looper_id)
+        else:
+            if visible_looper_volume == 0:
                 self.turn_looper_on_off(looper_id)
 
     def __process_repeater_event(self, event, repeater_length):
@@ -457,6 +484,12 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
 
     def __get_track_selection_status(self, track_id):
         return self.__loopers[self.__selected_looper].get_track_selection_status(track_id)
+
+    def __process_oneshot_sampler(self, event, oneshot_sampler_slot):
+        if event.data2 != 0:
+            self.__mic_one_shot_sampler.slot_click(oneshot_sampler_slot)
+        else:
+            self.__mic_one_shot_sampler.slot_release(oneshot_sampler_slot)
 
     def __on_midi_msg_processing(self, event):
 
@@ -601,6 +634,14 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.__process_mute_looper(event, constants.Looper_3)
         elif event.data1 == constants.MIDI_CC_LOOPER_MUTE_4 and event.midiChan == constants.MIDI_CH_LOOPER_MUTE_4:
             self.__process_mute_looper(event, constants.Looper_4)
+        elif event.data1 == constants.MIDI_CC_LOOPER_MUTE_INVERTED_1 and event.midiChan == constants.MIDI_CH_LOOPER_MUTE_INVERTED_1:
+            self.__process_mute_looper_inverted(event, constants.Looper_1)
+        elif event.data1 == constants.MIDI_CC_LOOPER_MUTE_INVERTED_2 and event.midiChan == constants.MIDI_CH_LOOPER_MUTE_INVERTED_2:
+            self.__process_mute_looper_inverted(event, constants.Looper_2)
+        elif event.data1 == constants.MIDI_CC_LOOPER_MUTE_INVERTED_3 and event.midiChan == constants.MIDI_CH_LOOPER_MUTE_INVERTED_3:
+            self.__process_mute_looper_inverted(event, constants.Looper_3)
+        elif event.data1 == constants.MIDI_CC_LOOPER_MUTE_INVERTED_4 and event.midiChan == constants.MIDI_CH_LOOPER_MUTE_INVERTED_4:
+            self.__process_mute_looper_inverted(event, constants.Looper_4)
         elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_1 and event.midiChan == constants.MIDI_CH_TRACK_VOLUME_1:
             self.__set_track_volume(constants.Track_1, (event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE, False)
         elif event.data1 == constants.MIDI_CC_TRACK_VOLUME_2 and event.midiChan == constants.MIDI_CH_TRACK_VOLUME_2:
@@ -619,6 +660,14 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.__process_mute_track(event, constants.Track_3)
         elif event.data1 == constants.MIDI_CC_TRACK_MUTE_4 and event.midiChan == constants.MIDI_CH_TRACK_MUTE_4:
             self.__process_mute_track(event, constants.Track_4)
+        elif event.data1 == constants.MIDI_CC_TRACK_MUTE_INVERTED_1 and event.midiChan == constants.MIDI_CH_TRACK_MUTE_INVERTED_1:
+            self.__process_mute_track_inverted(event, constants.Track_1)
+        elif event.data1 == constants.MIDI_CC_TRACK_MUTE_INVERTED_2 and event.midiChan == constants.MIDI_CH_TRACK_MUTE_INVERTED_2:
+            self.__process_mute_track_inverted(event, constants.Track_2)
+        elif event.data1 == constants.MIDI_CC_TRACK_MUTE_INVERTED_3 and event.midiChan == constants.MIDI_CH_TRACK_MUTE_INVERTED_3:
+            self.__process_mute_track_inverted(event, constants.Track_3)
+        elif event.data1 == constants.MIDI_CC_TRACK_MUTE_INVERTED_4 and event.midiChan == constants.MIDI_CH_TRACK_MUTE_INVERTED_4:
+            self.__process_mute_track_inverted(event, constants.Track_4)
         elif event.data1 == constants.MIDI_CC_TRACK_PAN_1 and event.midiChan == constants.MIDI_CH_TRACK_PAN_1:
             self.__set_track_pan(constants.Track_1, (event.data2 / fl_helper.MIDI_MAX_VALUE), False)
         elif event.data1 == constants.MIDI_CC_TRACK_PAN_2 and event.midiChan == constants.MIDI_CH_TRACK_PAN_2:
@@ -729,6 +778,27 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.__process_repeater_event(event, repeater_constants.RepeaterLength.LENGTH_1_16)
         elif event.data1 == constants.MIDI_CC_REPEATER_1_32 and event.midiChan == constants.MIDI_CH_REPEATER_1_32:
             self.__process_repeater_event(event, repeater_constants.RepeaterLength.LENGTH_1_32)
+        elif event.data1 == constants.MIDI_CC_REMIXER_PLAY_ONESHOT_1 and event.midiChan == constants.MIDI_CH_REMIXER_PLAY_ONESHOT_1:
+            self.__process_oneshot_sampler(event, constants.RemixerSlot_1)
+        elif event.data1 == constants.MIDI_CC_REMIXER_PLAY_ONESHOT_2 and event.midiChan == constants.MIDI_CH_REMIXER_PLAY_ONESHOT_2:
+            self.__process_oneshot_sampler(event, constants.RemixerSlot_2)
+        elif event.data1 == constants.MIDI_CC_REMIXER_PLAY_ONESHOT_3 and event.midiChan == constants.MIDI_CH_REMIXER_PLAY_ONESHOT_3:
+            self.__process_oneshot_sampler(event, constants.RemixerSlot_3)
+        elif event.data1 == constants.MIDI_CC_REMIXER_PLAY_ONESHOT_4 and event.midiChan == constants.MIDI_CH_REMIXER_PLAY_ONESHOT_4:
+            self.__process_oneshot_sampler(event, constants.RemixerSlot_4)
+        elif event.data1 == constants.MIDI_CC_REMIXER_PLAY_ONESHOT_5 and event.midiChan == constants.MIDI_CH_REMIXER_PLAY_ONESHOT_5:
+            self.__process_oneshot_sampler(event, constants.RemixerSlot_5)
+        elif event.data1 == constants.MIDI_CC_REMIXER_PLAY_ONESHOT_6 and event.midiChan == constants.MIDI_CH_REMIXER_PLAY_ONESHOT_6:
+            self.__process_oneshot_sampler(event, constants.RemixerSlot_6)
+        elif event.data1 == constants.MIDI_CC_REMIXER_PLAY_ONESHOT_7 and event.midiChan == constants.MIDI_CH_REMIXER_PLAY_ONESHOT_7:
+            self.__process_oneshot_sampler(event, constants.RemixerSlot_7)
+        elif event.data1 == constants.MIDI_CC_REMIXER_PLAY_ONESHOT_8 and event.midiChan == constants.MIDI_CH_REMIXER_PLAY_ONESHOT_8:
+            self.__process_oneshot_sampler(event, constants.RemixerSlot_8)
+        elif event.data1 == constants.MIDI_CC_REMIXER_CLEAR_MODE and event.midiChan == constants.MIDI_CH_REMIXER_CLEAR_MODE:
+            if event.data2 != 0:
+                self.__mic_one_shot_sampler.clear_click()
+            else:
+                self.__mic_one_shot_sampler.clear_release()
 
     def on_midi_msg(self, event):
 
@@ -746,7 +816,7 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             if (not (event.data1 == constants.MIDI_CC_CLEAR and event.midiChan == constants.MIDI_CH_CLEAR and not self.is_playing())):
                 if not transport.isPlaying():
                     self.start()
-            self.__on_midi_msg_processing(event)
+            self.__on_midi_msg_processing(event)       
 
         event.handled = True
 

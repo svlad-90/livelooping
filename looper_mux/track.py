@@ -12,13 +12,14 @@ import device
 from looper_mux import constants
 from looper_mux.sample_length import SampleLength
 from common import fl_helper, global_constants
-from common import updateable    
+from common import updateable
+from looper_mux.view import View
 
 class Track():
 
-    RECORDING_STATE_OFF       = 0
+    RECORDING_STATE_OFF = 24
     RECORDING_STATE_RECORDING = 1
-    RECORDING_STATE_PLAYBACK  = 37
+    RECORDING_STATE_PLAYBACK = 37
 
     def __init__(self, looper_number, track_number, mixer_channel, view, context_provider):
         self.__view = view
@@ -35,6 +36,7 @@ class Track():
         self.__pan = global_constants.DEFAULT_PANOMATIC_PAN_LEVEL
         self.__selection_status = False
         self.__looper_fx_1_channel = self.__calculate_looper_fx_1_channel()
+        self.__prev_volume = 0
 
         action_click = lambda: \
             self.__view.set_track_clear_state(self.__track_number, True)
@@ -49,7 +51,38 @@ class Track():
                                                                      action_release,
                                                                      action_delayed,
                                                                      0.25)
+
         self.__context_provider.get_updateable_mux().add_updateable(self.__clear_track_handler)
+
+        mute_volume_handler_release = lambda: \
+            None
+
+        self.__select_track_handler = updateable.DoubleDelayedActionHandler(self.__select_track_handler_click,
+                                                                     mute_volume_handler_release,
+                                                                     self.__select_track_handler_delayed_1,
+                                                                     0.025,
+                                                                     self.__select_track_handler_delayed_2,
+                                                                     0.05)
+
+        self.__context_provider.get_updateable_mux().add_updateable(self.__select_track_handler)
+
+    def __select_track_handler_click(self):
+        if self.__prev_volume == 0.0:
+            self.__prev_volume = self.__volume
+            self.set_track_volume(0.0, True)
+
+    def __select_track_handler_delayed_1(self):
+        if self.__selection_status:
+            self.__set_track_routing(self.__mixer_channel, constants.FX_UNIT_IN_CHANNEL, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+            self.__set_track_routing(self.__mixer_channel, self.__looper_fx_1_channel, 0)
+        else:
+            self.__set_track_routing(self.__mixer_channel, constants.FX_UNIT_IN_CHANNEL, 0)
+            self.__set_track_routing(self.__mixer_channel, self.__looper_fx_1_channel, fl_helper.MAX_VOLUME_LEVEL_VALUE)
+
+    def __select_track_handler_delayed_2(self):
+        if self.__prev_volume != 0.0:
+            self.set_track_volume(self.__prev_volume, True)
+            self.__prev_volume = 0.0
 
     def on_init_script(self):
         self.reset_track_params()
@@ -243,16 +276,27 @@ class Track():
     def update_stats(self):
         if self.__is_gui_active == True:
             self.__view.set_track_recording_state(self.__track_number, self.__recording_state)
+            self.__view.set_track_selection_status(self.__track_number, self.__selection_status)
 
         self.__update_volume(True)
         self.__update_hp_filter_level(True)
         self.__update_lp_filter_level(True)
         self.__update_pan(True)
 
+    def __calculate_track_mute_state(self):
+        track_mute_state = View.MUTE_STATE_OFF
+
+        if self.__volume == 0:
+            track_mute_state = View.MUTE_STATE_MUTED
+        elif self.is_playback_in_progress():
+            track_mute_state = View.MUTE_STATE_PLAYING
+    
+        return track_mute_state
+
     def __update_volume(self, forward_to_device):
         if self.__is_gui_active == True:
             self.__view.set_track_volume(self.__track_number, self.__volume, forward_to_device)
-            self.__view.set_track_muted(self.__track_number, self.__volume == 0)
+            self.__view.set_track_muted(self.__track_number, self.__calculate_track_mute_state())
 
     def __update_hp_filter_level(self, forward_to_device):
         if self.__is_gui_active == True:
@@ -285,16 +329,11 @@ class Track():
         mixer.setRouteToLevel(source_channel, target_channel, routing_level)
 
     def set_track_selection_status(self, selection_status):
-        self.__selection_status = selection_status
-
-        if selection_status:
-            self.__set_track_routing(self.__mixer_channel, constants.FX_UNIT_IN_CHANNEL, fl_helper.MAX_VOLUME_LEVEL_VALUE)
-            self.__set_track_routing(self.__mixer_channel, self.__looper_fx_1_channel, 0)
-        else:
-            self.__set_track_routing(self.__mixer_channel, constants.FX_UNIT_IN_CHANNEL, 0)
-            self.__set_track_routing(self.__mixer_channel, self.__looper_fx_1_channel, fl_helper.MAX_VOLUME_LEVEL_VALUE)
-            
-        self.__view.set_track_selection_status(self.__track_number, selection_status)
+        if selection_status != self.__selection_status:
+            self.__selection_status = selection_status
+            self.__select_track_handler.click()
+            self.__select_track_handler.release()
+            self.__view.set_track_selection_status(self.__track_number, self.__selection_status)
 
     def get_track_selection_status(self):
         return self.__selection_status
