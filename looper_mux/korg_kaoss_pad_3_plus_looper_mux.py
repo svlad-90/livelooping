@@ -71,11 +71,8 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
 
         self.__updateable_mux.add_updateable(self.__clear_handler)
 
-        sync_daw_transport_action_release = lambda: \
-            self.__view.set_sync_daw_transport_button_state(False)
-
         self.__sync_daw_transport_handler = input_handlers.ClickReleaseHandler(self.sync_daw_transport_action_click,
-                                                                           sync_daw_transport_action_release)
+                                                                               self.sync_daw_transport_action_release)
 
         self.__drop_manager = drop.DropManager(self.__view)
         self.__updateable_mux.add_updateable(self.__drop_manager)
@@ -85,9 +82,14 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
 
         self.__repeater = repeater.Repeater(self.__view)
 
-        self.__mic_one_shot_sampler = remixer.OneshotSampler(self.__view, self.__updateable_mux,
-                                                                     constants.MIC_ONESHOT_SAMPLER_MIXER_CHANNEL,
-                                                                     constants.MIC_ONESHOT_SAMPLER_MIXER_SLOT)
+        self.__remixer_manager = remixer.RemixerManager(self.__view, self.__updateable_mux, self.mute_looper_provider)
+
+    def mute_looper_provider(self, looper_id):
+        if looper_id == constants.LoopersAll:
+            for single_looper_id in range(constants.Looper_1, constants.Looper_4 + 1):
+                self.__set_looper_volume(single_looper_id, 0.0, single_looper_id == self.__selected_looper)
+        else:
+            self.__set_looper_volume(looper_id, 0.0, looper_id == self.__selected_looper)
 
     def on_init_script(self):
 
@@ -96,7 +98,7 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
 
             try:
 
-                # fl_helper.print_all_plugin_parameters(72, 0)
+                # fl_helper.print_all_plugin_parameters(74, 0)
 
                 self.__sidechain_manager.add_sidechain_item(constants.MIDI_CH_SIDECHAIN_TENSION_T1,
                                             constants.MIDI_CC_SIDECHAIN_TENSION_T1,
@@ -171,14 +173,13 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
                 for looper_id in self.__loopers:
                     self.__loopers[looper_id].on_init_script()
                 self.__initialized = True
+                self.__remixer_manager.on_init_script()
                 self.clear()
                 self.__view.set_tempo(mixer.getCurrentTempo() / 1000.0, True)
                 self.set_sample_length(SampleLength.LENGTH_1)
                 self.__loopers[self.__selected_looper].select()
 
                 self.__view.set_clear_btn_state(updateable.DoubleClickTimeoutHandler.STATE_INITITAL)
-
-                self.__mic_one_shot_sampler.on_init_script()
             except Exception as e:
                 print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.on_init_script.__name__ + ": failed to initialize the script.")
                 print(e)
@@ -196,7 +197,12 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
 
     def sync_daw_transport_action_click(self):
         self.__view.set_sync_daw_transport_button_state(True)
+        self.__remixer_manager.sync_daw_transport_click()
+
+    def sync_daw_transport_action_release(self):
+        self.__view.set_sync_daw_transport_button_state(False)
         self.__sync_daw_transport()
+        self.__remixer_manager.sync_daw_transport_release()
 
     def clear_handler_action_second_click(self):
         self.__view.set_clear_btn_state(updateable.DoubleClickTimeoutHandler.STATE_SECOND_CLICK_DONE)
@@ -295,6 +301,7 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         self.__sidechain_manager.set_sidechain_tension(constants.Track_4, constants.DEFAULT_TENSION_SIDECHAIN_LEVEL, True)
         self.set_extra_1_state(0, True)
         self.__reset_recording_routing_status()
+        self.__remixer_manager.reset_all_fx_parameters()
 
     def clear_current_looper(self):
         self.__loopers[self.__selected_looper].clear_looper()
@@ -487,9 +494,9 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
 
     def __process_oneshot_sampler(self, event, oneshot_sampler_slot):
         if event.data2 != 0:
-            self.__mic_one_shot_sampler.slot_click(oneshot_sampler_slot)
+            self.__remixer_manager.slot_click(oneshot_sampler_slot)
         else:
-            self.__mic_one_shot_sampler.slot_release(oneshot_sampler_slot)
+            self.__remixer_manager.slot_release(oneshot_sampler_slot)
 
     def __on_midi_msg_processing(self, event):
 
@@ -796,9 +803,83 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.__process_oneshot_sampler(event, constants.RemixerSlot_8)
         elif event.data1 == constants.MIDI_CC_REMIXER_CLEAR_MODE and event.midiChan == constants.MIDI_CH_REMIXER_CLEAR_MODE:
             if event.data2 != 0:
-                self.__mic_one_shot_sampler.clear_click()
+                self.__remixer_manager.clear_click()
             else:
-                self.__mic_one_shot_sampler.clear_release()
+                self.__remixer_manager.clear_release()
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_MIC and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_MIC:
+            self.__remixer_manager.activate_unit(constants.RemixerUnitType.MIC)
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_SYNTH and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_SYNTH:
+            self.__remixer_manager.activate_unit(constants.RemixerUnitType.SYNTH)
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_LOOPER_1 and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_LOOPER_1:
+            self.__remixer_manager.activate_unit(constants.RemixerUnitType.LOOPER_1)
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_LOOPER_2 and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_LOOPER_2:
+            self.__remixer_manager.activate_unit(constants.RemixerUnitType.LOOPER_2)
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_LOOPER_3 and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_LOOPER_3:
+            self.__remixer_manager.activate_unit(constants.RemixerUnitType.LOOPER_3)
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_LOOPER_4 and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_LOOPER_4:
+            self.__remixer_manager.activate_unit(constants.RemixerUnitType.LOOPER_4)
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_LOOPERS_ALL and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_LOOPERS_ALL:
+            self.__remixer_manager.activate_unit(constants.RemixerUnitType.LOOPERS_ALL)
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_RESET_ALL_PARAMETERS and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_RESET_ALL_PARAMETERS:
+            if event.data2 != 0:
+                self.__remixer_manager.reset_fx_parameters_clicked()
+            else:
+                self.__remixer_manager.reset_fx_parameters_released()
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_REVERSE and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_REVERSE:
+            if event.data2 != 0:
+                self.__remixer_manager.reverse_clicked()
+            else:
+                self.__remixer_manager.reverse_released()
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_REVERB and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_REVERB:
+            if event.data2 != 0:
+                self.__remixer_manager.reverb_clicked()
+            else:
+                self.__remixer_manager.reverb_released()
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_DELAY and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_DELAY:
+            if event.data2 != 0:
+                self.__remixer_manager.delay_clicked()
+            else:
+                self.__remixer_manager.delay_released()
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_PHASER and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_PHASER:
+            if event.data2 != 0:
+                self.__remixer_manager.phaser_clicked()
+            else:
+                self.__remixer_manager.phaser_released()
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_STEREO_ENHANCER and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_STEREO_ENHANCER:
+            if event.data2 != 0:
+                self.__remixer_manager.stereo_enhancer_clicked()
+            else:
+                self.__remixer_manager.stereo_enhancer_released()
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_PITCH_SHIFT and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_PITCH_SHIFT:
+                self.__remixer_manager.set_pitch_shift_level(event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_RESET_PITCH_SHIFT and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_RESET_PITCH_SHIFT:
+            if event.data2 != 0:
+                self.__remixer_manager.reset_pitch_shift_level()
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_PITCH_SHIFT_DRY_WET and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_PITCH_SHIFT_DRY_WET:
+                self.__remixer_manager.set_pitch_shift_dry_wet_level(event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_RESET_PITCH_SHIFT_DRY_WET and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_RESET_PITCH_SHIFT_DRY_WET:
+            if event.data2 != 0:
+                self.__remixer_manager.reset_pitch_shift_dry_wet_level()
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_VOLUME and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_VOLUME:
+                self.__remixer_manager.set_volume_level((event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_RESET_VOLUME and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_RESET_VOLUME:
+            if event.data2 != 0:
+                self.__remixer_manager.reset_volume_level()
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_PAN and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_PAN:
+                self.__remixer_manager.set_pan_level(event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_RESET_PAN and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_RESET_PAN:
+            if event.data2 != 0:
+                self.__remixer_manager.reset_pan_level()
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_DISTORTION and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_DISTORTION:
+                self.__remixer_manager.set_distortion_level(event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_RESET_DISTORTION and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_RESET_DISTORTION:
+            if event.data2 != 0:
+                self.__remixer_manager.reset_distortion_level()
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_DISTORTION_DRY_WET and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_DISTORTION_DRY_WET:
+                self.__remixer_manager.set_distortion_dry_wet_level(event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_RESET_DISTORTION_DRY_WET and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_RESET_DISTORTION_DRY_WET:
+            if event.data2 != 0:
+                self.__remixer_manager.reset_distortion_dry_wet_level()
 
     def on_midi_msg(self, event):
 

@@ -25,6 +25,7 @@ class View:
     VALUE_SELECTED = 80
     VALUE_SELECTED_2 = 100
     VALUE_RED = 1
+    VALUE_GREEN = 37
 
     def __init__(self):
         self.supported_sample_lengths = [
@@ -837,7 +838,8 @@ class View:
 
     ONESHOT_SAMPLER_STATUS_OFF = VALUE_OFF
     ONESHOT_SAMPLER_STATUS_RECORDING = VALUE_RED
-    ONESHOT_SAMPLER_STATUS_RECORDED = VALUE_SELECTED_2
+    ONESHOT_SAMPLER_STATUS_RECORDED = VALUE_GREEN
+    ONESHOT_SAMPLER_STATUS_PLAYBACK = VALUE_SELECTED_2
 
     def set_remixer_slot_state(self, slot_id, value):
         midi_id = midi.MIDI_CONTROLCHANGE
@@ -886,3 +888,95 @@ class View:
             value = 1
 
         device.midiOutMsg(midi_id, channel, cc_number, value)
+
+    def activate_remixer_unit(self, remixer_unit):
+            midi_id = midi.MIDI_CONTROLCHANGE
+
+            for unit_type in range(constants.RemixerUnitType.MIC, constants.RemixerUnitType.LOOPERS_ALL+1):
+                if unit_type == remixer_unit:
+                    value = View.VALUE_SELECTED
+                else:
+                    value = View.VALUE_OFF
+
+                if unit_type == constants.RemixerUnitType.MIC:
+                    channel = constants.MIDI_CH_REMIXER_UNIT_MIC
+                    cc_number = constants.MIDI_CC_REMIXER_UNIT_MIC
+                elif unit_type == constants.RemixerUnitType.SYNTH:
+                    channel = constants.MIDI_CH_REMIXER_UNIT_SYNTH
+                    cc_number = constants.MIDI_CC_REMIXER_UNIT_SYNTH
+                elif unit_type == constants.RemixerUnitType.LOOPER_1:
+                    channel = constants.MIDI_CH_REMIXER_UNIT_LOOPER_1
+                    cc_number = constants.MIDI_CC_REMIXER_UNIT_LOOPER_1
+                elif unit_type == constants.RemixerUnitType.LOOPER_2:
+                    channel = constants.MIDI_CH_REMIXER_UNIT_LOOPER_2
+                    cc_number = constants.MIDI_CC_REMIXER_UNIT_LOOPER_2
+                elif unit_type == constants.RemixerUnitType.LOOPER_3:
+                    channel = constants.MIDI_CH_REMIXER_UNIT_LOOPER_3
+                    cc_number = constants.MIDI_CC_REMIXER_UNIT_LOOPER_3
+                elif unit_type == constants.RemixerUnitType.LOOPER_4:
+                    channel = constants.MIDI_CH_REMIXER_UNIT_LOOPER_4
+                    cc_number = constants.MIDI_CC_REMIXER_UNIT_LOOPER_4
+                elif unit_type == constants.RemixerUnitType.LOOPERS_ALL:
+                    channel = constants.MIDI_CH_REMIXER_UNIT_LOOPERS_ALL
+                    cc_number = constants.MIDI_CC_REMIXER_UNIT_LOOPERS_ALL
+
+                device.midiOutMsg(midi_id, channel, cc_number, value)
+
+    def set_remixer_fx_unit_pitch_shift_level(self, level, forward_to_device):
+        midi_id = midi.MIDI_CONTROLCHANGE
+        channel = constants.MIDI_CH_REMIXER_UNIT_FX_PITCH_SHIFT
+        cc_number = constants.MIDI_CC_REMIXER_UNIT_FX_PITCH_SHIFT
+        value = int(level * fl_helper.MIDI_MAX_VALUE)
+        device.midiOutMsg(midi_id, channel, cc_number, value)
+
+    def set_remixer_fx_unit_pitch_shift_dry_wet_level(self, level, forward_to_device):
+        pass
+
+    def set_remixer_fx_unit_distortion_level(self, level, forward_to_device):
+        pass
+
+    def set_remixer_fx_unit_distortion_dry_wet_level(self, level, forward_to_device):
+        pass
+
+    def set_remixer_fx_unit_volume_level(self, level, forward_to_device):
+        pass
+
+    def set_remixer_fx_unit_pan_level(self, level, forward_to_device):
+        pass
+
+    def set_remixer_fx_unit_stereo_enhancer_status(self, status):
+        pass
+
+    def set_remixer_fx_unit_reset_fx_params_btn_state(self, state):
+
+        midi_id = midi.MIDI_CONTROLCHANGE
+        channel = constants.MIDI_CH_REMIXER_UNIT_FX_RESET_ALL_PARAMETERS
+        cc_number = constants.MIDI_CC_REMIXER_UNIT_FX_RESET_ALL_PARAMETERS
+
+        value = View.VALUE_OFF
+
+        if state == updateable.DoubleClickTimeoutHandler.STATE_INITITAL:
+            value = View.VALUE_OFF
+        if state == updateable.DoubleClickTimeoutHandler.STATE_FIRST_CLICK_DONE:
+            value = 25
+        if state == updateable.DoubleClickTimeoutHandler.STATE_FIRST_CLICK_RELEASED:
+            value = 13
+        if state == updateable.DoubleClickTimeoutHandler.STATE_SECOND_CLICK_DONE:
+            value = 1
+
+        device.midiOutMsg(midi_id, channel, cc_number, value)
+
+    REMIXER_FX_UNIT_STATUS_OFF = VALUE_OFF
+    REMIXER_FX_UNIT_STATUS_ON = VALUE_SELECTED
+
+    def set_remixer_fx_unit_phaser_status(self, status):
+        pass
+
+    def set_remixer_fx_unit_delay_status(self, status):
+        pass
+
+    def set_remixer_fx_unit_reverb_status(self, status):
+        pass
+
+    def set_remixer_fx_unit_reverse_status(self, status):
+        pass
