@@ -14,19 +14,20 @@ class FxPresetPage:
     fx_preset_page_3 = 2
     fx_preset_page_4 = 3
 
-    def __init__(self, context, fx_page_number, view):
+    def __init__(self, context, fx_page_number, view, daw_fx_manager):
         self.__context = context
         self.__view = view
+        self.__daw_fx_manager = daw_fx_manager
         self.__fx_page_number = fx_page_number
         self.__selected_fx_preset_id = FxPreset.fx_preset_1
-        self.__fx_presets = { FxPreset.fx_preset_1: FxPreset(self.__context, fx_page_number, FxPreset.fx_preset_1, self.__view),
-                       FxPreset.fx_preset_2: FxPreset(self.__context, fx_page_number, FxPreset.fx_preset_2, self.__view),
-                       FxPreset.fx_preset_3: FxPreset(self.__context, fx_page_number, FxPreset.fx_preset_3, self.__view),
-                       FxPreset.fx_preset_4: FxPreset(self.__context, fx_page_number, FxPreset.fx_preset_4, self.__view),
-                       FxPreset.fx_preset_5: FxPreset(self.__context, fx_page_number, FxPreset.fx_preset_5, self.__view),
-                       FxPreset.fx_preset_6: FxPreset(self.__context, fx_page_number, FxPreset.fx_preset_6, self.__view),
-                       FxPreset.fx_preset_7: FxPreset(self.__context, fx_page_number, FxPreset.fx_preset_7, self.__view),
-                       FxPreset.fx_preset_8: FxPreset(self.__context, fx_page_number, FxPreset.fx_preset_8, self.__view) }
+        self.__fx_presets = { FxPreset.fx_preset_1: FxPreset(self.__context, fx_page_number, FxPreset.fx_preset_1, self.__view, daw_fx_manager),
+                       FxPreset.fx_preset_2: FxPreset(self.__context, fx_page_number, FxPreset.fx_preset_2, self.__view, daw_fx_manager),
+                       FxPreset.fx_preset_3: FxPreset(self.__context, fx_page_number, FxPreset.fx_preset_3, self.__view, daw_fx_manager),
+                       FxPreset.fx_preset_4: FxPreset(self.__context, fx_page_number, FxPreset.fx_preset_4, self.__view, daw_fx_manager),
+                       FxPreset.fx_preset_5: FxPreset(self.__context, fx_page_number, FxPreset.fx_preset_5, self.__view, daw_fx_manager),
+                       FxPreset.fx_preset_6: FxPreset(self.__context, fx_page_number, FxPreset.fx_preset_6, self.__view, daw_fx_manager),
+                       FxPreset.fx_preset_7: FxPreset(self.__context, fx_page_number, FxPreset.fx_preset_7, self.__view, daw_fx_manager),
+                       FxPreset.fx_preset_8: FxPreset(self.__context, fx_page_number, FxPreset.fx_preset_8, self.__view, daw_fx_manager) }
         self.__initialized = False
 
     def select(self, select_preset = True):
@@ -104,9 +105,6 @@ class FxPresetPage:
             self.__fx_presets[self.__selected_fx_preset_id].set_active_fx_unit(FxUnit.FX_UNIT_MANIPULATOR)
         elif active_fx_unit == FxUnit.FX_UNIT_MANIPULATOR:
             print(self.__context.device_name + ': ' + FxPresetPage.change_active_fx_unit.__name__ + ": to finisher voodoo")
-            self.__fx_presets[self.__selected_fx_preset_id].set_active_fx_unit(FxUnit.FX_UNIT_FINISHER_VOODOO)
-        elif active_fx_unit == FxUnit.FX_UNIT_FINISHER_VOODOO:
-            print(self.__context.device_name + ': ' + FxPresetPage.change_active_fx_unit.__name__ + ": to custom")
             self.__fx_presets[self.__selected_fx_preset_id].set_active_fx_unit(FxUnit.FX_UNIT_CUSTOM)
 
         self.__fx_presets[self.__selected_fx_preset_id].view_update_active_fx_unit()

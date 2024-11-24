@@ -72,26 +72,36 @@ class MidiMappingInputDialog:
                 self.__state = MidiMappingInputDialog.STATE_FINAL
         elif self.__state == MidiMappingInputDialog.STATE_SELECT_PLUGIN_NUMBER:
             if event.data1 == MIDI_CC_NEXT_ITEM and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
-                self.__selected_plugin_number = self.__selected_plugin_number + 1
+                plugin_found = False
+                while not plugin_found:
+                    self.__selected_plugin_number = self.__selected_plugin_number + 1
+    
+                    if self.__selected_plugin_number > constants.MAX_PLUGIN_NUMBER:
+                        self.__selected_plugin_number = constants.MIN_PLUGIN_NUMBER
+    
+                        self.__selected_channel_idx += 1
+                        if self.__selected_channel_idx >= len(self.__plugins_mixer_channels):
+                            self.__selected_channel_idx = 0
 
-                if self.__selected_plugin_number > constants.MAX_PLUGIN_NUMBER:
-                    self.__selected_plugin_number = constants.MIN_PLUGIN_NUMBER
-
-                    self.__selected_channel_idx += 1
-                    if self.__selected_channel_idx >= len(self.__plugins_mixer_channels):
-                        self.__selected_channel_idx = 0
+                        if plugins.isValid(self.__plugins_mixer_channels[self.__selected_channel_idx], self.__selected_plugin_number):
+                            plugin_found = True
 
                 plugin_name = plugins.getPluginName(self.__plugins_mixer_channels[self.__selected_channel_idx], self.__selected_plugin_number, True)
                 print(MSG_PREFIX + " >>> Current cursor position is - #" + str(self.__selected_plugin_number) + f" '{plugin_name}'")
             elif event.data1 == MIDI_CC_PREVIOUS_ITEM and event.data2 == constants.KP3_PLUS_ABCD_PRESSED:
-                self.__selected_plugin_number = self.__selected_plugin_number - 1
+                plugin_found = False
+                while not plugin_found:
+                    self.__selected_plugin_number = self.__selected_plugin_number - 1
+    
+                    if self.__selected_plugin_number < constants.MIN_PLUGIN_NUMBER:
+                        self.__selected_plugin_number = constants.MAX_PLUGIN_NUMBER
+    
+                        self.__selected_channel_idx -= 1
+                        if self.__selected_channel_idx < 0:
+                            self.__selected_channel_idx = len(self.__plugins_mixer_channels) - 1
 
-                if self.__selected_plugin_number < constants.MIN_PLUGIN_NUMBER:
-                    self.__selected_plugin_number = constants.MAX_PLUGIN_NUMBER
-
-                    self.__selected_channel_idx -= 1
-                    if self.__selected_channel_idx < 0:
-                        self.__selected_channel_idx = len(self.__plugins_mixer_channels) - 1
+                        if plugins.isValid(self.__plugins_mixer_channels[self.__selected_channel_idx], self.__selected_plugin_number):
+                            plugin_found = True
 
                 plugin_name = plugins.getPluginName(self.__plugins_mixer_channels[self.__selected_channel_idx], self.__selected_plugin_number, True)
                 print(MSG_PREFIX + " >>> Current cursor position is - #" + str(self.__selected_plugin_number) + f" '{plugin_name}'")

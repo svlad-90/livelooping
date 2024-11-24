@@ -17,6 +17,7 @@ from common import updateable
 from looper_mux import fx
 from looper_mux.fx import FXBank, FXSlot
 from looper_mux import repeater_constants
+from _ast import Or
 
 class View:
 
@@ -887,6 +888,8 @@ class View:
         if state == updateable.DoubleClickTimeoutHandler.STATE_SECOND_CLICK_DONE:
             value = 1
 
+        # print("set_remixer_clear_button_state: midi_id - " + str(midi_id) + ", channel - " + \
+        #       str(channel) + ", cc_number - " + str(cc_number) + ", value - " + str(value))
         device.midiOutMsg(midi_id, channel, cc_number, value)
 
     def activate_remixer_unit(self, remixer_unit):
@@ -923,20 +926,20 @@ class View:
                 device.midiOutMsg(midi_id, channel, cc_number, value)
 
     def set_remixer_fx_unit_pitch_shift_level(self, level, forward_to_device):
-        midi_id = midi.MIDI_CONTROLCHANGE
-        channel = constants.MIDI_CH_REMIXER_UNIT_FX_PITCH_SHIFT
-        cc_number = constants.MIDI_CC_REMIXER_UNIT_FX_PITCH_SHIFT
-        value = int(level * fl_helper.MIDI_MAX_VALUE)
-        device.midiOutMsg(midi_id, channel, cc_number, value)
-
-    def set_remixer_fx_unit_pitch_shift_dry_wet_level(self, level, forward_to_device):
-        pass
+        if forward_to_device:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REMIXER_UNIT_FX_PITCH_SHIFT
+            cc_number = constants.MIDI_CC_REMIXER_UNIT_FX_PITCH_SHIFT
+            value = int(level * fl_helper.MIDI_MAX_VALUE)
+            device.midiOutMsg(midi_id, channel, cc_number, value)
 
     def set_remixer_fx_unit_distortion_level(self, level, forward_to_device):
-        pass
-
-    def set_remixer_fx_unit_distortion_dry_wet_level(self, level, forward_to_device):
-        pass
+        if forward_to_device:
+            midi_id = midi.MIDI_CONTROLCHANGE
+            channel = constants.MIDI_CH_REMIXER_UNIT_FX_DISTORTION
+            cc_number = constants.MIDI_CC_REMIXER_UNIT_FX_DISTORTION
+            value = int(level * fl_helper.MIDI_MAX_VALUE)
+            device.midiOutMsg(midi_id, channel, cc_number, value)
 
     def set_remixer_fx_unit_volume_level(self, level, forward_to_device):
         pass
@@ -972,11 +975,60 @@ class View:
     def set_remixer_fx_unit_phaser_status(self, status):
         pass
 
-    def set_remixer_fx_unit_delay_status(self, status):
-        pass
-
-    def set_remixer_fx_unit_reverb_status(self, status):
-        pass
-
     def set_remixer_fx_unit_reverse_status(self, status):
         pass
+
+    def set_remixer_fx_unit_sidechain_level(self, remixer_fx_sidechain_item_type, level, forward_to_device):
+        if forward_to_device:
+            midi_id = midi.MIDI_CONTROLCHANGE
+
+            if remixer_fx_sidechain_item_type == constants.RemixerFXSidechainItemType.LOW_FREQ_TO_VOLUME or \
+                remixer_fx_sidechain_item_type == constants.RemixerFXSidechainItemType.MID_FREQ:
+                channel = constants.MIDI_CH_REMIXER_UNIT_FX_SIDECHAIN_1
+                cc_number = constants.MIDI_CC_REMIXER_UNIT_FX_SIDECHAIN_1
+            elif remixer_fx_sidechain_item_type == constants.RemixerFXSidechainItemType.LOW_FREQ or \
+                remixer_fx_sidechain_item_type == constants.RemixerFXSidechainItemType.HIGH_FREQ:
+                channel = constants.MIDI_CH_REMIXER_UNIT_FX_SIDECHAIN_2
+                cc_number = constants.MIDI_CC_REMIXER_UNIT_FX_SIDECHAIN_2
+    
+            value = int(level * fl_helper.MIDI_MAX_VALUE)
+    
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+    def set_remixer_fx_unit_sidechain_items_pair_mode(self, remixer_fx_sidechain_items_pair_type, mode):
+            midi_id = midi.MIDI_CONTROLCHANGE
+
+            if remixer_fx_sidechain_items_pair_type == constants.RemixerFXSidechainItemsPairType.PAIR_1:
+                channel = constants.MIDI_CH_REMIXER_UNIT_FX_SIDECHAIN_1_MODE
+                cc_number = constants.MIDI_CC_REMIXER_UNIT_FX_SIDECHAIN_1_MODE
+            elif remixer_fx_sidechain_items_pair_type == constants.RemixerFXSidechainItemsPairType.PAIR_2:
+                channel = constants.MIDI_CH_REMIXER_UNIT_FX_SIDECHAIN_2_MODE
+                cc_number = constants.MIDI_CC_REMIXER_UNIT_FX_SIDECHAIN_2_MODE
+    
+            if mode == constants.RemixerFXSidechainItemsPairMode.MODE_1:
+                value = View.VALUE_SELECTED
+            elif mode == constants.RemixerFXSidechainItemsPairMode.MODE_2:
+                value = View.VALUE_SELECTED_2
+    
+            device.midiOutMsg(midi_id, channel, cc_number, value)
+
+    def set_remixer_fx_unit_reverb_state(self, state):
+        midi_id = midi.MIDI_CONTROLCHANGE
+        channel = constants.MIDI_CH_REMIXER_UNIT_FX_REVERB
+        cc_number = constants.MIDI_CC_REMIXER_UNIT_FX_REVERB
+        value = View.VALUE_SELECTED if state else View.VALUE_OFF
+        device.midiOutMsg(midi_id, channel, cc_number, value)
+
+    def set_remixer_fx_unit_delay_state(self, state):
+        midi_id = midi.MIDI_CONTROLCHANGE
+        channel = constants.MIDI_CH_REMIXER_UNIT_FX_DELAY
+        cc_number = constants.MIDI_CC_REMIXER_UNIT_FX_DELAY
+        value = View.VALUE_SELECTED if state else View.VALUE_OFF
+        device.midiOutMsg(midi_id, channel, cc_number, value)
+
+    def set_remixer_fx_unit_phaser_state(self, state):
+        midi_id = midi.MIDI_CONTROLCHANGE
+        channel = constants.MIDI_CH_REMIXER_UNIT_FX_PHASER
+        cc_number = constants.MIDI_CC_REMIXER_UNIT_FX_PHASER
+        value = View.VALUE_SELECTED if state else View.VALUE_OFF
+        device.midiOutMsg(midi_id, channel, cc_number, value)

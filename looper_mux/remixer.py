@@ -17,6 +17,62 @@ from looper_mux import constants
 from looper_mux import view
 from common import updateable
 
+class RemixerFXSidechainItem:
+    def __init__(self, view, remixer_fx_sidechain_item_type, mixer_channel, mixer_slot, plugin_param):
+        self.__sidechain_level = constants.DEFAULT_SIDECHAIN_LEVEL
+        self.__view = view
+        self.__remixer_fx_sidechain_item_type = remixer_fx_sidechain_item_type
+        self.__mixer_channel = mixer_channel
+        self.__mixer_slot = mixer_slot
+        self.__plugin_param = plugin_param
+
+    def update_sidechain_level(self):
+        self.set_sidechain_level(self.__sidechain_level, True)
+
+    def set_sidechain_level(self, level, forward_to_device):
+        self.__sidechain_level = level
+        plugins.setParamValue(level,
+                              self.__plugin_param,
+                              self.__mixer_channel,
+                              self.__mixer_slot,
+                              midi.PIM_None, True)
+        self.__view.set_remixer_fx_unit_sidechain_level(self.__remixer_fx_sidechain_item_type, level, forward_to_device)
+
+    def reset_sidechain_level(self):
+        self.set_sidechain_level(constants.DEFAULT_SIDECHAIN_LEVEL, True)
+
+class RemixerFXSidechainItemsPair:
+    def __init__(self, view, remixer_fx_sidechain_items_pair_type, remixer_fx_sidechain_item_1, remixer_fx_sidechain_item_2):
+        self.__view = view
+        self.__remixer_fx_sidechain_items_pair_type = remixer_fx_sidechain_items_pair_type
+        self.__remixer_fx_sidechain_items = [remixer_fx_sidechain_item_1, remixer_fx_sidechain_item_2]
+        self.__mode = constants.RemixerFXSidechainItemsPairMode.MODE_1
+
+    def set_sidechain_level(self, level, forward_to_device):
+        self.__remixer_fx_sidechain_items[self.__mode].set_sidechain_level(level, forward_to_device)
+
+    def reset_all_sidechain_levels(self):
+        for item in self.__remixer_fx_sidechain_items:
+            item.reset_sidechain_level()
+
+    def switch_mode(self):
+        if self.__mode == constants.RemixerFXSidechainItemsPairMode.MODE_1:
+            self.__mode = constants.RemixerFXSidechainItemsPairMode.MODE_2
+        else:
+            self.__mode = constants.RemixerFXSidechainItemsPairMode.MODE_1
+        self.update_mode()
+
+    def reset_mode(self):
+        self.__mode = constants.RemixerFXSidechainItemsPairMode.MODE_1
+        self.update_mode()
+
+    def update_mode(self):
+        self.__view.set_remixer_fx_unit_sidechain_items_pair_mode(self.__remixer_fx_sidechain_items_pair_type, self.__mode)
+        self.update_sidechain_level()
+
+    def update_sidechain_level(self):
+        self.__remixer_fx_sidechain_items[self.__mode].update_sidechain_level()
+
 class RemixerFXUnit:
     def __init__(self, view):
         self._view = view
@@ -26,6 +82,33 @@ class RemixerFXUnit:
         self.__volume_level = global_constants.DEFAULT_PANOMATIC_VOLUME_LEVEL
         self.__pan = global_constants.DEFAULT_PANOMATIC_PAN_LEVEL
         self.__pitch_shift_level = fl_helper.MAX_LEVEL_VALUE / 2
+        self.__reverb_state = False
+        self.__delay_state = False
+        self.__phaser_state = False
+        self.__remixer_fx_sidechain_items_pairs = [ RemixerFXSidechainItemsPair(self._view,
+                                                                                constants.RemixerFXSidechainItemsPairType.PAIR_1,
+                                                                                RemixerFXSidechainItem(self._view,
+                                                                                                       constants.RemixerFXSidechainItemType.LOW_FREQ_TO_VOLUME,
+                                                                                                       constants.REMIXER_FX_2_MIXER_CHANNEL,
+                                                                                                       constants.REMIXER_SC_LOW_FREQ_TO_VOLUME_MIXER_SLOT,
+                                                                                                       constants.FORMULA_CONTROLLER_B_PARAM_INDEX),
+                                                                                RemixerFXSidechainItem(self._view,
+                                                                                                       constants.RemixerFXSidechainItemType.MID_FREQ,
+                                                                                                       constants.REMIXER_FX_2_MIXER_CHANNEL,
+                                                                                                       constants.REMIXER_SC_MID_FREQ_MIXER_SLOT,
+                                                                                                       constants.FORMULA_CONTROLLER_B_PARAM_INDEX)),
+                                                    RemixerFXSidechainItemsPair(self._view,
+                                                                                constants.RemixerFXSidechainItemsPairType.PAIR_2,
+                                                                                RemixerFXSidechainItem(self._view,
+                                                                                                       constants.RemixerFXSidechainItemType.LOW_FREQ,
+                                                                                                       constants.REMIXER_FX_2_MIXER_CHANNEL,
+                                                                                                       constants.REMIXER_SC_LOW_FREQ_MIXER_SLOT,
+                                                                                                       constants.FORMULA_CONTROLLER_B_PARAM_INDEX),
+                                                                                RemixerFXSidechainItem(self._view,
+                                                                                                       constants.RemixerFXSidechainItemType.HIGH_FREQ,
+                                                                                                       constants.REMIXER_FX_2_MIXER_CHANNEL,
+                                                                                                       constants.REMIXER_SC_HIGH_FREQ_MIXER_SLOT,
+                                                                                                       constants.FORMULA_CONTROLLER_B_PARAM_INDEX)) ]
 
     def on_init_script(self):
         self._update_all_fx_parameters()
@@ -38,23 +121,29 @@ class RemixerFXUnit:
     def reset_pitch_shift_level(self):
         self.set_pitch_shift_level(global_constants.DEFAULT_PANOMATIC_PAN_LEVEL, True)
 
-    def set_pitch_shift_dry_wet_level(self, level, forward_to_device):
-        pass
-
-    def reset_pitch_shift_dry_wet_level(self):
-        pass
-
     def set_distortion_level(self, level, forward_to_device):
-        pass
+        self.__distortion_level = level
+        plugins.setParamValue(level,
+                              constants.TURNADO_CONTROL_PARAMETER_5,
+                              constants.REMIXER_FX_2_MIXER_CHANNEL,
+                              constants.REMIXER_FX_TURNADO_MIXER_SLOT,
+                              midi.PIM_None, True)
+        self._view.set_remixer_fx_unit_distortion_level(level, forward_to_device)
 
     def reset_distortion_level(self):
-        pass
+        self.set_distortion_level(fl_helper.MIN_LEVEL_VALUE, True)
 
-    def set_distortion_dry_wet_level(self, level, forward_to_device):
-        pass
+    def set_sidechain_1_level(self, level, forward_to_device):
+        self.__remixer_fx_sidechain_items_pairs[constants.RemixerFXSidechainItemsPairType.PAIR_1].set_sidechain_level(level, forward_to_device)
 
-    def reset_distortion_dry_wet_level(self):
-        pass
+    def switch_sidechain_1_mode(self):
+        self.__remixer_fx_sidechain_items_pairs[constants.RemixerFXSidechainItemsPairType.PAIR_1].switch_mode()
+
+    def set_sidechain_2_level(self, level, forward_to_device):
+        self.__remixer_fx_sidechain_items_pairs[constants.RemixerFXSidechainItemsPairType.PAIR_2].set_sidechain_level(level, forward_to_device)
+
+    def switch_sidechain_2_mode(self):
+        self.__remixer_fx_sidechain_items_pairs[constants.RemixerFXSidechainItemsPairType.PAIR_2].switch_mode()
 
     def set_volume_level(self, level, forward_to_device):
         pass
@@ -75,19 +164,19 @@ class RemixerFXUnit:
         pass
 
     def reverb_clicked(self):
-        pass
+        self.__set_reverb_state(not self.__reverb_state)
 
     def reverb_released(self):
         pass
 
     def delay_clicked(self):
-        pass
+        self.__set_delay_state(not self.__delay_state)
 
     def delay_released(self):
         pass
 
     def phaser_clicked(self):
-        pass
+        self.__set_phaser_state(not self.__phaser_state)
 
     def phaser_released(self):
         pass
@@ -98,15 +187,60 @@ class RemixerFXUnit:
     def stereo_enhancer_released(self):
         pass
 
-
     def reset_fx_parameters(self):
         self.reset_pitch_shift_level()
+        self.reset_distortion_level()
+        self.__set_reverb_state(False)
+        self.__set_delay_state(False)
+        self.__set_phaser_state(False)
+
+        for pair in self.__remixer_fx_sidechain_items_pairs:
+            pair.reset_all_sidechain_levels()
+            pair.reset_mode()
+
+        self._view.set_remixer_fx_unit_reset_fx_params_btn_state(updateable.DoubleClickTimeoutHandler.STATE_INITITAL)
+        self._view.set_remixer_clear_button_state(updateable.DoubleClickTimeoutHandler.STATE_INITITAL)
 
     def _update_all_fx_parameters(self):
         self._view.set_remixer_fx_unit_pitch_shift_level(self.__pitch_shift_level, True)
+        self.set_distortion_level(self.__distortion_level, True)
+        self.__set_reverb_state(self.__reverb_state)
+        self.__set_delay_state(self.__delay_state)
+        self.__set_phaser_state(self.__phaser_state)
+
+        for pair in self.__remixer_fx_sidechain_items_pairs:
+            pair.update_sidechain_level()
+            pair.update_mode()
 
     def _get_note(self):
         return int(constants.DEFAULT_REMIXER_NOTE + ( ( -0.5 + self.__pitch_shift_level ) * 2 * 12 ))
+
+    def __set_reverb_state(self, state):
+        self.__reverb_state = state
+        plugins.setParamValue(1.0 if state else 0.0,
+                              constants.TURNADO_CONTROL_PARAMETER_2,
+                              constants.REMIXER_FX_2_MIXER_CHANNEL,
+                              constants.REMIXER_FX_TURNADO_MIXER_SLOT,
+                              midi.PIM_None, True)
+        self._view.set_remixer_fx_unit_reverb_state(self.__reverb_state)
+
+    def __set_delay_state(self, state):
+        self.__delay_state = state
+        plugins.setParamValue(1.0 if state else 0.0,
+                              constants.TURNADO_CONTROL_PARAMETER_3,
+                              constants.REMIXER_FX_2_MIXER_CHANNEL,
+                              constants.REMIXER_FX_TURNADO_MIXER_SLOT,
+                              midi.PIM_None, True)
+        self._view.set_remixer_fx_unit_delay_state(self.__delay_state)
+
+    def __set_phaser_state(self, state):
+        self.__phaser_state = state
+        plugins.setParamValue(1.0 if state else 0.0,
+                              constants.TURNADO_CONTROL_PARAMETER_4,
+                              constants.REMIXER_FX_2_MIXER_CHANNEL,
+                              constants.REMIXER_FX_TURNADO_MIXER_SLOT,
+                              midi.PIM_None, True)
+        self._view.set_remixer_fx_unit_phaser_state(self.__phaser_state)
 
 class RemixerSlotStatus(Enum):
     NOT_RECORDED = 0
@@ -465,6 +599,7 @@ class RemixerTape(RemixerFXUnit):
         time.sleep(0.015)
         self.__playback_start()
         self.__number_of_pressed_buttons += 1
+        print("slot_click - self.__number_of_pressed_buttons - " + str(self.__number_of_pressed_buttons))
         self.__set_playback_status(remixer_slot_index, RemixerSlotStatus.PLAYBACK)
 
         if self.__first_playback == True:
@@ -474,6 +609,7 @@ class RemixerTape(RemixerFXUnit):
 
     def slot_release(self, remixer_slot_index):
         self.__number_of_pressed_buttons -= 1
+        print("slot_release - self.__number_of_pressed_buttons - " + str(self.__number_of_pressed_buttons))
         if self.__number_of_pressed_buttons == 0:
             self.__playback_stop()
         self.__set_playback_status(remixer_slot_index, RemixerSlotStatus.RECORDED)
@@ -569,8 +705,7 @@ class RemixerTape(RemixerFXUnit):
         self.__set_tape_recording_status(True)        
 
     def stop_play_all_slots(self):
-        for slot_id in range(constants.RemixerSlot_1, constants.RemixerSlot_8 + 1):
-            self.slot_release(slot_id)
+        self.__playback_stop()
 
 class RemixerManager:
 
@@ -660,7 +795,6 @@ class RemixerManager:
             remixer_unit.on_init_script()
 
         self.activate_unit(constants.RemixerUnitType.MIC)
-        self.__view.set_remixer_fx_unit_reset_fx_params_btn_state(updateable.DoubleClickTimeoutHandler.STATE_INITITAL)
 
     def activate_unit(self, unit_id):
         if unit_id != self.__current_active_unit:
@@ -689,23 +823,11 @@ class RemixerManager:
     def reset_pitch_shift_level(self):
         self.__remixer_units[self.__current_active_unit].reset_pitch_shift_level()
 
-    def set_pitch_shift_dry_wet_level(self, level, forward_to_device):
-        self.__remixer_units[self.__current_active_unit].set_pitch_shift_dry_wet_level(level, forward_to_device)
-
-    def reset_pitch_shift_dry_wet_level(self):
-        self.__remixer_units[self.__current_active_unit].reset_pitch_shift_dry_wet_level()
-
     def set_distortion_level(self, level, forward_to_device):
         self.__remixer_units[self.__current_active_unit].set_distortion_level(level, forward_to_device)
 
     def reset_distortion_level(self):
         self.__remixer_units[self.__current_active_unit].reset_distortion_level()
-
-    def set_distortion_dry_wet_level(self, level, forward_to_device):
-        self.__remixer_units[self.__current_active_unit].set_distortion_dry_wet_level(level, forward_to_device)
-
-    def reset_distortion_dry_wet_level(self):
-        self.__remixer_units[self.__current_active_unit].reset_distortion_dry_wet_level()
 
     def set_volume_level(self, level, forward_to_device):
         self.__remixer_units[self.__current_active_unit].set_volume_level(level, forward_to_device)
@@ -766,3 +888,15 @@ class RemixerManager:
     def sync_daw_transport_release(self):
         for remixer_unit in self.__remixer_units.values():
             remixer_unit.sync_daw_transport_release()
+
+    def set_sidechain_1_level(self, level, forward_to_device):
+        self.__remixer_units[self.__current_active_unit].set_sidechain_1_level(level, forward_to_device)
+
+    def switch_sidechain_1_mode(self):
+        self.__remixer_units[self.__current_active_unit].switch_sidechain_1_mode()
+
+    def set_sidechain_2_level(self, level, forward_to_device):
+        self.__remixer_units[self.__current_active_unit].set_sidechain_2_level(level, forward_to_device)
+
+    def switch_sidechain_2_mode(self):
+        self.__remixer_units[self.__current_active_unit].switch_sidechain_2_mode()

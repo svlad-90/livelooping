@@ -23,7 +23,7 @@ class Repeater:
         self.__repeater_mixer_slot = constants.REPEATER_MIXER_SLOT
         self.__loopers_all_mixer_channel = constants.LOOPERS_ALL_CHANNEL
         self.__turnado_control_parameter_1 = constants.TURNADO_CONTROL_PARAMETER_1
-        self.__turnado_trigger_parameter = 14
+        self.__turnado_trigger_parameter = 28
 
     def on_init_script(self):
         self.drop()
@@ -32,11 +32,13 @@ class Repeater:
         self.__mode = repeater_constants.RepeaterMode.MODE_RECORDING
         self.__set_mic_routing(False)
         self.__set_length(length)
+        self.__apply_length(repeater_constants.RepeaterLength.LENGTH_1_8)
         self.__set_recording_status(True)
         self.__view.set_repeater_buttons_state(repeater_constants.RepeaterMode.MODE_RECORDING, length)
 
     def stop_recording(self):
         self.__mode = repeater_constants.RepeaterMode.MODE_PLAYBACK
+        self.__apply_length(self.__length)
         self.__set_mic_routing(True)
         self.__set_recording_status(False)
         self.__view.set_repeater_buttons_state(repeater_constants.RepeaterMode.MODE_PLAYBACK, self.__length)
@@ -65,6 +67,9 @@ class Repeater:
 
     def __set_length(self, length):
         self.__length = length
+        self.__apply_length(length)
+
+    def __apply_length(self, length):
         if length == repeater_constants.RepeaterLength.LENGTH_0:
             self.__set_turnado_repeater_parameter(0.0)
         if length == repeater_constants.RepeaterLength.LENGTH_4:

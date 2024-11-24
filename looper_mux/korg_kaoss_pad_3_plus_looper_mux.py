@@ -98,7 +98,7 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
 
             try:
 
-                # fl_helper.print_all_plugin_parameters(74, 0)
+                # fl_helper.print_all_plugin_parameters(70, 0)
 
                 self.__sidechain_manager.add_sidechain_item(constants.MIDI_CH_SIDECHAIN_TENSION_T1,
                                             constants.MIDI_CC_SIDECHAIN_TENSION_T1,
@@ -212,7 +212,7 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         return transport.isPlaying()
 
     def stop(self):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.stop.__name__)
+        # print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.stop.__name__)
 
         self.clear()
 
@@ -222,7 +222,7 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.__view.set_start_btn_state(False)
 
     def start(self):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.start.__name__)
+        # print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.start.__name__)
 
         if not transport.isPlaying():
             transport.start()
@@ -233,9 +233,9 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         current_tempo = mixer.getCurrentTempo() / 100.0
         if math.fabs(int(current_tempo / 10) - int(target_tempo / 10)) >= constants.TEMPO_JOG_ROTATION_THRESHOLD:
             jog_rotation = int(target_tempo - current_tempo)
-            print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.set_tempo.__name__ + \
-                  ": target tempo: " + str(target_tempo) + ", current tempo: " + str(current_tempo) + \
-                  ", jog rotation: " + str(jog_rotation))
+            # print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.set_tempo.__name__ + \
+            #       ": target tempo: " + str(target_tempo) + ", current tempo: " + str(current_tempo) + \
+            #       ", jog rotation: " + str(jog_rotation))
             transport.globalTransport(105, jog_rotation)
             self.__view.set_tempo(target_tempo / 10.0, forward_to_device)
 
@@ -390,7 +390,7 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
             self.set_recording_routing_status(False)
 
     def __start_recording_track(self, selected_track_id):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.__start_recording_track.__name__ + ": track - " + str(selected_track_id))
+        #print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.__start_recording_track.__name__ + ": track - " + str(selected_track_id))
         self.__loopers[self.__selected_looper].start_recording_track(selected_track_id, self.__selected_sample_length)
 
         for looper_id in self.__loopers:
@@ -404,7 +404,7 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
                     self.__loopers[looper_id].get_track(track_id).set_routing_level(0.0)
 
     def __stop_recording_track(self, track_id, selected_track_id):
-        print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.__stop_recording_track.__name__ + ": track - " + str(track_id))
+        #print(self.__context.device_name + ': ' + KorgKaossPad3PlusLooperMux.__stop_recording_track.__name__ + ": track - " + str(track_id))
 
         self.__loopers[self.__selected_looper].stop_recording_track(track_id)
         self.__loopers[self.__selected_looper].get_track(track_id).set_routing_level(0.0)
@@ -492,11 +492,11 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
     def __get_track_selection_status(self, track_id):
         return self.__loopers[self.__selected_looper].get_track_selection_status(track_id)
 
-    def __process_oneshot_sampler(self, event, oneshot_sampler_slot):
+    def __process_remixer_slot(self, event, remixer_slot):
         if event.data2 != 0:
-            self.__remixer_manager.slot_click(oneshot_sampler_slot)
+            self.__remixer_manager.slot_click(remixer_slot)
         else:
-            self.__remixer_manager.slot_release(oneshot_sampler_slot)
+            self.__remixer_manager.slot_release(remixer_slot)
 
     def __on_midi_msg_processing(self, event):
 
@@ -786,21 +786,21 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         elif event.data1 == constants.MIDI_CC_REPEATER_1_32 and event.midiChan == constants.MIDI_CH_REPEATER_1_32:
             self.__process_repeater_event(event, repeater_constants.RepeaterLength.LENGTH_1_32)
         elif event.data1 == constants.MIDI_CC_REMIXER_PLAY_ONESHOT_1 and event.midiChan == constants.MIDI_CH_REMIXER_PLAY_ONESHOT_1:
-            self.__process_oneshot_sampler(event, constants.RemixerSlot_1)
+            self.__process_remixer_slot(event, constants.RemixerSlot_1)
         elif event.data1 == constants.MIDI_CC_REMIXER_PLAY_ONESHOT_2 and event.midiChan == constants.MIDI_CH_REMIXER_PLAY_ONESHOT_2:
-            self.__process_oneshot_sampler(event, constants.RemixerSlot_2)
+            self.__process_remixer_slot(event, constants.RemixerSlot_2)
         elif event.data1 == constants.MIDI_CC_REMIXER_PLAY_ONESHOT_3 and event.midiChan == constants.MIDI_CH_REMIXER_PLAY_ONESHOT_3:
-            self.__process_oneshot_sampler(event, constants.RemixerSlot_3)
+            self.__process_remixer_slot(event, constants.RemixerSlot_3)
         elif event.data1 == constants.MIDI_CC_REMIXER_PLAY_ONESHOT_4 and event.midiChan == constants.MIDI_CH_REMIXER_PLAY_ONESHOT_4:
-            self.__process_oneshot_sampler(event, constants.RemixerSlot_4)
+            self.__process_remixer_slot(event, constants.RemixerSlot_4)
         elif event.data1 == constants.MIDI_CC_REMIXER_PLAY_ONESHOT_5 and event.midiChan == constants.MIDI_CH_REMIXER_PLAY_ONESHOT_5:
-            self.__process_oneshot_sampler(event, constants.RemixerSlot_5)
+            self.__process_remixer_slot(event, constants.RemixerSlot_5)
         elif event.data1 == constants.MIDI_CC_REMIXER_PLAY_ONESHOT_6 and event.midiChan == constants.MIDI_CH_REMIXER_PLAY_ONESHOT_6:
-            self.__process_oneshot_sampler(event, constants.RemixerSlot_6)
+            self.__process_remixer_slot(event, constants.RemixerSlot_6)
         elif event.data1 == constants.MIDI_CC_REMIXER_PLAY_ONESHOT_7 and event.midiChan == constants.MIDI_CH_REMIXER_PLAY_ONESHOT_7:
-            self.__process_oneshot_sampler(event, constants.RemixerSlot_7)
+            self.__process_remixer_slot(event, constants.RemixerSlot_7)
         elif event.data1 == constants.MIDI_CC_REMIXER_PLAY_ONESHOT_8 and event.midiChan == constants.MIDI_CH_REMIXER_PLAY_ONESHOT_8:
-            self.__process_oneshot_sampler(event, constants.RemixerSlot_8)
+            self.__process_remixer_slot(event, constants.RemixerSlot_8)
         elif event.data1 == constants.MIDI_CC_REMIXER_CLEAR_MODE and event.midiChan == constants.MIDI_CH_REMIXER_CLEAR_MODE:
             if event.data2 != 0:
                 self.__remixer_manager.clear_click()
@@ -855,11 +855,6 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_RESET_PITCH_SHIFT and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_RESET_PITCH_SHIFT:
             if event.data2 != 0:
                 self.__remixer_manager.reset_pitch_shift_level()
-        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_PITCH_SHIFT_DRY_WET and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_PITCH_SHIFT_DRY_WET:
-                self.__remixer_manager.set_pitch_shift_dry_wet_level(event.data2 / fl_helper.MIDI_MAX_VALUE, False)
-        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_RESET_PITCH_SHIFT_DRY_WET and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_RESET_PITCH_SHIFT_DRY_WET:
-            if event.data2 != 0:
-                self.__remixer_manager.reset_pitch_shift_dry_wet_level()
         elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_VOLUME and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_VOLUME:
                 self.__remixer_manager.set_volume_level((event.data2 / fl_helper.MIDI_MAX_VALUE) * fl_helper.MAX_VOLUME_LEVEL_VALUE, False)
         elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_RESET_VOLUME and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_RESET_VOLUME:
@@ -875,11 +870,16 @@ class KorgKaossPad3PlusLooperMux(IContextInterface):
         elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_RESET_DISTORTION and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_RESET_DISTORTION:
             if event.data2 != 0:
                 self.__remixer_manager.reset_distortion_level()
-        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_DISTORTION_DRY_WET and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_DISTORTION_DRY_WET:
-                self.__remixer_manager.set_distortion_dry_wet_level(event.data2 / fl_helper.MIDI_MAX_VALUE, False)
-        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_RESET_DISTORTION_DRY_WET and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_RESET_DISTORTION_DRY_WET:
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_SIDECHAIN_1 and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_SIDECHAIN_1:
+                self.__remixer_manager.set_sidechain_1_level(event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_SIDECHAIN_1_MODE and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_SIDECHAIN_1_MODE:
             if event.data2 != 0:
-                self.__remixer_manager.reset_distortion_dry_wet_level()
+                self.__remixer_manager.switch_sidechain_1_mode()
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_SIDECHAIN_2 and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_SIDECHAIN_2:
+                self.__remixer_manager.set_sidechain_2_level(event.data2 / fl_helper.MIDI_MAX_VALUE, False)
+        elif event.data1 == constants.MIDI_CC_REMIXER_UNIT_FX_SIDECHAIN_2_MODE and event.midiChan == constants.MIDI_CH_REMIXER_UNIT_FX_SIDECHAIN_2_MODE:
+            if event.data2 != 0:
+                self.__remixer_manager.switch_sidechain_2_mode()
 
     def on_midi_msg(self, event):
 

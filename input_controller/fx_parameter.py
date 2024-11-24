@@ -36,24 +36,7 @@ class FxParameter:
 
     def get_fl_param_index(self, adjustable_plugin_slot_index, fx_param_id):
 
-        if adjustable_plugin_slot_index == constants.FX2_FINISHER_VOODOO_SLOT_INDEX:
-            if fx_param_id == FxParameter.FXParameter_1:
-                return constants.FINISHER_VOODOO_VARIATION_1_PARAM_INDEX
-            elif fx_param_id == FxParameter.FXParameter_2:
-                return constants.FINISHER_VOODOO_VARIATION_2_PARAM_INDEX
-            elif fx_param_id == FxParameter.FXParameter_3:
-                return constants.FINISHER_VOODOO_VARIATION_3_PARAM_INDEX
-            elif fx_param_id == FxParameter.FXParameter_4:
-                return constants.FINISHER_VOODOO_VARIATION_4_PARAM_INDEX
-            elif fx_param_id == FxParameter.FXParameter_5:
-                return constants.INVALID_PARAM
-            elif fx_param_id == FxParameter.FXParameter_6:
-                return constants.INVALID_PARAM
-            elif fx_param_id == FxParameter.FXParameter_7:
-                return constants.INVALID_PARAM
-            elif fx_param_id == FxParameter.FXParameter_8:
-                return constants.FINISHER_VOODOO_EFFECT_PARAM_INDEX
-        elif adjustable_plugin_slot_index == constants.FX2_MANIPULATOR_SLOT_INDEX:
+        if adjustable_plugin_slot_index == constants.MANIPULATOR_SLOT_INDEX:
             if fx_param_id == FxParameter.FXParameter_1:
                 return constants.MANIPULATOR_FORMANT_PARAM_INDEX
             elif fx_param_id == FxParameter.FXParameter_2:
@@ -100,7 +83,7 @@ class FxParameter:
 
             # Fallback for the case if MIDI mapping has no channel id data
             if channel_id == constants.INVALID_PARAM:
-                channel_id = self.__context.fx2_channel
+                channel_id = self.__context.fx_4_channel
 
             plugins.setParamValue(fx_param_level, fl_param_id, channel_id, adjustable_plugin_slot_index, midi.PIM_None, True)
             self.__fx_param_level = fx_param_level
@@ -132,7 +115,7 @@ class FxParameter:
 
             # Fallback for the case if MIDI mapping has no channel id data
             if channel_id == constants.INVALID_PARAM:
-                channel_id = self.__context.fx2_channel
+                channel_id = self.__context.fx_4_channel
 
             param_value = plugins.getParamValue(fl_param_id, channel_id, adjustable_plugin_slot_index, True)
             self.__fx_param_level = param_value

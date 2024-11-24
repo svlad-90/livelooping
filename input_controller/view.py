@@ -115,21 +115,15 @@ class View:
     def set_active_fx_unit(self, active_fx_unit):
 
         manipulator_value = 0.0
-        voodoo_finisher_value = 0.0
         custom_value = 0.0
 
         if active_fx_unit == FxUnit.FX_UNIT_MANIPULATOR:
             manipulator_value = 1.0
-        elif active_fx_unit == FxUnit.FX_UNIT_FINISHER_VOODOO:
-            voodoo_finisher_value = 1.0
         elif active_fx_unit == FxUnit.FX_UNIT_CUSTOM:
             custom_value = 1.0
 
         parameter_id = fl_helper.find_parameter_by_name(self.__context.main_channel, "AFX_Manipulator", constants.INPUT_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(manipulator_value, parameter_id, self.__context.main_channel, constants.INPUT_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
-
-        parameter_id = fl_helper.find_parameter_by_name(self.__context.main_channel, "AFX_Voodoo_Finisher", constants.INPUT_CONTROL_SURFACE_MIXER_SLOT_INDEX)
-        plugins.setParamValue(voodoo_finisher_value, parameter_id, self.__context.main_channel, constants.INPUT_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)
 
         parameter_id = fl_helper.find_parameter_by_name(self.__context.main_channel, "AFX_Custom", constants.INPUT_CONTROL_SURFACE_MIXER_SLOT_INDEX)
         plugins.setParamValue(custom_value, parameter_id, self.__context.main_channel, constants.INPUT_CONTROL_SURFACE_MIXER_SLOT_INDEX, midi.PIM_None, True)

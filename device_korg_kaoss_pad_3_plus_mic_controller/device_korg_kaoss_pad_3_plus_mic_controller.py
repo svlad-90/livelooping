@@ -7,10 +7,14 @@ from input_controller.context import Context
 from input_controller.device_type import DeviceType
 from input_controller.korg_kaoss_pad_3_plus_input_controller import KorgKaossPad3PlusInputController
 
-MIC_MAIN_CHANNEL              = 11
-MIC_FX1_CHANNEL               = 10
-MIC_FX2_CHANNEL               = 9
-MIC_FX3_CHANNEL               = 8
+MIC_MAIN_CHANNEL              = 15
+MIC_INPUT_CHANNEL             = 14
+MIC_FX1_CHANNEL               = 13
+MIC_FX2_CHANNEL               = 12
+MIC_FX3_CHANNEL               = 11
+MIC_FX4_CHANNEL               = 10
+MIC_FINALIZE_CHANNEL          = 9
+MIC_OUT_CHANNEL               = 8
 PARAMS_FIRST_STORAGE_TRACK_ID = 200
 FIRST_SCENE_PATTERN           = 0
 LOOPERS_SC_CTRL_NAME          = "Mic_Loopers_SC"
@@ -18,9 +22,13 @@ LOOPERS_SC_CTRL_NAME          = "Mic_Loopers_SC"
 context = Context(device_name,
                   DeviceType.MIC,
                   MIC_MAIN_CHANNEL,
+                  MIC_INPUT_CHANNEL,
                   MIC_FX1_CHANNEL,
                   MIC_FX2_CHANNEL,
                   MIC_FX3_CHANNEL,
+                  MIC_FX4_CHANNEL,
+                  MIC_FINALIZE_CHANNEL,
+                  MIC_OUT_CHANNEL,
                   PARAMS_FIRST_STORAGE_TRACK_ID,
                   FIRST_SCENE_PATTERN,
                   LOOPERS_SC_CTRL_NAME)
